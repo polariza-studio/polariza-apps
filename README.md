@@ -1,13 +1,13 @@
 # Polariza Apps
 
-Catàleg d'apps simples que demostren el que es pot construir des de Polariza Studio. Cada app viu a `apps/<nom-app>/` amb el seu propi README (què és, per què existeix, com s'executa).
+Catálogo de apps simples que demuestran lo que se puede construir desde Polariza Studio. Cada app vive en `apps/<nombre-app>/` con su propio README (qué es, por qué existe, cómo se ejecuta).
 
 ## Apps
 
-_(encara cap)_
+_(todavía ninguna)_
 
-## Convenció
+## Convención
 
-- Una carpeta per app dins de `apps/`.
-- Cada app és independent: les seves pròpies dependències, el seu propi README.
-- Simple per defecte — si una app creix prou com per convertir-se en cas d'estudi real, es documenta com a projecte propi al Hub.
+- Una carpeta por app dentro de `apps/`.
+- Cada app es independiente: sus propias dependencias, su propio README.
+- Simple por defecto — si una app crece lo suficiente como para convertirse en caso de estudio real, se documenta como proyecto propio en el Hub.
