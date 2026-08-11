@@ -1,0 +1,84 @@
+name: Deploy apps to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/*/pnpm-lock.yaml
+
+      - name: Build every app under apps/
+        run: |
+          set -e
+          mkdir -p site
+          touch site/.nojekyll
+
+          for app_dir in apps/*/; do
+            name="$(basename "$app_dir")"
+            [ -f "$app_dir/package.json" ] || continue
+
+            echo "::group::Building $name"
+            pnpm --dir "$app_dir" install
+            pnpm --dir "$app_dir" build
+            mkdir -p "site/$name"
+            cp -r "$app_dir/dist/." "site/$name/"
+            echo "::endgroup::"
+          done
+
+      - name: Generate catalog index
+        run: |
+          {
+            echo '<!doctype html>'
+            echo '<html lang="en"><head><meta charset="UTF-8" />'
+            echo '<meta name="viewport" content="width=device-width, initial-scale=1.0" />'
+            echo '<title>Polariza Apps</title>'
+            echo '<style>body{font:16px/1.5 system-ui,sans-serif;max-width:640px;margin:4rem auto;padding:0 1.5rem;color:#08060d}a{color:#aa3bff}</style>'
+            echo '</head><body>'
+            echo '<h1>Polariza Apps</h1>'
+            echo '<ul>'
+            for app_dir in apps/*/; do
+              name="$(basename "$app_dir")"
+              [ -f "$app_dir/package.json" ] || continue
+              echo "<li><a href=\"./$name/\">$name</a></li>"
+            done
+            echo '</ul>'
+            echo '</body></html>'
+          } > site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
