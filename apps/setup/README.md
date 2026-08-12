@@ -4,7 +4,9 @@ A simple app to plan, organize, and track your workouts.
 
 ## Why it exists
 
-The first app in the [Polariza Apps](../../README.md) catalog — a small, self-contained example of what the studio builds from idea to shipped product.
+SetUp started from a simple need: making workouts easier to plan and follow. It helps you build a routine around your goals, choose the right exercises, understand how to perform them correctly, and guides you through your workout as you train.
+
+It's also the first app in the [Polariza Apps](../../README.md) catalog — a small, self-contained example of what the studio builds from idea to shipped product.
 
 ## Stack
 
