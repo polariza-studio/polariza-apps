@@ -59,6 +59,23 @@
     --color-state-active: var(--state-active);
     --color-state-inactive: var(--state-inactive);
 
+    /* Button v1 Interaction States — Foundations v1, approved 2026-08-14
+       (visually reviewed in Storybook, see Foundations.mdx "Buttons" >
+       "Interaction states"). Canonical, no longer provisional. Maps the
+       Button-scoped custom properties below (defined under
+       [data-slot="button"] in this file, not :root — they're Button
+       interaction derivatives, not general-purpose reusable surface
+       colors like --primary/--secondary) onto real Tailwind utilities
+       (bg-button-primary-hover, etc.) so button.tsx no longer needs
+       arbitrary-value bracket syntax. Don't reference these from any
+       component other than Button. */
+    --color-button-primary-hover: var(--button-primary-hover);
+    --color-button-primary-pressed: var(--button-primary-pressed);
+    --color-button-secondary-hover: var(--button-secondary-hover);
+    --color-button-secondary-pressed: var(--button-secondary-pressed);
+    --color-button-ghost-inverse-hover: var(--button-ghost-inverse-hover);
+    --color-button-ghost-inverse-pressed: var(--button-ghost-inverse-pressed);
+
     /* Spacing + Radius Foundations v1 — approved by the user 2026-08-14.
        --radius-md is the only v1-canonical radius value (8px). The legacy
        shadcn --radius-sm/lg/xl/2xl/3xl/4xl scale (and its --radius seed)
@@ -184,6 +201,18 @@
     --state-active: var(--lime);
     --state-inactive: color-mix(in srgb, var(--moss) 10%, transparent);
 
+    /* --secondary / --secondary-foreground — CANONICAL Color Foundations v1,
+       promoted 2026-08-14 (previously a shadcn-alias placeholder pointing at
+       --surface-subtle/--foreground; that mapping is gone). Represents an
+       important action with lower emphasis than --primary: Button v1's
+       `secondary` variant (Finish) — moss fill, white text, sitting
+       directly on a light screen (not a full-screen inversion). Resolves
+       to the same primitives as --background-inverse/--foreground-inverse
+       on purpose — same colors, distinct semantic role (a single button's
+       fill vs. a full-surface inversion) — see Foundations.mdx "Buttons". */
+    --secondary: var(--moss);
+    --secondary-foreground: var(--neutral-0);
+
     /* shadcn compatibility aliases — NOT canonical SetUp tokens. These
        exist only because shadcn's generated components (button.tsx etc.)
        expect these variable names to exist. Conservatively mapped onto
@@ -191,8 +220,6 @@
        exposed as approved foundations in Foundations.mdx, and not to be
        used intentionally in new SetUp components until their semantic
        role is explicitly decided. */
-    --secondary: var(--surface-subtle);
-    --secondary-foreground: var(--foreground);
     --muted: var(--surface-subtle);
     --muted-foreground: var(--foreground-secondary);
     --accent: var(--interactive-subtle);
@@ -256,6 +283,31 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Button v1 Interaction States — Foundations v1, approved 2026-08-14
+   (visually reviewed and approved in Storybook — see button.stories.tsx
+   "Interaction States" and Foundations.mdx "Buttons"). Canonical, not
+   provisional. Not measured in Paper (Paper shows one resting state per
+   button) — these are a designed extension of it. Scoped to
+   [data-slot=button], not :root, because they're Button-specific
+   interaction derivatives, not general-purpose reusable surface colors;
+   mapped into real Tailwind utilities via the --color-button-* entries in
+   @theme inline above. Don't reference these from anything other than
+   Button. Ghost's hover/pressed reuse existing approved tokens
+   (border-subtle/border) directly in button.tsx and need no entry here. */
+[data-slot="button"] {
+    --button-primary-hover: color-mix(in srgb, var(--lime) 92%, var(--moss) 8%);
+    --button-primary-pressed: color-mix(in srgb, var(--lime) 84%, var(--moss) 16%);
+    --button-secondary-hover: color-mix(in srgb, var(--moss) 92%, var(--neutral-0) 8%);
+    --button-secondary-pressed: color-mix(in srgb, var(--moss) 84%, var(--neutral-0) 16%);
+    --button-ghost-inverse-hover: color-mix(in srgb, var(--neutral-0) 16%, transparent);
+    --button-ghost-inverse-pressed: color-mix(in srgb, var(--neutral-0) 24%, transparent);
+}
+
+/* .dark is inert/out of scope (no dark-mode toggle in MVP, see earlier
+   Foundations decisions) — left as shadcn's original generic neutrals,
+   UNTOUCHED even though --secondary/--secondary-foreground gained real
+   product meaning in light mode above. Flagging so this reads as a known
+   gap, not an oversight, if dark mode is ever picked up. */
 .dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);

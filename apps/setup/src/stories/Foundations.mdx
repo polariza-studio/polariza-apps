@@ -55,6 +55,11 @@ Raw palette values. **Not exposed as Tailwind utilities** (`bg-moss` etc. don't 
     colors={{ primary: 'var(--primary)', 'primary-foreground': 'var(--primary-foreground)' }}
   />
   <ColorItem
+    title="secondary / secondary-foreground"
+    subtitle="Important action, lower emphasis than primary: Finish. Same primitives as background-inverse/foreground-inverse, distinct role — promoted from shadcn-alias 2026-08-14"
+    colors={{ secondary: 'var(--secondary)', 'secondary-foreground': 'var(--secondary-foreground)' }}
+  />
+  <ColorItem
     title="interactive-subtle / interactive-subtle-inverse"
     subtitle="Always-visible (not hover-only) tinted button surface: Adjust plan, Pause, Discard Activity"
     colors={{ 'interactive-subtle': 'var(--interactive-subtle)', 'interactive-subtle-inverse': 'var(--interactive-subtle-inverse)' }}
@@ -66,15 +71,14 @@ Raw palette values. **Not exposed as Tailwind utilities** (`bg-moss` etc. don't 
   />
 </ColorPalette>
 
-**Two screens invert to a dark surface**: Workout Overview and Workout Completion are full-bleed moss with near-white text, instead of the usual light background — `bg-background-inverse text-foreground-inverse`. The same inversion gives the "Finish" button its dark fill on the otherwise-light Workout Mode screens.
+**Two screens invert to a dark surface**: Workout Overview and Workout Completion are full-bleed moss with near-white text, instead of the usual light background — `bg-background-inverse text-foreground-inverse`. The "Finish" button is a different thing: it's a single button with its own dark fill (`bg-secondary text-secondary-foreground`) sitting on an otherwise-light Workout Mode screen, not a full-screen inversion — see "Buttons" below.
 
 ### shadcn compatibility aliases — not canonical
 
-`components/ui/button.tsx` (and any future shadcn-added component) expects `--secondary`, `--muted`, `--accent` (plus their `-foreground` pairs), `--card`, `--popover`, `--input`, `--ring`, and `--destructive` to exist, because shadcn's generated code references them. **None of these are part of Color Foundations v1** — they carry no approved product meaning yet. They're kept defined only so existing components don't break, conservatively aliased onto the semantic tokens above:
+`components/ui/button.tsx` (and any future shadcn-added component) expects `--muted`, `--accent` (plus their `-foreground` pairs), `--card`, `--popover`, `--input`, `--ring`, and `--destructive` to exist, because shadcn's generated code references them. **None of these are part of Color Foundations v1** — they carry no approved product meaning yet. They're kept defined only so existing components don't break, conservatively aliased onto the semantic tokens above. (`--secondary`/`--secondary-foreground` used to be in this bucket too — promoted to canonical 2026-08-14, see the swatch above.)
 
 | shadcn variable | Aliased to | 
 | --- | --- |
-| `--secondary` / `--secondary-foreground` | `--surface-subtle` / `--foreground` |
 | `--muted` / `--muted-foreground` | `--surface-subtle` / `--foreground-secondary` |
 | `--accent` / `--accent-foreground` | `--interactive-subtle` / `--foreground` |
 | `--card`, `--popover` (+ foregrounds) | `--background` / `--foreground` (flat surfaces, no distinct card tone) |
@@ -273,7 +277,7 @@ Paper's dividers are filled rectangles (`background-color: var(--border-subtle)`
 
 ## Shadows — Foundations v1
 
-**Approved 2026-08-14.** One token, one consumer: `--shadow-button` (`0 4px 8px 2px`, tinted at `border-subtle`'s weight — moss @ 10%) is applied to Button v1's `inverse` variant only (`components/ui/button.tsx`) — Finish is the sole button in Paper that carries a shadow, confirmed by the full button audit and re-audit in this conversation. `primary`, `ghost`, and `ghost-inverse` have no shadow.
+**Approved 2026-08-14.** One token, one consumer: `--shadow-button` (`0 4px 8px 2px`, tinted at `border-subtle`'s weight — moss @ 10%) is applied to Button v1's `secondary` variant only (`components/ui/button.tsx`) — Finish is the sole button in Paper that carries a shadow, confirmed by the full button audit and re-audit in this conversation. `primary`, `ghost`, and `ghost-inverse` have no shadow.
 
 <div style={{ display: 'flex', gap: '24px', marginTop: '8px', alignItems: 'center' }}>
   <div style={{ padding: '12px 24px', borderRadius: '9999px', background: 'var(--background-inverse)', color: 'var(--foreground-inverse)', boxShadow: 'var(--shadow-button)' }}>Finish</div>
@@ -316,20 +320,40 @@ This is a usage rule, not a gallery — see [lucide.dev/icons](https://lucide.de
 - Icon-only controls are reserved for a small set of very common, instantly-recognizable actions (back, close, pause).
 - Everything else — and anything in Onboarding, Plan Settings, or a primary call-to-action — pairs the icon with a visible text label. Don't let an icon carry meaning alone if getting it wrong costs the user their workout state.
 
-## Buttons — Button v1, implemented
+## Buttons — Button v1, approved
 
-**Implemented 2026-08-14** in `components/ui/button.tsx`, replacing the prior shadcn scaffold (`default`/`outline`/`secondary`/`ghost`/`destructive`/`link`) entirely. Four variants, matching the three visual tiers found across all 10 button instances audited in Paper (one tier splits by light/dark screen context):
+**Approved 2026-08-14** in `components/ui/button.tsx`, replacing the prior shadcn scaffold (`default`/`outline`/`secondary`/`ghost`/`destructive`/`link`) entirely. Structure, tokens, and interaction states are all final — this is the canonical spec for Button v1. Four variants, matching the three visual tiers found across all 10 button instances audited in Paper (one tier splits by light/dark screen context):
 
 | Variant | Background | Text | Paper examples |
 | --- | --- | --- | --- |
 | `primary` | `--primary` | `--primary-foreground` | Start Workout, Save Activity, Next, Resume |
 | `ghost` | `--interactive-subtle` | `--foreground` | Adjust plan, Pause |
-| `inverse` | `--background-inverse` | `--foreground-inverse` | Finish |
+| `secondary` | `--secondary` | `--secondary-foreground` | Finish |
 | `ghost-inverse` | `--interactive-subtle-inverse` | `--foreground-inverse` | Discard Activity |
 
-No `size` prop — every Paper button is one size. Padding is icon-aware via the `data-icon="inline-start"|"inline-end"` convention on icon children (see `button.stories.tsx`): no icon → `space-7` (20px) both sides; leading icon → `space-6`/`space-7` (16/20); trailing icon → `space-7`/`space-6` (20/16). Vertical padding `space-2` (6px), icon/text gap `space-5` (12px), radius `radius-full`, typography `action`. Height is a fixed `48px` (`h-12`) — approved 2026-08-14 as a direct exception to the spacing scale (no `space-*` token covers 48px); content centers in the extra space above/below the 22px line-height via `items-center`, matching Paper exactly rather than the ~34px a padding-only, content-driven height would give. Back/Settings icon-only controls are explicitly **not** part of Button v1 — no `IconButton` yet. No hover/pressed/disabled/loading visual states were invented — Paper shows exactly one resting state per button.
+**Corrected naming 2026-08-14**: `secondary` was originally named `inverse`, on the wrong assumption that it needed a dark-surface context to read. It doesn't — it's an important, lower-emphasis-than-primary action with its own moss fill/white text, sitting directly on the light Workout Mode screen. `ghost-inverse` is the only variant that actually lives on a dark/inverse surface.
 
-**Resolved 2026-08-14**: `--shadow-button` approved as Shadow Foundations v1 and applied to `inverse` only — see "Shadows" above.
+No `size` prop — every Paper button is one size. Padding is icon-aware via the `data-icon="inline-start"|"inline-end"` convention on icon children (see `button.stories.tsx`): no icon → `space-7` (20px) both sides; leading icon → `space-6`/`space-7` (16/20); trailing icon → `space-7`/`space-6` (20/16). Vertical padding `space-2` (6px), icon/text gap `space-5` (12px), radius `radius-full`, typography `action`. Height is a fixed `48px` (`h-12`) — approved 2026-08-14 as a direct exception to the spacing scale (no `space-*` token covers 48px); content centers in the extra space above/below the 22px line-height via `items-center`, matching Paper exactly rather than the ~34px a padding-only, content-driven height would give. Back/Settings icon-only controls are explicitly **not** part of Button v1 — no `IconButton` yet. No loading state was invented — that's still out of scope.
+
+**Resolved 2026-08-14**: `--shadow-button` approved as Shadow Foundations v1 and applied to `secondary` only — see "Shadows" above.
+
+### Interaction states — Foundations v1, approved 2026-08-14
+
+Default, Hover, Pressed, Focus, and Disabled are implemented for all four variants (`components/ui/button.tsx`, see `button.stories.tsx` "Interaction States" for a visual gallery). Text/icon color never changes across Default/Hover/Pressed — only background does, so contrast never degrades on interaction, and no opacity is ever applied to the whole button. Visually reviewed and approved in Storybook; canonical, not provisional.
+
+- **`ghost`** reuses existing approved tokens for its own hover/pressed — `border-subtle` and `border`, the same moss-opacity ladder its resting state (`interactive-subtle`) already sits on. No new tokens.
+- **`primary`, `secondary`, `ghost-inverse`** hover/pressed use the `--color-button-*` tokens below — Button-scoped, defined in `index.css` (raw values under `[data-slot="button"]`, mapped to Tailwind utilities in `@theme inline`). Canonical, but Button-only: don't reference them from any other component — they're interaction derivatives of Button's own fills, not general-purpose reusable surface colors.
+- **Focus** ring color is conditional per variant, not a new token: `primary`/`ghost`/`secondary` ring in `foreground` (moss) — all three render directly on the light page, so a dark ring is what reads there. `ghost-inverse` rings in `foreground-inverse` (white) — the one variant that actually sits on a dark surface. 2px ring, 2px offset.
+- **Disabled** never dims the whole button. `primary` and `secondary` both flatten to `ghost`'s resting visual weight (`interactive-subtle` background, `foreground-secondary` text) — both are light-surface fills, so they share the same de-emphasized target; `secondary` additionally drops `shadow-button`. `ghost`/`ghost-inverse` keep their own background and just move text to the matching `-secondary` foreground token.
+
+| Token | Formula | Resolved |
+| --- | --- | --- |
+| `--button-primary-hover` | `color-mix(in srgb, var(--lime) 92%, var(--moss) 8%)` | `#B3E84C` |
+| `--button-primary-pressed` | `color-mix(in srgb, var(--lime) 84%, var(--moss) 16%)` | `#A7DA46` |
+| `--button-secondary-hover` | `color-mix(in srgb, var(--moss) 92%, var(--neutral-0) 8%)` | `#3A4F14` |
+| `--button-secondary-pressed` | `color-mix(in srgb, var(--moss) 84%, var(--neutral-0) 16%)` | `#4B5F29` |
+| `--button-ghost-inverse-hover` | `color-mix(in srgb, var(--neutral-0) 16%, transparent)` | white @ 16% |
+| `--button-ghost-inverse-pressed` | `color-mix(in srgb, var(--neutral-0) 24%, transparent)` | white @ 24% |
 
 ## Source of truth
 

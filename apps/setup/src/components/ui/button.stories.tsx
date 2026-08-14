@@ -13,7 +13,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'ghost', 'inverse', 'ghost-inverse'],
+      options: ['primary', 'ghost', 'secondary', 'ghost-inverse'],
     },
   },
 } satisfies Meta<typeof Button>;
@@ -28,16 +28,19 @@ export const Default: Story = {
   },
 };
 
-// `inverse` and `ghost-inverse` use --foreground-inverse (near-white) text,
-// so they need a moss backdrop to read — exactly how they appear in the
-// product (Workout Overview, Workout Completion, "Finish").
+// `secondary` (Finish) has its own moss fill/white text but sits directly
+// on the light page — not a dark-surface context, so it renders at top
+// level alongside primary/ghost. `ghost-inverse` (Discard Activity) is the
+// only variant that actually lives on an inverse/dark surface, so it's the
+// only one wrapped in a moss backdrop here — matching how it appears in
+// the product.
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-4">
       <Button variant="primary">Start Workout</Button>
       <Button variant="ghost">Adjust plan</Button>
+      <Button variant="secondary">Finish</Button>
       <div className="flex items-center gap-4 rounded-xl bg-background-inverse p-4">
-        <Button variant="inverse">Finish</Button>
         <Button variant="ghost-inverse">Discard Activity</Button>
       </div>
     </div>
@@ -70,12 +73,10 @@ export const LeadingIcon: Story = {
         <Pause data-icon="inline-start" fill="currentColor" stroke="none" />
         Pause
       </Button>
-      <div className="rounded-xl bg-background-inverse p-4">
-        <Button variant="inverse">
-          <Square data-icon="inline-start" fill="currentColor" stroke="none" />
-          Finish
-        </Button>
-      </div>
+      <Button variant="secondary">
+        <Square data-icon="inline-start" fill="currentColor" stroke="none" />
+        Finish
+      </Button>
     </div>
   ),
 };
@@ -95,4 +96,99 @@ export const Disabled: Story = {
     children: 'Start Workout',
     disabled: true,
   },
+};
+
+// State labels/swatches, not real :hover/:active/:focus-visible triggers —
+// this is a visual reference gallery, so each non-Default/Disabled cell
+// forces the target state's classes directly (bypassing the pseudo-class)
+// so it renders statically. All classes below are canonical Foundations v1
+// tokens, the same ones button.tsx itself uses — nothing story-only.
+const stateLabelClass = 'text-caption leading-caption text-foreground-secondary';
+
+function StateRow({
+  variant,
+  hoverClassName,
+  pressedClassName,
+  focusRingClassName,
+}: {
+  variant: 'primary' | 'ghost' | 'secondary' | 'ghost-inverse';
+  hoverClassName: string;
+  pressedClassName: string;
+  focusRingClassName: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-end gap-6">
+      <div className="flex flex-col items-center gap-2">
+        <Button variant={variant}>Start Workout</Button>
+        <span className={stateLabelClass}>Default</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <Button variant={variant} className={hoverClassName}>
+          Start Workout
+        </Button>
+        <span className={stateLabelClass}>Hover</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <Button variant={variant} className={pressedClassName}>
+          Start Workout
+        </Button>
+        <span className={stateLabelClass}>Pressed</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <Button variant={variant} className={`ring-2 ring-offset-2 ${focusRingClassName}`}>
+          Start Workout
+        </Button>
+        <span className={stateLabelClass}>Focus</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <Button variant={variant} disabled>
+          Start Workout
+        </Button>
+        <span className={stateLabelClass}>Disabled</span>
+      </div>
+    </div>
+  );
+}
+
+export const InteractionStates: Story = {
+  render: () => (
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-3">
+        <h3 className="text-body-emphasis leading-body-emphasis text-foreground">Primary</h3>
+        <StateRow
+          variant="primary"
+          hoverClassName="bg-button-primary-hover"
+          pressedClassName="bg-button-primary-pressed"
+          focusRingClassName="ring-foreground"
+        />
+      </div>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-body-emphasis leading-body-emphasis text-foreground">Ghost</h3>
+        <StateRow
+          variant="ghost"
+          hoverClassName="bg-border-subtle"
+          pressedClassName="bg-border"
+          focusRingClassName="ring-foreground"
+        />
+      </div>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-body-emphasis leading-body-emphasis text-foreground">Secondary</h3>
+        <StateRow
+          variant="secondary"
+          hoverClassName="bg-button-secondary-hover"
+          pressedClassName="bg-button-secondary-pressed"
+          focusRingClassName="ring-foreground"
+        />
+      </div>
+      <div className="flex flex-col gap-3 rounded-xl bg-background-inverse p-6">
+        <h3 className="text-body-emphasis leading-body-emphasis text-foreground-inverse">Ghost inverse</h3>
+        <StateRow
+          variant="ghost-inverse"
+          hoverClassName="bg-button-ghost-inverse-hover"
+          pressedClassName="bg-button-ghost-inverse-pressed"
+          focusRingClassName="ring-foreground-inverse"
+        />
+      </div>
+    </div>
+  ),
 };
