@@ -1,13 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    /* No --font-sans override: Paper's fontFamily is "System Sans-Serif"
+       (a deliberate choice, confirmed 2026-08-14 — not an unset default as
+       previously assumed), so this intentionally falls through to
+       Tailwind's own built-in system-font stack (-apple-system,
+       BlinkMacSystemFont, "Segoe UI", Roboto, …) rather than a webfont. */
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,40 +42,210 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+
+    /* Color Foundations v1 — canonical semantic tokens. Primitives
+       (--moss, --lime, --lime-soft, --neutral-0, --neutral-50) are
+       deliberately NOT mapped here — they stay unavailable as Tailwind
+       utilities so components can't consume them directly. */
+    --color-background-inverse: var(--background-inverse);
+    --color-foreground-secondary: var(--foreground-secondary);
+    --color-foreground-inverse: var(--foreground-inverse);
+    --color-foreground-inverse-secondary: var(--foreground-inverse-secondary);
+    --color-surface-subtle: var(--surface-subtle);
+    --color-surface-inverse: var(--surface-inverse);
+    --color-border-subtle: var(--border-subtle);
+    --color-interactive-subtle: var(--interactive-subtle);
+    --color-interactive-subtle-inverse: var(--interactive-subtle-inverse);
+    --color-state-active: var(--state-active);
+    --color-state-inactive: var(--state-inactive);
+
+    /* Spacing + Radius Foundations v1 — approved by the user 2026-08-14.
+       --radius-md is the only v1-canonical radius value (8px). The legacy
+       shadcn --radius-sm/lg/xl/2xl/3xl/4xl scale (and its --radius seed)
+       was removed 2026-08-14 once Button v1 stopped being its only
+       consumer — verified via a full grep of src/ before deletion. Do not
+       create new radius tokens without asking first. */
+    --radius-md: 0.5rem; /* 8px — v1 canonical (radius-md) */
+
+    /* Spacing scale — named (not numeric) keys, deliberately, so they can't
+       collide with or silently redefine Tailwind's built-in numeric spacing
+       utilities (p-1, gap-4, …), which remain available and unrelated.
+       Generates p-space-1, gap-space-5, etc. */
+    --spacing-space-1: var(--space-1);
+    --spacing-space-2: var(--space-2);
+    --spacing-space-3: var(--space-3);
+    --spacing-space-4: var(--space-4);
+    --spacing-space-5: var(--space-5);
+    --spacing-space-6: var(--space-6);
+    --spacing-space-7: var(--space-7);
+    --spacing-space-8: var(--space-8);
+    --spacing-space-9: var(--space-9);
+
+    /* Typography Foundations v1 — approved by the user 2026-08-14, from an
+       exhaustive audit + cleanup pass of the current Paper file. Each token
+       bundles size, weight, and line-height as one unit (Tailwind v4's
+       --text-*--font-weight pairing) — hierarchy is driven by size, not by
+       introducing new weights (SetUp uses only 300/400/500). Letter-spacing
+       is normal everywhere; no token overrides it. Do not create additional
+       typography tokens (component-specific or otherwise) without asking
+       first — see Foundations.mdx.
+
+       IMPORTANT — always pair `text-{token}` with `leading-{token}` at the
+       call site (e.g. `text-action leading-action`), never `text-{token}`
+       alone. Tailwind's Preflight sets `font: inherit` on form controls
+       (button/input/select/textarea), and that shorthand's inherited
+       line-height wins over `text-*`'s built-in `--text-*--line-height`
+       fallback in practice — confirmed empirically 2026-08-14 while
+       auditing Button v1 (a bare `text-action` button rendered at 24px
+       line-height, not the intended 22px). A real `leading-*` utility
+       reliably overrides Preflight; the auto-paired one doesn't. The
+       `--leading-*` tokens below reference the exact same values as their
+       `--text-*--line-height` counterparts (single source of truth), they
+       just also exist as their own real utility so this bug can't recur. */
+    --text-display-lg: 3rem; /* 48px */
+    --text-display-lg--line-height: 3.5rem; /* 56px */
+    --text-display-lg--font-weight: 300;
+    --leading-display-lg: var(--text-display-lg--line-height);
+    --text-display-md: 2rem; /* 32px */
+    --text-display-md--line-height: 2.5rem; /* 40px */
+    --text-display-md--font-weight: 300;
+    --leading-display-md: var(--text-display-md--line-height);
+    --text-heading: 1.5rem; /* 24px */
+    --text-heading--line-height: 1.75rem; /* 28px */
+    --text-heading--font-weight: 300;
+    --leading-heading: var(--text-heading--line-height);
+    --text-body: 1rem; /* 16px */
+    --text-body--line-height: 1.5rem; /* 24px */
+    --text-body--font-weight: 400;
+    --leading-body: var(--text-body--line-height);
+    --text-body-emphasis: 1rem; /* 16px */
+    --text-body-emphasis--line-height: 1.5rem; /* 24px */
+    --text-body-emphasis--font-weight: 500;
+    --leading-body-emphasis: var(--text-body-emphasis--line-height);
+    --text-action: 1rem; /* 16px */
+    --text-action--line-height: 1.375rem; /* 22px */
+    --text-action--font-weight: 400;
+    --leading-action: var(--text-action--line-height);
+    --text-caption: 0.875rem; /* 14px */
+    --text-caption--line-height: 1.25rem; /* 20px */
+    --text-caption--font-weight: 400;
+    --leading-caption: var(--text-caption--line-height);
+    --text-label: 0.75rem; /* 12px */
+    --text-label--line-height: 1rem; /* 16px */
+    --text-label--font-weight: 400;
+    --leading-label: var(--text-label--line-height);
+    --text-label-emphasis: 0.75rem; /* 12px */
+    --text-label-emphasis--line-height: 1rem; /* 16px */
+    --text-label-emphasis--font-weight: 500;
+    --leading-label-emphasis: var(--text-label-emphasis--line-height);
+
+    /* Soft lift on filled pill buttons (Start Workout, Save Activity, Finish…).
+       Not on Tailwind's default shadow scale — this exact blur/spread/opacity
+       is what's measured in Paper. Uses --border-subtle (moss @ 10%) since
+       that's the same value Paper's shadow tint resolves to on light
+       screens. The dark-surface counterpart (white-tinted) is a documented
+       one-off, see Foundations.mdx. Not yet applied consistently to every
+       instance in Paper — treat as an emerging pattern, not a hard rule. */
+    --shadow-button: 0 4px 8px 2px var(--border-subtle);
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    /* ==========================================================
+       Color Foundations v1 — defined and approved by the user
+       2026-08-14. Canonical semantic source of truth for SetUp.
+       Paper is the visual reference; do not infer, rename, or add
+       color tokens here without asking first. See Foundations.mdx.
+       ========================================================== */
+
+    /* Primitives — raw palette values. NOT mapped into @theme inline
+       (see above), so components cannot consume these directly; only
+       the semantic tokens below are meant to be used. */
+    --moss: #294000;
+    --lime: #BFF753;
+    --lime-soft: #CEFB83; /* not yet assigned to a semantic token in v1 */
+    --neutral-0: #FFFFFF;
+    --neutral-50: #FAFAFA;
+
+    /* Semantic tokens — canonical. */
+    --background: var(--neutral-50);
+    --background-inverse: var(--moss);
+    --foreground: var(--moss);
+    --foreground-secondary: color-mix(in srgb, var(--moss) 60%, transparent);
+    --foreground-inverse: var(--neutral-0);
+    --foreground-inverse-secondary: color-mix(in srgb, var(--neutral-0) 60%, transparent);
+    --surface-subtle: color-mix(in srgb, var(--moss) 4%, transparent);
+    --surface-inverse: color-mix(in srgb, var(--neutral-0) 10%, transparent);
+    --border: color-mix(in srgb, var(--moss) 20%, transparent);
+    --border-subtle: color-mix(in srgb, var(--moss) 10%, transparent);
+    --primary: var(--lime);
+    --primary-foreground: var(--moss);
+    --interactive-subtle: color-mix(in srgb, var(--moss) 4%, transparent);
+    --interactive-subtle-inverse: color-mix(in srgb, var(--neutral-0) 10%, transparent);
+    --state-active: var(--lime);
+    --state-inactive: color-mix(in srgb, var(--moss) 10%, transparent);
+
+    /* shadcn compatibility aliases — NOT canonical SetUp tokens. These
+       exist only because shadcn's generated components (button.tsx etc.)
+       expect these variable names to exist. Conservatively mapped onto
+       the approved semantic tokens above per explicit instruction — not
+       exposed as approved foundations in Foundations.mdx, and not to be
+       used intentionally in new SetUp components until their semantic
+       role is explicitly decided. */
+    --secondary: var(--surface-subtle);
+    --secondary-foreground: var(--foreground);
+    --muted: var(--surface-subtle);
+    --muted-foreground: var(--foreground-secondary);
+    --accent: var(--interactive-subtle);
+    --accent-foreground: var(--foreground);
+
+    /* Also shadcn-required, also outside v1 — same conservative-alias
+       treatment: --card/--popover keep the "flat surfaces" decision
+       already made (no distinct card tone), --ring/--input wire to
+       already-approved tokens. --destructive is untouched from shadcn's
+       plain default: v1 defines no red, and Paper deliberately doesn't
+       style destructive actions (e.g. Discard Activity) as alarming. */
+    --card: var(--background);
+    --card-foreground: var(--foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--foreground);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --input: var(--border);
+    --ring: var(--foreground);
+
+    /* --chart-1..5: no data-visualization role is defined in v1 (the
+       weekly-graph green that used to live here no longer exists in
+       Paper — it was replaced with moss, see Foundations.mdx). Left as
+       shadcn's original neutral placeholders, unaddressed for now. */
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
+
+    /* Spacing + Radius Foundations v1 — canonical. Measured directly from
+       Paper (get_computed_styles on real padding/gap/borderRadius values
+       across all 6 screens), not derived from Tailwind/shadcn defaults.
+       68px (the day/set-selector column gap) is explicitly NOT a spacing
+       token — it's a layout/component dimension, excluded from this scale
+       on purpose. Do not add new space-* or radius-* tokens without asking
+       first. See Foundations.mdx. */
+    --space-1: 0.25rem; /* 4px */
+    --space-2: 0.375rem; /* 6px */
+    --space-3: 0.5rem; /* 8px */
+    --space-4: 0.625rem; /* 10px */
+    --space-5: 0.75rem; /* 12px */
+    --space-6: 1rem; /* 16px */
+    --space-7: 1.25rem; /* 20px */
+    --space-8: 1.5rem; /* 24px */
+    --space-9: 2.5rem; /* 40px */
+
+    /* Not wired into a new Tailwind utility: `rounded-full` (Tailwind's
+       own hardcoded pill utility) already produces the same visual result
+       as 100px at every size used in this app, so there's no need for a
+       parallel `rounded-radius-full` class. Defined here only so
+       Foundations.mdx can reference the exact canonical value. */
+    --radius-full: 100px;
+
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
