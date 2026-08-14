@@ -333,7 +333,7 @@ This is a usage rule, not a gallery — see [lucide.dev/icons](https://lucide.de
 
 **Corrected naming 2026-08-14**: `secondary` was originally named `inverse`, on the wrong assumption that it needed a dark-surface context to read. It doesn't — it's an important, lower-emphasis-than-primary action with its own moss fill/white text, sitting directly on the light Workout Mode screen. `ghost-inverse` is the only variant that actually lives on a dark/inverse surface.
 
-No `size` prop — every Paper button is one size. Padding is icon-aware via the `data-icon="inline-start"|"inline-end"` convention on icon children (see `button.stories.tsx`): no icon → `space-7` (20px) both sides; leading icon → `space-6`/`space-7` (16/20); trailing icon → `space-7`/`space-6` (20/16). Vertical padding `space-2` (6px), icon/text gap `space-5` (12px), radius `radius-full`, typography `action`. Height is a fixed `48px` (`h-12`) — approved 2026-08-14 as a direct exception to the spacing scale (no `space-*` token covers 48px); content centers in the extra space above/below the 22px line-height via `items-center`, matching Paper exactly rather than the ~34px a padding-only, content-driven height would give. Back/Settings icon-only controls are explicitly **not** part of Button v1 — no `IconButton` yet. No loading state was invented — that's still out of scope.
+No `size` prop — every Paper button is one size. Padding is icon-aware via the `data-icon="inline-start"|"inline-end"` convention on icon children (see `button.stories.tsx`): no icon → `space-7` (20px) both sides; leading icon → `space-6`/`space-7` (16/20); trailing icon → `space-7`/`space-6` (20/16). Vertical padding `space-2` (6px), icon/text gap `space-5` (12px), radius `radius-full`, typography `action`. Height is a fixed `48px` (`h-12`) — approved 2026-08-14 as a direct exception to the spacing scale (no `space-*` token covers 48px); content centers in the extra space above/below the 22px line-height via `items-center`, matching Paper exactly rather than the ~34px a padding-only, content-driven height would give. Back/Settings icon-only controls are explicitly **not** part of Button v1 — see the separate `IconButton` component below. No loading state was invented — that's still out of scope.
 
 **Resolved 2026-08-14**: `--shadow-button` approved as Shadow Foundations v1 and applied to `secondary` only — see "Shadows" above.
 
@@ -354,6 +354,40 @@ Default, Hover, Pressed, Focus, and Disabled are implemented for all four varian
 | `--button-secondary-pressed` | `color-mix(in srgb, var(--moss) 84%, var(--neutral-0) 16%)` | `#4B5F29` |
 | `--button-ghost-inverse-hover` | `color-mix(in srgb, var(--neutral-0) 16%, transparent)` | white @ 16% |
 | `--button-ghost-inverse-pressed` | `color-mix(in srgb, var(--neutral-0) 24%, transparent)` | white @ 24% |
+
+## IconButton — v1, approved
+
+**Approved 2026-08-14** in `components/ui/icon-button.tsx` — a separate component from Button, not an `icon-only` Button variant. Measured directly from Paper's "Back" button, the one fully-designed instance (present, identical, on all 5 non-`home` screens; `home` has neither Back nor Settings).
+
+**One visual variant. No `default`/`inverse`/size/filled variants exist or should exist.** Icon color comes entirely from `currentColor`, inherited from whichever ancestor sets `text-foreground` (light surfaces) or `text-foreground-inverse` (inverse surfaces) — the exact same `<IconButton>` renders correctly in both contexts, unmodified. This mirrors exactly what Paper shows: identical 32×32 box on every instance, with only the icon's stroke color changing between the two moss-background screens (white) and the three light-background screens (moss).
+
+| Property | Value | Token |
+| --- | --- | --- |
+| Width / height | 32×32px | `size-8` |
+| Padding | 6px | `p-space-2` |
+| Radius | full | `rounded-full` |
+| Background | none | — |
+| Border | none | — |
+| Shadow | none | — |
+| Icon size | 20×20px | `size-5` (default, same convention as Button) |
+| Stroke width | 1.5 | `[stroke-width:1.5]` |
+| Fill / stroke | `fill="none"`, `stroke="currentColor"` | default iconography rule — **no filled-icon exception**, Button's Play/Pause/Finish treatment does not carry over |
+
+```tsx
+<IconButton aria-label="Go back">
+  <ArrowLeft />
+</IconButton>
+```
+
+`aria-label` is required (TypeScript-enforced) — this is an icon-only control with no visible text. `className` is accepted for layout only (e.g. margins in a flex row); it is not meant to redefine the canonical geometry above — same documentation-only convention Button v1 already relies on, not a runtime-enforced restriction.
+
+**Settings is out of scope for v1.** Paper contains only a hidden, empty shell for it (0×0 inner `<svg>`, no fill/stroke attributes at all, never laid into the header's flex row) — there's no designed icon to source from. Implementing it now would mean inventing an icon choice with zero Paper evidence, the same caution already applied to exercise content and training rules. Back is the only implemented use case.
+
+### States — Default only, approved 2026-08-14
+
+No hover/pressed/disabled visual treatment has been invented. `disabled` only gets `pointer-events-none` (behavior) — it renders **visually identical to Default**; that's intentional, not an oversight, pending a separate approval pass. Keyboard focus uses `focus-visible:ring-2 focus-visible:ring-current` — `ring-current` (not a fixed color) for the same both-contexts-for-free reason as the icon itself. No `ring-offset`: IconButton has no fill to separate the ring from, so a fixed-color offset would paint a mismatched halo on whichever backdrop (light or inverse) it sits on.
+
+Hover / Pressed / Focus-appearance / Disabled visuals are a separate proposal, to be visually approved in Storybook — same process Button v1's interaction states went through. Don't assume Button's hover/pressed formulas transfer; IconButton's tap target and visual weight are different enough to need their own review.
 
 ## Source of truth
 
