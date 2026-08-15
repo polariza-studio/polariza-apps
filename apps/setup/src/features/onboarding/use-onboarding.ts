@@ -57,6 +57,9 @@ const AUTO_ADVANCE_STEPS: ReadonlySet<OnboardingStepId> = new Set([
 // option still reads as selected.
 const AUTO_ADVANCE_DELAY_MS = 200;
 
+// First-time onboarding only — adjusting an existing plan goes through
+// the dedicated Adjust Plan screens instead (src/features/adjust-plan),
+// not this wizard.
 export function useOnboarding() {
   const navigate = useNavigate();
   const [answers, setAnswers] = useState<Draft>({});
@@ -84,14 +87,19 @@ export function useOnboarding() {
     }
     // deprioritizedAreas/context have no screen yet (deliberately deferred,
     // see steps.ts) — always saved empty, not left undefined, since the
-    // rest of the domain depends on them existing.
+    // rest of the domain depends on them existing. equipment is only ever
+    // asked for 'home' users (see steps.ts) — defaulted the same way for
+    // 'gym' users, rather than left undefined, so every saved
+    // OnboardingAnswers actually satisfies its type.
     const completed: OnboardingAnswers = {
       ...(answers as OnboardingAnswers),
+      equipment: answers.equipment ?? [],
       deprioritizedAreas: [],
       context: [],
     };
     await storageRepository.savePreferences(completed);
-    navigate('/home', { replace: true });
+    // Plan generation happens on the loading screen, not here.
+    navigate('/loading', { replace: true });
   }
 
   function goBack() {

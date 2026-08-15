@@ -58,3 +58,31 @@ export type OnboardingAnswers = {
   // "None" (step 8) is represented as an empty array.
   context: TrainingContext[];
 };
+
+// Order-insensitive: re-picking the same multi-select set in a different
+// order isn't a change worth generating a new plan over. Nullish-safe:
+// `equipment` is never asked (and so never set) for gym-track users, and
+// preferences saved before this comparison existed may predate it too.
+function sameItems<T>(a: T[] | undefined, b: T[] | undefined): boolean {
+  const itemsA = a ?? [];
+  const itemsB = b ?? [];
+  if (itemsA.length !== itemsB.length) return false;
+  const bSet = new Set(itemsB);
+  return itemsA.every((item) => bSet.has(item));
+}
+
+// Used by both first-time onboarding (unused there in practice — there's
+// nothing to compare against yet) and Adjust Plan, to decide whether
+// "Save changes" actually needs to regenerate the plan.
+export function answersEqual(a: OnboardingAnswers, b: OnboardingAnswers): boolean {
+  return (
+    a.name === b.name &&
+    a.goal === b.goal &&
+    a.experience === b.experience &&
+    a.daysPerWeek === b.daysPerWeek &&
+    a.sessionDuration === b.sessionDuration &&
+    a.trainingEnvironment === b.trainingEnvironment &&
+    sameItems(a.equipment, b.equipment) &&
+    sameItems(a.focusAreas, b.focusAreas)
+  );
+}

@@ -2,8 +2,18 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { RequireOnboarding } from '@/app/RequireOnboarding'
 import { RootRedirect } from '@/app/RootRedirect'
+import { AdjustPlanLayout } from '@/features/adjust-plan/AdjustPlanLayout'
+import { AdjustPlanPage } from '@/features/adjust-plan/AdjustPlanPage'
+import {
+  AdjustPlanDaysPage,
+  AdjustPlanEnvironmentPage,
+  AdjustPlanExperiencePage,
+  AdjustPlanGoalPage,
+  AdjustPlanTimePage,
+} from '@/features/adjust-plan/field-pages'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { HomePage } from '@/features/home/HomePage'
+import { PlanLoadingScreen } from '@/features/plan/PlanLoadingScreen'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { WorkoutActivePage } from '@/features/workout/WorkoutActivePage'
 import { WorkoutCompletePage } from '@/features/workout/WorkoutCompletePage'
@@ -29,6 +39,14 @@ function App() {
         <Route path="/" element={<RootRedirect />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
         <Route
+          path="/loading"
+          element={
+            <RequireOnboarding>
+              <PlanLoadingScreen />
+            </RequireOnboarding>
+          }
+        />
+        <Route
           path="/home"
           element={
             <RequireOnboarding>
@@ -36,6 +54,21 @@ function App() {
             </RequireOnboarding>
           }
         />
+        <Route
+          path="/adjust-plan"
+          element={
+            <RequireOnboarding>
+              <AdjustPlanLayout />
+            </RequireOnboarding>
+          }
+        >
+          <Route index element={<AdjustPlanPage />} />
+          <Route path="goal" element={<AdjustPlanGoalPage />} />
+          <Route path="experience" element={<AdjustPlanExperiencePage />} />
+          <Route path="days" element={<AdjustPlanDaysPage />} />
+          <Route path="time" element={<AdjustPlanTimePage />} />
+          <Route path="environment" element={<AdjustPlanEnvironmentPage />} />
+        </Route>
         <Route
           path="/workout/:dayId"
           element={
