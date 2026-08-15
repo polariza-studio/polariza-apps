@@ -4,6 +4,7 @@ import type { DaysPerWeek, OnboardingAnswers } from '../../domain/onboarding';
 
 function answersWithDays(daysPerWeek: DaysPerWeek): OnboardingAnswers {
   return {
+    name: 'Test User',
     goal: 'muscle',
     experience: 'some-experience',
     daysPerWeek,

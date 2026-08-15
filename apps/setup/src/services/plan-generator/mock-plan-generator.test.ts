@@ -58,6 +58,7 @@ const fixtureLibrary: Exercise[] = [
 // Gym environment with equipment: [] resolves to rules/equipment.ts's
 // standardGymEquipment, which covers all of the fixtures above.
 const answers: OnboardingAnswers = {
+  name: 'Test User',
   goal: 'stronger',
   experience: 'new',
   daysPerWeek: 2,

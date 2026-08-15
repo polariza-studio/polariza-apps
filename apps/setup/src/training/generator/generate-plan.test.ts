@@ -66,6 +66,7 @@ const fixtureLibrary: Exercise[] = [
 ];
 
 const answers: OnboardingAnswers = {
+  name: 'Test User',
   goal: 'muscle',
   experience: 'some-experience',
   daysPerWeek: 3,

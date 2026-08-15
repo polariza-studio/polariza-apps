@@ -30,6 +30,7 @@ class FakeStorage implements Storage {
 }
 
 const preferences: OnboardingAnswers = {
+  name: 'Test User',
   goal: 'muscle',
   experience: 'some-experience',
   daysPerWeek: 3,

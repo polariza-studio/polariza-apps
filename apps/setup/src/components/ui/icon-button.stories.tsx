@@ -63,3 +63,64 @@ export const InverseContext: Story = {
     </div>
   ),
 };
+
+// State labels/swatches, not real :hover/:active/:focus-visible triggers —
+// forces each state's classes directly (bypassing the pseudo-class) via
+// `className`, so it renders statically. PROPOSED 2026-08-14, pending
+// visual approval — `--icon-button-hover`/`-pressed` are provisional (see
+// icon-button.tsx and index.css), not yet in Foundations.mdx.
+function StateRow({ labelClassName }: { labelClassName: string }) {
+  return (
+    <div className="flex flex-wrap items-end gap-6">
+      <div className="flex flex-col items-center gap-2">
+        <IconButton aria-label="Go back">
+          <ArrowLeft />
+        </IconButton>
+        <span className={labelClassName}>Default</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <IconButton aria-label="Go back" className="bg-[var(--icon-button-hover)]">
+          <ArrowLeft />
+        </IconButton>
+        <span className={labelClassName}>Hover</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <IconButton aria-label="Go back" className="bg-[var(--icon-button-pressed)]">
+          <ArrowLeft />
+        </IconButton>
+        <span className={labelClassName}>Pressed</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <IconButton aria-label="Go back" className="ring-2 ring-current">
+          <ArrowLeft />
+        </IconButton>
+        <span className={labelClassName}>Focus</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <IconButton aria-label="Go back" disabled>
+          <ArrowLeft />
+        </IconButton>
+        <span className={labelClassName}>Disabled</span>
+      </div>
+    </div>
+  );
+}
+
+export const InteractionStates: Story = {
+  args: {
+    'aria-label': 'Go back',
+    children: <ArrowLeft />,
+  },
+  render: () => (
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-3">
+        <h3 className="text-body-emphasis leading-body-emphasis text-foreground">Light context</h3>
+        <StateRow labelClassName="text-caption leading-caption text-foreground-secondary" />
+      </div>
+      <div className="flex flex-col gap-3 rounded-xl bg-background-inverse p-6 text-foreground-inverse">
+        <h3 className="text-body-emphasis leading-body-emphasis">Inverse context</h3>
+        <StateRow labelClassName="text-caption leading-caption text-foreground-inverse-secondary" />
+      </div>
+    </div>
+  ),
+};

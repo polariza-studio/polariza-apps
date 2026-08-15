@@ -21,6 +21,7 @@ function planWithDay(overrides: Partial<TrainingDay> = {}): TrainingPlan {
     id: 'plan-1',
     createdAt: new Date().toISOString(),
     preferences: {
+      name: 'Test User',
       goal: 'muscle',
       experience: 'some-experience',
       daysPerWeek: 2,

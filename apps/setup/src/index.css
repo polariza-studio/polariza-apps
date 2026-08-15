@@ -100,12 +100,19 @@
 
     /* Typography Foundations v1 — approved by the user 2026-08-14, from an
        exhaustive audit + cleanup pass of the current Paper file. Each token
-       bundles size, weight, and line-height as one unit (Tailwind v4's
-       --text-*--font-weight pairing) — hierarchy is driven by size, not by
-       introducing new weights (SetUp uses only 300/400/500). Letter-spacing
-       is normal everywhere; no token overrides it. Do not create additional
-       typography tokens (component-specific or otherwise) without asking
-       first — see Foundations.mdx.
+       bundles size, weight, line-height, and letter-spacing as one unit
+       (Tailwind v4's --text-*--font-weight/--line-height/--letter-spacing
+       pairing) — hierarchy is driven by size, not by introducing new
+       weights (SetUp uses only 300/400/500). Paper itself specifies no
+       letter-spacing anywhere (confirmed 2026-08-16 via a filtered search
+       across the whole file, zero matches) — the 0.01em (1%) tracking below
+       is a deliberate app-side addition on top of that, not a Paper value,
+       requested to compensate for Paper's own renderer and the browser
+       resolving `system-ui` to different actual fonts. `em`, not `px`, so
+       it scales with each size (1% of 12px ≠ 1% of 48px) instead of a
+       single fixed offset. Do not create additional typography tokens
+       (component-specific or otherwise) without asking first — see
+       Foundations.mdx.
 
        IMPORTANT — always pair `text-{token}` with `leading-{token}` at the
        call site (e.g. `text-action leading-action`), never `text-{token}`
@@ -122,38 +129,47 @@
     --text-display-lg: 3rem; /* 48px */
     --text-display-lg--line-height: 3.5rem; /* 56px */
     --text-display-lg--font-weight: 300;
+    --text-display-lg--letter-spacing: 0.01em;
     --leading-display-lg: var(--text-display-lg--line-height);
     --text-display-md: 2rem; /* 32px */
     --text-display-md--line-height: 2.5rem; /* 40px */
     --text-display-md--font-weight: 300;
+    --text-display-md--letter-spacing: 0.01em;
     --leading-display-md: var(--text-display-md--line-height);
     --text-heading: 1.5rem; /* 24px */
     --text-heading--line-height: 1.75rem; /* 28px */
     --text-heading--font-weight: 300;
+    --text-heading--letter-spacing: 0.01em;
     --leading-heading: var(--text-heading--line-height);
     --text-body: 1rem; /* 16px */
     --text-body--line-height: 1.5rem; /* 24px */
     --text-body--font-weight: 400;
+    --text-body--letter-spacing: 0.01em;
     --leading-body: var(--text-body--line-height);
     --text-body-emphasis: 1rem; /* 16px */
     --text-body-emphasis--line-height: 1.5rem; /* 24px */
     --text-body-emphasis--font-weight: 500;
+    --text-body-emphasis--letter-spacing: 0.01em;
     --leading-body-emphasis: var(--text-body-emphasis--line-height);
     --text-action: 1rem; /* 16px */
     --text-action--line-height: 1.375rem; /* 22px */
     --text-action--font-weight: 400;
+    --text-action--letter-spacing: 0.01em;
     --leading-action: var(--text-action--line-height);
     --text-caption: 0.875rem; /* 14px */
     --text-caption--line-height: 1.25rem; /* 20px */
     --text-caption--font-weight: 400;
+    --text-caption--letter-spacing: 0.01em;
     --leading-caption: var(--text-caption--line-height);
     --text-label: 0.75rem; /* 12px */
     --text-label--line-height: 1rem; /* 16px */
     --text-label--font-weight: 400;
+    --text-label--letter-spacing: 0.01em;
     --leading-label: var(--text-label--line-height);
     --text-label-emphasis: 0.75rem; /* 12px */
     --text-label-emphasis--line-height: 1rem; /* 16px */
     --text-label-emphasis--font-weight: 500;
+    --text-label-emphasis--letter-spacing: 0.01em;
     --leading-label-emphasis: var(--text-label-emphasis--line-height);
 
     /* Soft lift on filled pill buttons (Start Workout, Save Activity, Finish…).
@@ -301,6 +317,37 @@
     --button-secondary-pressed: color-mix(in srgb, var(--moss) 84%, var(--neutral-0) 16%);
     --button-ghost-inverse-hover: color-mix(in srgb, var(--neutral-0) 16%, transparent);
     --button-ghost-inverse-pressed: color-mix(in srgb, var(--neutral-0) 24%, transparent);
+}
+
+/* IconButton v1 Interaction States — PROPOSED 2026-08-14, pending visual
+   approval (see icon-button.stories.tsx "Interaction States"). NOT
+   Foundations tokens, NOT documented in Foundations.mdx, NOT mapped into
+   @theme inline. IconButton has no variant prop, so unlike Button these
+   can't hardcode a fixed light-only or inverse-only Foundations token
+   (bg-interactive-subtle would be nearly invisible on a moss backdrop;
+   bg-interactive-subtle-inverse would be nearly invisible on a light
+   one) — there's no prop to pick the right one per context. Instead they
+   derive from currentColor itself via color-mix(), the same mechanism
+   already used for the focus ring (ring-current): since currentColor
+   already resolves correctly per context (moss on light surfaces, white
+   on inverse, set entirely by the ancestor), one formula renders the
+   right tint automatically in both, with zero prop. Scoped to
+   [data-slot="icon-button"], not :root.
+
+   Disabled matches Button's own pattern for consistency: Button's
+   ghost/ghost-inverse (the two variants with no separate "flattened"
+   surface to fall back to, same as IconButton's bare transparent default)
+   never touch background on disabled — only text moves to the
+   `-secondary` foreground token (a 60%-of-base color-mix, see
+   --foreground-secondary/--foreground-inverse-secondary above). IconButton
+   has no fixed foreground token to swap to (no variant), so
+   --icon-button-disabled-foreground reproduces the exact same 60% ratio
+   via currentColor instead — background stays fully transparent,
+   unchanged from Default; only the icon dims. No opacity touched anywhere. */
+[data-slot="icon-button"] {
+    --icon-button-hover: color-mix(in srgb, currentColor 8%, transparent);
+    --icon-button-pressed: color-mix(in srgb, currentColor 18%, transparent);
+    --icon-button-disabled-foreground: color-mix(in srgb, currentColor 60%, transparent);
 }
 
 /* .dark is inert/out of scope (no dark-mode toggle in MVP, see earlier

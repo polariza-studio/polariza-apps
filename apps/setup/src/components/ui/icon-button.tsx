@@ -26,18 +26,33 @@ import { cn } from "@/lib/utils"
 // with no designed icon (0×0 inner svg, no fill/stroke attributes at all).
 // Back is the only implemented use case.
 //
-// States: Default only, approved 2026-08-14. No hover/pressed/disabled
-// visual treatment has been invented — `disabled` only gets
-// `pointer-events-none` (behavior, not a look); it renders visually
-// identical to Default. Hover/Pressed/Focus-appearance/Disabled visuals
-// are a separate proposal, pending visual approval in Storybook, same
-// process Button went through. Focus ring uses `ring-current` rather than
-// a fixed color, for the same both-contexts-for-free reason as the icon —
-// and has no ring-offset: IconButton has no fill to separate the ring
-// from, so an offset would just paint a fixed-color halo that mismatches
-// whichever backdrop (light or inverse) it sits on.
+// Focus: Default approved 2026-08-14. Focus ring uses `ring-current`
+// rather than a fixed color, for the same both-contexts-for-free reason
+// as the icon — and has no ring-offset: IconButton has no fill to
+// separate the ring from, so an offset would just paint a fixed-color
+// halo that mismatches whichever backdrop (light or inverse) it sits on.
+//
+// Hover/Pressed/Disabled — PROPOSED 2026-08-14, pending visual approval
+// in Storybook (see icon-button.stories.tsx "Interaction States"). NOT
+// yet canonical, NOT in Foundations.mdx. Since IconButton has no variant
+// prop, background/text can't hardcode a fixed light-only or inverse-only
+// Foundations token the way Button's variants do — there's no prop to
+// pick the right one per context. Instead Hover/Pressed background
+// derives from `currentColor` via `color-mix()` (raw values in index.css,
+// scoped to [data-slot="icon-button"]) — the same trick as the focus ring
+// — so one formula renders the correct tint in both contexts
+// automatically. Text/icon color itself never changes across Default/
+// Hover/Pressed — only background does.
+//
+// Disabled matches Button's own pattern (its ghost/ghost-inverse variants
+// specifically — the ones with no separate flattened surface to fall back
+// to, same as IconButton's bare transparent default): background stays
+// untouched, only the icon dims, via --icon-button-disabled-foreground —
+// the exact same 60%-of-base ratio as --foreground-secondary/
+// --foreground-inverse-secondary, just currentColor-relative so it works
+// without a variant. No opacity touched anywhere.
 const iconButtonClassName =
-  "inline-flex size-8 shrink-0 items-center justify-center rounded-full p-space-2 outline-none select-none disabled:pointer-events-none focus-visible:ring-2 focus-visible:ring-current [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 [&_svg]:[stroke-width:1.5]"
+  "inline-flex size-8 shrink-0 items-center justify-center rounded-full p-space-2 outline-none select-none transition-colors hover:bg-[var(--icon-button-hover)] active:bg-[var(--icon-button-pressed)] focus-visible:ring-2 focus-visible:ring-current disabled:pointer-events-none disabled:text-[var(--icon-button-disabled-foreground)] [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 [&_svg]:[stroke-width:1.5]"
 
 function IconButton({
   className,
