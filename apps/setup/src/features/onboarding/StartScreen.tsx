@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { Button } from '@/components/ui/button';
 
 // Measured from Paper's "start-screen" artboard (re-audited 2026-08-15,
@@ -51,6 +53,17 @@ const WEEK_TONE_COLOR: Record<WeekTone, string> = {
 };
 
 export function StartScreen({ onStart }: { onStart: () => void }) {
+  // This screen's background differs from the rest of the app (gradient
+  // vs. the general --background token), so <html>'s own background —
+  // what iOS Safari shows during pull-to-refresh rubber-banding — needs
+  // to match it here specifically while this screen is mounted.
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = 'var(--lime-soft)';
+    return () => {
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
+
   return (
     <div
       className="flex min-h-svh flex-col bg-[var(--lime-soft)]"

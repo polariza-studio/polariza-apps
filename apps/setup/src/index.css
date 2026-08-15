@@ -397,6 +397,10 @@
     @apply bg-background text-foreground;
     }
   html {
-    @apply font-sans;
+    /* iOS Safari reveals this color, not body's, during rubber-band
+       overscroll (pull-to-refresh) — without it, that bounce area (and
+       any gap before the viewport height settles) shows default white
+       instead of the app's background. */
+    @apply font-sans bg-background;
     }
 }
