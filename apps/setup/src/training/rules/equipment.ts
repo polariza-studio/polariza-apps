@@ -10,6 +10,8 @@ export const standardGymEquipment: Equipment[] = [
   'barbell',
   'bench',
   'pull-up-bar',
+  'cable',
+  'machine',
 ];
 
 // Resolves the equipment actually available to the user. Per spec §4.1

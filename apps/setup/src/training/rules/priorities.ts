@@ -18,13 +18,22 @@ export const focusAreaMuscles: Record<FocusArea, MuscleGroup[]> = {
 };
 
 export type PriorityModifier = {
-  // Added to (focus) or withheld from (deprioritized) an exercise's sets
-  // when it targets that area as a primary muscle.
+  // Added to a session's single best-focus-matching exercise — see
+  // apply-focus-emphasis.ts. Deliberately not applied per-exercise across
+  // every exercise that happens to hit a focus muscle: focus areas are
+  // also common primary/secondary program muscles by default, so an
+  // unbounded per-exercise bonus compounds across the week into a de
+  // facto specialization program rather than the "moderate emphasis" the
+  // product spec calls for (§4.1 step 6).
   extraSets: number;
 };
 
-// PROVISIONAL — not reviewed, placeholder only. Per spec §4.1 step 7,
-// deprioritizing must not remove necessary training, only avoid adding to it
-// — so its modifier is 0, never negative.
+// PROVISIONAL — not reviewed, placeholder only.
 export const focusAreaModifier: PriorityModifier = { extraSets: 1 };
-export const deprioritizedAreaModifier: PriorityModifier = { extraSets: 0 };
+
+// Deprioritized areas have no modifier at all (not even a 0 one) —
+// per spec §4.1 step 7, deprioritizing must never remove necessary
+// training, only avoid adding to it. Since apply-focus-emphasis.ts only
+// ever reads answers.focusAreas, a deprioritized area structurally can't
+// receive the emphasis bonus; there's nothing else in the pipeline that
+// would reduce its volume either.

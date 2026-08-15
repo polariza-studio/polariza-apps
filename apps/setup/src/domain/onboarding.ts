@@ -11,6 +11,12 @@ export type SessionDuration = 30 | 45 | 60 | 75;
 
 export type TrainingEnvironment = 'gym' | 'home';
 
+// 'cable' and 'machine' are gym-only tags used by the exercise library and
+// rules/equipment.ts's standardGymEquipment — they're deliberately not in
+// step-options.ts's EQUIPMENT_OPTIONS (Paper's home-equipment screen has
+// only the 6 chips below this comment), so a home user's `equipment` array
+// can never contain them; they exist purely so gym-tagged exercises
+// (leg press, lat pulldown, cable row, etc.) can be filtered in.
 export type Equipment =
   | 'bodyweight-only'
   | 'dumbbells'
@@ -18,7 +24,9 @@ export type Equipment =
   | 'bench'
   | 'barbell'
   | 'pull-up-bar'
-  | 'other';
+  | 'other'
+  | 'cable'
+  | 'machine';
 
 export type FocusArea =
   | 'glutes'

@@ -5,6 +5,7 @@ import type { OnboardingAnswers } from '../../domain/onboarding';
 
 function technique(name: string) {
   return {
+    description: `Fixture technique for ${name}.`,
     setup: [`Set up for ${name}.`],
     execution: [`Perform ${name}.`],
     cues: [`Cue for ${name}.`],
@@ -12,46 +13,95 @@ function technique(name: string) {
   };
 }
 
+const demands = { technical: 'low', balance: 'low', mobility: 'low', systemic: 'low' } as const;
+
+// Covers every pattern full-body-2day's day templates require (squat,
+// horizontal-push, horizontal-pull, hinge, vertical-push, lunge) so
+// generation doesn't hard-fail on a missing required pattern.
 const fixtureLibrary: Exercise[] = [
   {
     id: 'squat-1',
     name: 'Goblet squat',
+    category: 'strength',
+    strengthType: 'compound',
     movementPattern: 'squat',
     muscles: { primary: ['quadriceps', 'glutes'], secondary: [] },
     equipment: ['dumbbells'],
     difficulty: 'beginner',
     suitableGoals: ['stronger'],
+    demands,
     technique: technique('goblet squat'),
+    trackingMode: 'reps-weight',
   },
   {
     id: 'hinge-1',
     name: 'Dumbbell RDL',
+    category: 'strength',
+    strengthType: 'compound',
     movementPattern: 'hinge',
     muscles: { primary: ['hamstrings', 'glutes'], secondary: [] },
     equipment: ['dumbbells'],
     difficulty: 'beginner',
     suitableGoals: ['stronger'],
+    demands,
     technique: technique('dumbbell RDL'),
+    trackingMode: 'reps-weight',
   },
   {
     id: 'push-1',
     name: 'Dumbbell bench press',
+    category: 'strength',
+    strengthType: 'compound',
     movementPattern: 'horizontal-push',
     muscles: { primary: ['chest', 'triceps'], secondary: [] },
     equipment: ['dumbbells', 'bench'],
     difficulty: 'beginner',
     suitableGoals: ['stronger'],
+    demands,
     technique: technique('dumbbell bench press'),
+    trackingMode: 'reps-weight',
   },
   {
     id: 'pull-1',
     name: 'Dumbbell row',
+    category: 'strength',
+    strengthType: 'compound',
     movementPattern: 'horizontal-pull',
     muscles: { primary: ['back'], secondary: ['biceps'] },
     equipment: ['dumbbells'],
     difficulty: 'beginner',
     suitableGoals: ['stronger'],
+    demands,
     technique: technique('dumbbell row'),
+    trackingMode: 'reps-weight',
+  },
+  {
+    id: 'vertical-push-1',
+    name: 'Dumbbell shoulder press',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'vertical-push',
+    muscles: { primary: ['shoulders', 'triceps'], secondary: [] },
+    equipment: ['dumbbells'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger'],
+    demands,
+    technique: technique('dumbbell shoulder press'),
+    trackingMode: 'reps-weight',
+  },
+  {
+    id: 'lunge-1',
+    name: 'Dumbbell walking lunge',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'lunge',
+    muscles: { primary: ['quadriceps', 'glutes'], secondary: [] },
+    equipment: ['dumbbells'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger'],
+    demands,
+    technique: technique('dumbbell walking lunge'),
+    trackingMode: 'reps-side',
   },
 ];
 

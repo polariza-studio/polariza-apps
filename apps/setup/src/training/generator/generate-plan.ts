@@ -19,6 +19,8 @@ import { assignMovementPatterns } from './assign-movement-patterns';
 import { applyPriorities } from './apply-priorities';
 import { selectExercises } from './select-exercises';
 import { prescribeExercise } from './prescribe-exercise';
+import { applyFocusEmphasis } from './apply-focus-emphasis';
+import { sessionQualityPass } from './session-quality-pass';
 import { estimateDuration } from './estimate-duration';
 import { validatePlan } from './validate-plan';
 import { hasUnsupportedContext } from '../rules/safety';
@@ -31,21 +33,28 @@ export function generatePlan(answers: OnboardingAnswers, exerciseLibrary: Exerci
   hasUnsupportedContext(answers.context);
 
   const split = selectSplit(answers);
-  const baseSets = calculateVolume(answers);
-  const movementDays = assignMovementPatterns(split, answers);
+  const roleSets = calculateVolume(answers);
+  const movementDays = assignMovementPatterns(split, answers, roleSets);
   const prioritizedDays = applyPriorities(movementDays, answers);
   const selectedDays = selectExercises(prioritizedDays, answers, exerciseLibrary);
 
   const days: TrainingDay[] = selectedDays.map((day, index) => {
     const exercises = day.exercises.map(({ exercise, slot }) =>
-      prescribeExercise(exercise, slot, answers, baseSets),
+      prescribeExercise(exercise, slot, answers, roleSets),
     );
-    return {
+    const baseDay: TrainingDay = {
       id: `day-${index + 1}`,
       name: day.name,
-      estimatedDurationMinutes: estimateDuration(exercises),
+      estimatedDurationMinutes: 0,
       exercises,
     };
+    // Focus emphasis (bounded, ≤1 exercise/day) and the quality pass
+    // (redundancy dedup + high-systemic cap) can both change a day's
+    // sets/exercise list, so duration is estimated once, after both, not
+    // from the raw selection.
+    const emphasized = applyFocusEmphasis(baseDay, answers, exerciseLibrary);
+    const qualityChecked = sessionQualityPass(emphasized, exerciseLibrary, answers);
+    return { ...qualityChecked, estimatedDurationMinutes: estimateDuration(qualityChecked.exercises) };
   });
 
   const plan: TrainingPlan = {
@@ -55,9 +64,14 @@ export function generatePlan(answers: OnboardingAnswers, exerciseLibrary: Exerci
     days,
   };
 
-  const errors = validatePlan(plan, exerciseLibrary);
+  const { errors, warnings } = validatePlan(plan, exerciseLibrary, split);
   if (errors.length > 0) {
     throw new Error(`Generated plan failed validation:\n${errors.join('\n')}`);
+  }
+  if (warnings.length > 0 && typeof console !== 'undefined') {
+    // Soft flags — surfaced for visibility, never block generation. See
+    // validate-plan.ts's ValidationResult doc comment.
+    console.warn(`Generated plan has quality warnings:\n${warnings.join('\n')}`);
   }
 
   return plan;

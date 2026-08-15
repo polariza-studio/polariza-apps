@@ -18,13 +18,13 @@ function answersWithDays(daysPerWeek: DaysPerWeek): OnboardingAnswers {
 }
 
 describe('selectSplit', () => {
-  it('picks full-body for 2 and 3 days per week', () => {
-    expect(selectSplit(answersWithDays(2)).id).toBe('full-body');
-    expect(selectSplit(answersWithDays(3)).id).toBe('full-body');
+  it('picks a full-body split for 2 and 3 days per week', () => {
+    expect(selectSplit(answersWithDays(2)).id).toBe('full-body-2day');
+    expect(selectSplit(answersWithDays(3)).id).toBe('full-body-3day');
   });
 
-  it('picks upper-lower for 4 and 5 days per week', () => {
+  it('picks upper-lower for 4 days and the 5-day hybrid for 5 days per week', () => {
     expect(selectSplit(answersWithDays(4)).id).toBe('upper-lower');
-    expect(selectSplit(answersWithDays(5)).id).toBe('upper-lower');
+    expect(selectSplit(answersWithDays(5)).id).toBe('upper-lower-push-pull-legs');
   });
 });
