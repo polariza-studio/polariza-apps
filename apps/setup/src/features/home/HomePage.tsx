@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { OnboardingAnswers } from '@/domain/onboarding';
 import type { TrainingDay, TrainingPlan } from '@/domain/plan';
 import { storageRepository } from '@/services/storage';
+import { InstallAppBanner } from './InstallAppBanner';
 import { ReorderableDayList } from './ReorderableDayList';
 import { getWeeklyActivitySummary, type WeekTone } from './weekly-activity';
 
@@ -142,6 +143,8 @@ export function HomePage() {
           </Button>
         </div>
       </div>
+
+      <InstallAppBanner />
     </div>
   );
 }
