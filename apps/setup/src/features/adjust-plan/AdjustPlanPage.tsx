@@ -66,12 +66,35 @@ export function AdjustPlanPage() {
   const { original, draft, setField } = useAdjustPlan();
 
   async function handleSave() {
+    // Blur whatever's focused (the Name input, most likely) before doing
+    // anything else. On mobile, tapping Save while the keyboard is still
+    // open for a focused input can take two taps — the first just
+    // dismisses the keyboard — because the button shifts as the
+    // viewport resizes out from under that first tap. Blurring here
+    // (called on pointerdown, before that shift happens) means the
+    // keyboard is already closing by the time the tap lands, so this
+    // click fires normally instead of being swallowed by it.
+    (document.activeElement as HTMLElement | null)?.blur();
+
     if (answersEqual(draft, original)) {
       // Nothing actually changed — no reason to touch the current plan
       // or regenerate; historical activity is untouched either way.
       navigate('/home');
       return;
     }
+
+    // Name is the one field the generator never sees (spec §4.2's
+    // generator input has no name) — changing only it should just save
+    // and return, not regenerate the plan (which would needlessly
+    // replace it, and previously did) or show the loading screen.
+    const withoutName = { ...draft, name: '' };
+    const originalWithoutName = { ...original, name: '' };
+    if (answersEqual(withoutName, originalWithoutName)) {
+      await storageRepository.savePreferences(draft);
+      navigate('/home');
+      return;
+    }
+
     await storageRepository.savePreferences(draft);
     navigate('/loading');
   }
@@ -183,7 +206,12 @@ export function AdjustPlanPage() {
 
       <div className="px-space-7 py-[32px]">
         <div className="mx-auto w-full max-w-[440px]">
-          <Button variant="primary" className="w-full" onClick={handleSave}>
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={handleSave}
+            onPointerDown={() => (document.activeElement as HTMLElement | null)?.blur()}
+          >
             Save changes
           </Button>
         </div>
