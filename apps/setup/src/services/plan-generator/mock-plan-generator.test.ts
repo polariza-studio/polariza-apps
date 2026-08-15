@@ -103,12 +103,40 @@ const fixtureLibrary: Exercise[] = [
     technique: technique('dumbbell walking lunge'),
     trackingMode: 'reps-side',
   },
+  {
+    id: 'dynamic-warmup-flow',
+    name: 'Dynamic warm-up flow',
+    category: 'warmup',
+    movementPattern: 'core',
+    muscles: { primary: ['core'], secondary: [] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger'],
+    demands,
+    technique: technique('dynamic warm-up flow'),
+    trackingMode: 'duration',
+  },
+  {
+    id: 'hamstring-stretch',
+    name: 'Standing hamstring stretch',
+    category: 'cooldown',
+    movementPattern: 'hinge',
+    muscles: { primary: ['hamstrings'], secondary: [] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger'],
+    demands,
+    technique: technique('standing hamstring stretch'),
+    trackingMode: 'duration',
+  },
 ];
 
 // Gym environment with equipment: [] resolves to rules/equipment.ts's
 // standardGymEquipment, which covers all of the fixtures above.
 const answers: OnboardingAnswers = {
   name: 'Test User',
+  weightKg: 70,
+  heightCm: 170,
   goal: 'stronger',
   experience: 'new',
   daysPerWeek: 2,

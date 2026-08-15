@@ -6,17 +6,11 @@
 
 import type { Goal } from '../../domain/onboarding';
 
-// How many of a day template's ordered optionalPatterns (splits.ts)
-// actually get included, for goals where usesRemainingCapacityByGoal
-// (below) is false. Strength/general-fitness stay lean (primary-lift
-// emphasis, low redundancy); athletic sits a bit above that with room for
-// unilateral/core/carry without becoming core-heavy. Duration and
-// experience still act as a hard ceiling on top of this
-// (assign-movement-patterns.ts) — this number is a target driven by goal,
-// never inflated just because more session time is available.
-//
-// Not consulted at all for goals where usesRemainingCapacityByGoal is
-// true (currently just 'muscle') — see that flag's comment.
+// Only consulted for 'stronger' now (2026-08-16) — the one goal where
+// usesRemainingCapacityByGoal (below) is false, so it's the only one
+// still using a fixed accessory count instead of a time-budget walk. Kept
+// as a Record (not a single number) so re-enabling a fixed budget for
+// another goal later is a data change, not a type change.
 export const accessoryBudgetByGoal: Record<Goal, number> = {
   stronger: 1,
   muscle: 3,
@@ -24,7 +18,7 @@ export const accessoryBudgetByGoal: Record<Goal, number> = {
   'general-fitness': 1,
 };
 
-// MINIMUM SESSION → GOAL-BENEFICIAL ADDITIONS → STOP.
+// MINIMUM SESSION → GOAL-BENEFICIAL, NON-REDUNDANT ADDITIONS → STOP.
 //
 // For goals where this is true, assign-movement-patterns.ts ignores
 // accessoryBudgetByGoal and instead walks the day template's
@@ -36,21 +30,34 @@ export const accessoryBudgetByGoal: Record<Goal, number> = {
 // with anything the template doesn't already call out as useful for that
 // day, and it stops the moment the next addition wouldn't fit — duration
 // is still a ceiling the loop respects, never a target it fills for its
-// own sake.
+// own sake. session-quality-pass.ts's redundancy dedup runs afterward on
+// the real selected exercises and is what keeps this from becoming
+// "mechanically fill every slot" — a pattern added here that resolves to
+// an exercise redundant with one already in the session gets trimmed
+// there, not here (this stage doesn't know which exercise will fill a
+// slot yet).
 //
-// Scoped to 'muscle' only for now: that's the one goal in the reviewed
-// fixtures that was clearly leaving real training value on the table
-// (a 60-min hypertrophy session landing at ~25 min, missing genuine
-// complementary/isolation coverage). Strength/general-fitness are
-// deliberately lean regardless of remaining time (spec intent, confirmed
-// against the beginner fixtures); athletic's existing accessoryBudget
-// already matches its intended "unilateral/core/carry, not core-heavy"
-// scope.
+// CHANGED 2026-08-16: was 'muscle'-only. The rule itself is now
+// goal-graded by an actual programming distinction — 'stronger' is the
+// one goal where deliberate leanness (few, heavy, low-redundancy lifts,
+// long rest) is a defining feature of the goal itself, not just "the
+// goal with the smallest number" — so it's the only one that keeps a
+// fixed, small accessory count regardless of how much session time is
+// available. Every other goal now uses genuinely available time to add
+// non-redundant, goal-beneficial work instead of stopping at a number
+// picked independent of duration/day-intent. This was previously scoped
+// to 'muscle' alone because it was the one goal a reviewed fixture
+// clearly under-used (a 60-min hypertrophy session landing at ~25 min);
+// the same under-use applies to athletic/general-fitness sessions with
+// real time budget and a rich day template (e.g.
+// 'lower-upper-athletic-3day') — the fixed accessoryBudget numbers above
+// were never a considered ceiling for those goals, just an earlier
+// implementation's default.
 export const usesRemainingCapacityByGoal: Record<Goal, boolean> = {
   stronger: false,
   muscle: true,
-  athletic: false,
-  'general-fitness': false,
+  athletic: true,
+  'general-fitness': true,
 };
 
 // Shared by validate-plan.ts (flags a session that still exceeds this

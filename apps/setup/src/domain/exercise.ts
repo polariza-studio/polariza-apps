@@ -1,7 +1,7 @@
 // Exercise library domain types.
 // Spec: setup-functional-spec.md §5.3 (conceptual Exercise model) and §8.4 (technique in workout mode).
 
-import type { Equipment, Goal } from './onboarding';
+import type { Equipment, ExperienceLevel, Goal } from './onboarding';
 
 export type MovementPattern =
   | 'squat'
@@ -62,6 +62,15 @@ export type TrackingMode =
   | 'reps'
   | 'reps-weight'
   | 'reps-side'
+  // Unilateral AND weighted — a dumbbell row, walking lunge, or rear-
+  // foot-elevated split squat. Added 2026-08-17: these were originally
+  // misclassified as plain 'reps-side' (no weight field at all), which
+  // meant genuinely dumbbell-loaded exercises had nowhere to record —
+  // or suggest — the weight actually used. See PlannedExercise's
+  // `suggestedLoad`/CompletedSet's per-side tracking, both of which this
+  // mode participates in the same way 'reps-weight' does, just doubled
+  // per side.
+  | 'reps-weight-side'
   | 'duration'
   | 'duration-weight'
   | 'duration-side';
@@ -90,6 +99,21 @@ export type ExerciseDemands = {
   systemic: DemandLevel;
 };
 
+// A structured, equipment-aware starting-weight reference — never a raw
+// number. The UI derives its own display string per type (e.g.
+// "2 × 10 kg" for two-dumbbells) rather than a stored string, so the
+// format can change without touching data. `bodyweight` exists for
+// schema completeness (a future weighted-dip/weighted-pull-up variant)
+// — no current library exercise uses it, since every bodyweight-only
+// movement today tracks reps only, not weight.
+export type SuggestedLoad =
+  | { type: 'two-dumbbells'; weightPerDumbbell: number; unit: 'kg' }
+  | { type: 'single-dumbbell'; weight: number; unit: 'kg' }
+  | { type: 'barbell'; weight: number; unit: 'kg' }
+  | { type: 'machine'; weight: number; unit: 'kg' }
+  | { type: 'cable'; weight: number; unit: 'kg' }
+  | { type: 'bodyweight' };
+
 export type Exercise = {
   id: string;
   name: string;
@@ -116,6 +140,13 @@ export type Exercise = {
   technique: ExerciseTechnique;
 
   trackingMode: TrackingMode;
+
+  // One curated starting-weight reference per experience level — only
+  // meaningful when trackingMode is 'reps-weight' or 'duration-weight'.
+  // Deliberately not populated for v1 until the numbers themselves are
+  // reviewed (see generator/__fixtures__ review process) — the schema
+  // ships ahead of the data.
+  startingLoad?: Record<ExperienceLevel, SuggestedLoad>;
 
   // Placeholder for future asset work — no images generated yet.
   imagePath?: string;

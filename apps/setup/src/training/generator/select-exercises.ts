@@ -3,10 +3,11 @@
 // programming category (warm-up/cool-down exercises are library content
 // for the Technique UI and future use, not candidates the generator
 // programs into a session); ranked by fit with focus/deprioritized areas,
-// role/strengthType match, goal, and how often it's already been used
-// elsewhere in the week. A slot with no compatible candidate is dropped
-// rather than failing the whole plan; validate-plan.ts is what ultimately
-// rejects a plan left with a required pattern unfilled.
+// role/strengthType match, goal, functional overlap with what's already
+// in the session, and how often it's already been used elsewhere in the
+// week. A slot with no compatible candidate is dropped rather than
+// failing the whole plan; validate-plan.ts is what ultimately rejects a
+// plan left with a required pattern unfilled.
 //
 // findExerciseForSlot is exported so session-quality-pass.ts's
 // replace-before-remove can reuse the exact same candidate-filter/ranking
@@ -25,6 +26,7 @@ import type { PatternSlot, PrioritizedDayPlan } from './apply-priorities';
 import type { ExerciseRole } from '../rules/goals';
 import { resolveAvailableEquipment } from '../rules/equipment';
 import { experienceRules } from '../rules/experience';
+import { functionalOverlap } from './functional-overlap';
 
 const difficultyRank: Record<Exercise['difficulty'], number> = {
   beginner: 0,
@@ -67,6 +69,11 @@ export function selectExercises(
     // Avoid repeating the same exercise twice within one day; reuse across
     // different days in the week is fine and normal in real programming.
     const usedInDay = new Set<string>();
+    // The actual Exercise objects selected so far this day (not just
+    // their IDs) — rank() uses this to prefer a functionally-
+    // complementary candidate over one that overlaps heavily with
+    // something already in the session (see functional-overlap.ts).
+    const selectedInDay: Exercise[] = [];
     const exercises: SelectedExercise[] = [];
 
     for (const slot of day.slots) {
@@ -79,10 +86,12 @@ export function selectExercises(
         answers.experience,
         usedInDay,
         weekUsage,
+        { selectedInDay },
       );
       if (exercise) {
         exercises.push({ exercise, slot });
         usedInDay.add(exercise.id);
+        selectedInDay.push(exercise);
         weekUsage.set(exercise.id, (weekUsage.get(exercise.id) ?? 0) + 1);
       }
     }
@@ -100,7 +109,7 @@ export function findExerciseForSlot(
   experience: ExperienceLevel,
   excludeIds: Set<string>,
   weekUsage: Map<string, number>,
-  options: { excludeSystemicHigh?: boolean } = {},
+  options: { excludeSystemicHigh?: boolean; selectedInDay?: Exercise[] } = {},
 ): Exercise | null {
   const candidates = library.filter(
     (exercise) =>
@@ -115,8 +124,11 @@ export function findExerciseForSlot(
 
   if (candidates.length === 0) return null;
 
+  const selectedInDay = options.selectedInDay ?? [];
   const ranked = [...candidates].sort(
-    (a, b) => rank(b, slot, goal, experience, weekUsage) - rank(a, slot, goal, experience, weekUsage),
+    (a, b) =>
+      rank(b, slot, goal, experience, weekUsage, selectedInDay) -
+      rank(a, slot, goal, experience, weekUsage, selectedInDay),
   );
   return ranked[0];
 }
@@ -130,6 +142,7 @@ function rank(
   goal: Goal,
   experience: ExperienceLevel,
   weekUsage: Map<string, number>,
+  selectedInDay: Exercise[],
 ): number {
   const preferredHits = exercise.muscles.primary.filter((m) =>
     slot.preferredMuscles.includes(m),
@@ -187,5 +200,34 @@ function rank(
   const overusePenalty = weekUsage.get(exercise.id) ?? 0;
   const overuseWeight = preferredHits > 0 ? 0.6 : 0.1;
 
-  return preferredHits - avoidHits + goalMatch + roleMatch + difficultyFit + stabilityFit - overusePenalty * overuseWeight;
+  // FUNCTIONAL OVERLAP / FATIGUE — a preference, not a filter (spec:
+  // "do not ban repeated patterns"). Penalizes this candidate for
+  // overlapping with exercises ALREADY selected earlier in the same day
+  // (any role), weighted enough to outweigh roleMatch's compound
+  // preference (1.0) when overlap is high — so, e.g., a second
+  // horizontal-pull slot prefers Face Pull (isolation, 0 overlap with an
+  // already-picked Barbell Row) over a second bent-over row (compound,
+  // same primary muscles, overlap 1.0) — while a low-overlap pair like
+  // Romanian Deadlift alongside Hip Thrust (overlap 0.5) is barely
+  // discouraged at all, and a different-pattern pair (Squat next to a
+  // rear-foot-elevated split squat) isn't discouraged in the first place
+  // — functionalOverlap is 0 whenever the pattern or strengthType
+  // differs. Takes the WORST (highest) overlap against any one
+  // already-selected exercise, not a sum — stacking three unrelated
+  // exercises shouldn't accumulate a penalty meant for one clash.
+  const overlapPenalty = selectedInDay.reduce(
+    (worst, already) => Math.max(worst, functionalOverlap(exercise, already)),
+    0,
+  );
+
+  return (
+    preferredHits -
+    avoidHits +
+    goalMatch +
+    roleMatch +
+    difficultyFit +
+    stabilityFit -
+    overusePenalty * overuseWeight -
+    overlapPenalty * 1.5
+  );
 }

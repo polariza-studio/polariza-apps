@@ -2,15 +2,7 @@
 // Spec: setup-functional-spec.md §10 (core domain models).
 
 import type { OnboardingAnswers } from './onboarding';
-
-// Never populated by the v1 generator — spec §16 "no fake precision": with
-// no recorded training history, SetUp has no basis for an exact number.
-// Reserved for a future history-based progression feature.
-export type LoadGuidance = {
-  min?: number;
-  max?: number;
-  unit: 'kg';
-};
+import type { SuggestedLoad } from './exercise';
 
 // Discriminated by `mode`, which always matches the Exercise's own
 // `trackingMode` (domain/exercise.ts) — so Workout Mode reads the mode tag
@@ -44,7 +36,23 @@ export type ExercisePrescription =
       repRange: [number, number];
       restSeconds: number;
       targetRir?: [number, number];
-      suggestedWeight?: LoadGuidance;
+      // The experience-matched curated fallback from Exercise.startingLoad
+      // — a stable initial recommendation baked into the generated plan.
+      // Workout Mode may still override the displayed value with newer
+      // activity history at runtime; this field is never itself updated
+      // from history. Always editable, never a requirement — spec §16.
+      suggestedLoad?: SuggestedLoad;
+    }
+  | {
+      // Unilateral and weighted (dumbbell row, walking lunge, RFESS) —
+      // same shape as 'reps-weight', Workout Mode just renders two
+      // tracked rows per set (one per side) instead of one.
+      mode: 'reps-weight-side';
+      sets: number;
+      repRange: [number, number];
+      restSeconds: number;
+      targetRir?: [number, number];
+      suggestedLoad?: SuggestedLoad;
     }
   | {
       mode: 'duration';
@@ -63,7 +71,7 @@ export type ExercisePrescription =
       sets: number;
       durationSeconds: number;
       restSeconds?: number;
-      suggestedWeight?: LoadGuidance;
+      suggestedLoad?: SuggestedLoad;
     };
 
 export type PlannedExercise = {
@@ -75,11 +83,26 @@ export type PlannedExercise = {
   prescription: ExercisePrescription;
 };
 
+// Warm-up/cool-down entries deliberately don't reuse PlannedExercise:
+// `role` (primary/secondary/accessory) is a session-emphasis concept
+// that doesn't mean anything for a warm-up, and giving it a role value
+// anyway would be misleading rather than merely unused. Same
+// ExercisePrescription discriminated union, though — the prescription
+// shape doesn't depend on where in the session an exercise sits.
+export type WarmupCooldownExercise = {
+  exerciseId: string;
+  prescription: ExercisePrescription;
+};
+
 export type TrainingDay = {
   id: string;
   name: string;
   estimatedDurationMinutes: number;
+  // Explicit and separate from the main list, not mixed in — MVP is
+  // always exactly one exercise each (rules/warmup-cooldown.ts).
+  warmup: WarmupCooldownExercise[];
   exercises: PlannedExercise[];
+  cooldown: WarmupCooldownExercise[];
 };
 
 export type TrainingPlan = {

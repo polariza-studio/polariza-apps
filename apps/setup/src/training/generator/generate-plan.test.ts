@@ -116,14 +116,47 @@ const fixtureLibrary: Exercise[] = [
     technique: technique('plank'),
     trackingMode: 'duration',
   },
+  {
+    id: 'dynamic-warmup-flow',
+    name: 'Dynamic warm-up flow',
+    category: 'warmup',
+    movementPattern: 'core',
+    muscles: { primary: ['core'], secondary: [] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['muscle', 'athletic', 'general-fitness', 'stronger'],
+    demands,
+    technique: technique('dynamic warm-up flow'),
+    trackingMode: 'duration',
+  },
+  {
+    id: 'hamstring-stretch',
+    name: 'Standing hamstring stretch',
+    category: 'cooldown',
+    movementPattern: 'hinge',
+    muscles: { primary: ['hamstrings'], secondary: [] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['muscle', 'athletic', 'general-fitness', 'stronger'],
+    demands,
+    technique: technique('standing hamstring stretch'),
+    trackingMode: 'duration',
+  },
 ];
 
 const answers: OnboardingAnswers = {
   name: 'Test User',
+  weightKg: 70,
+  heightCm: 170,
   goal: 'muscle',
   experience: 'some-experience',
   daysPerWeek: 3,
-  sessionDuration: 45,
+  // 30, not 45: these tests are scoped to full-body-3day specifically
+  // (fixtureLibrary's own comment, plus the focus-area test's hardcoded
+  // day-0 exercise IDs assume that split's exact day-1 template) — 45+
+  // would now be eligible for select-split.ts's prefersWeeklyIntentSplit
+  // and pick a different split these fixtures don't cover.
+  sessionDuration: 30,
   trainingEnvironment: 'home',
   equipment: ['dumbbells', 'bench'],
   focusAreas: ['back'],

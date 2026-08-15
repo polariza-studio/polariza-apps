@@ -35,6 +35,19 @@ const library: Exercise[] = [
     technique: { description: 'An advanced lift.', setup: [], execution: [], cues: [], commonMistakes: [] },
     trackingMode: 'reps-weight',
   },
+  {
+    id: 'warmup-1',
+    name: 'Warm-up flow',
+    category: 'warmup',
+    movementPattern: 'core',
+    muscles: { primary: ['core'], secondary: [] },
+    equipment: [],
+    difficulty: 'beginner',
+    suitableGoals: ['muscle'],
+    demands,
+    technique: { description: 'A warm-up.', setup: [], execution: [], cues: [], commonMistakes: [] },
+    trackingMode: 'duration',
+  },
 ];
 
 // A single-day split requiring only 'squat' — matches the fixture plans
@@ -56,12 +69,18 @@ function reps(overrides: Partial<Extract<PlannedExercise['prescription'], { mode
   };
 }
 
+function validWarmupCooldown() {
+  return [{ exerciseId: 'warmup-1', prescription: { mode: 'duration' as const, sets: 1, durationSeconds: 60, restSeconds: 0 } }];
+}
+
 function planWithDay(overrides: Partial<TrainingDay> = {}): TrainingPlan {
   return {
     id: 'plan-1',
     createdAt: new Date().toISOString(),
     preferences: {
       name: 'Test User',
+      weightKg: 70,
+      heightCm: 170,
       goal: 'muscle',
       experience: 'some-experience',
       daysPerWeek: 2,
@@ -77,7 +96,9 @@ function planWithDay(overrides: Partial<TrainingDay> = {}): TrainingPlan {
         id: 'day-1',
         name: 'Full Body A',
         estimatedDurationMinutes: 15,
+        warmup: validWarmupCooldown(),
         exercises: [{ exerciseId: 'squat-1', role: 'primary', prescription: reps() }],
+        cooldown: validWarmupCooldown(),
         ...overrides,
       },
     ],
@@ -164,5 +185,15 @@ describe('validatePlan', () => {
     expect(
       validatePlan(plan, library, split).errors.some((e) => e.includes('exceeding the')),
     ).toBe(true);
+  });
+
+  it('rejects a day with no warm-up exercise', () => {
+    const plan = planWithDay({ warmup: [] });
+    expect(validatePlan(plan, library, split).errors.some((e) => e.includes('no warm-up exercise'))).toBe(true);
+  });
+
+  it('rejects a day with no cool-down exercise', () => {
+    const plan = planWithDay({ cooldown: [] });
+    expect(validatePlan(plan, library, split).errors.some((e) => e.includes('no cool-down exercise'))).toBe(true);
   });
 });

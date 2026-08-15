@@ -24,7 +24,8 @@
 // not a side effect of some other change.
 
 import type { Exercise, MuscleGroup } from '../../domain/exercise';
-import type { PlannedExercise, TrainingPlan } from '../../domain/plan';
+import type { Equipment } from '../../domain/onboarding';
+import type { PlannedExercise, TrainingPlan, WarmupCooldownExercise } from '../../domain/plan';
 import type { SplitDefinition } from '../rules/splits';
 import { experienceRules } from '../rules/experience';
 import { resolveAvailableEquipment } from '../rules/equipment';
@@ -143,6 +144,9 @@ export function validatePlan(
       );
     }
 
+    validateWarmupCooldown(day.warmup, 'warm-up', day.name, byId, availableEquipment, errors);
+    validateWarmupCooldown(day.cooldown, 'cool-down', day.name, byId, availableEquipment, errors);
+
     const template = split.days[dayIndex % split.days.length];
     const coveredPatterns = new Set(
       day.exercises
@@ -162,6 +166,40 @@ export function validatePlan(
   }
 
   return { errors, warnings };
+}
+
+// MVP is always exactly one warm-up and one cool-down exercise
+// (rules/warmup-cooldown.ts) — a day with zero means selection found no
+// equipment-compatible candidate, which shouldn't happen given the
+// library's warm-up/cool-down content is entirely bodyweight-only, but
+// is treated as a hard error rather than silently shipping a workout
+// with no warm-up if a future library change ever breaks that guarantee.
+function validateWarmupCooldown(
+  entries: WarmupCooldownExercise[],
+  label: 'warm-up' | 'cool-down',
+  dayName: string,
+  byId: Map<string, Exercise>,
+  availableEquipment: Equipment[],
+  errors: string[],
+): void {
+  if (entries.length === 0) {
+    errors.push(`Day "${dayName}" has no ${label} exercise.`);
+    return;
+  }
+
+  for (const entry of entries) {
+    const exercise = byId.get(entry.exerciseId);
+    if (!exercise) {
+      errors.push(`${label} exercise "${entry.exerciseId}" in day "${dayName}" references an unknown exercise ID.`);
+      continue;
+    }
+    if (!exercise.equipment.every((eq) => availableEquipment.includes(eq))) {
+      errors.push(`${label} exercise "${exercise.id}" in day "${dayName}" requires equipment the user doesn't have.`);
+    }
+    if (entry.prescription.sets <= 0) {
+      errors.push(`${label} exercise "${exercise.id}" in day "${dayName}" has non-positive sets.`);
+    }
+  }
 }
 
 function validateWeeklyVolume(plan: TrainingPlan, byId: Map<string, Exercise>): string[] {

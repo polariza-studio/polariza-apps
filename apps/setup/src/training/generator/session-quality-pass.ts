@@ -1,19 +1,36 @@
 // Stage 9: a session-level quality pass, run on each day before the plan
 // is returned — not just validated afterward. Two checks, both scoped to
-// never touch a primary/secondary (structurally required) exercise, only
+// never REMOVE a primary/secondary (structurally required) exercise, only
 // ever trimming/substituting accessory-tier work:
 //
 // 1. Movement redundancy — two exercises serving the same purpose in one
 //    session (plank + dead bug + hanging knee raise; bodyweight calf
 //    raise + machine calf raise) because slots happened to be available,
-//    not because the session's programming intent called for both. By
-//    construction (splits.ts's primary/secondary patterns are always
-//    distinct from each other and assign-movement-patterns.ts no longer
-//    cycles patterns to fill a budget), this should rarely find anything
-//    to remove — it's a defensive check on the final exercise list, not
-//    the primary mechanism preventing redundancy. No substitution here:
-//    the pattern stays covered by the surviving exercise, so there's
-//    nothing lost to replace.
+//    not because the session's programming intent called for both.
+//
+//    Redundancy-aware, not merely same-pattern (changed 2026-08-16):
+//    splits.ts's day templates may now deliberately request the SAME
+//    broad MovementPattern twice in one session (e.g. hinge + hinge, for
+//    a Hip Thrust + Romanian Deadlift lower day) when that's a genuine
+//    programming choice, not accidental slot-filling — sharing a pattern
+//    string is no longer treated as inherently redundant. What actually
+//    makes two exercises redundant: same pattern, same strengthType
+//    (compound vs isolation — a compound row and an isolation face pull
+//    sharing horizontal-pull are never redundant), AND the same primary-
+//    muscle set (Hip Thrust: glutes only; Romanian Deadlift: hamstrings
+//    + glutes — different sets, so genuinely not redundant despite both
+//    being 'hinge'; Goblet Squat/Bodyweight Squat/Leg Press: all
+//    quadriceps+glutes, all 'squat', all compound — genuinely redundant,
+//    keep only the first). "Redundant" here means functional-overlap.ts's
+//    score reaches its ceiling (1 — full primary-muscle-set equality
+//    within a same-pattern, same-strengthType pair); a partial-overlap
+//    pair (e.g. Deadlift/RDL) isn't touched by this pass at all — that
+//    case is a select-exercises.ts ranking preference, not a removal,
+//    since it only ever shows up between primary/secondary exercises
+//    this pass is scoped to never drop (see below). Only ever drops a
+//    LATER accessory-tier exercise redundant with something already
+//    kept (any role) — never a primary/secondary, and never on the
+//    strength of the FIRST occurrence of a pattern.
 //
 // 2. High-systemic-fatigue stacking — more than
 //    rules/session-composition.ts's cap of genuinely CNS/fatigue-taxing
@@ -35,6 +52,7 @@ import { maxHighSystemicPerSession } from '../rules/session-composition';
 import { resolveAvailableEquipment } from '../rules/equipment';
 import { experienceRules } from '../rules/experience';
 import { findExerciseForSlot } from './select-exercises';
+import { functionalOverlap } from './functional-overlap';
 
 const difficultyRank: Record<Exercise['difficulty'], number> = {
   beginner: 0,
@@ -55,30 +73,50 @@ export function sessionQualityPass(
 ): TrainingDay {
   const byId = new Map(exerciseLibrary.map((exercise) => [exercise.id, exercise]));
 
-  const deduped = dedupeByMovementPattern(day.exercises, byId);
+  const deduped = dedupeRedundantWork(day.exercises, byId);
   const capped = capHighSystemicWork(deduped, byId, exerciseLibrary, answers);
 
   return { ...day, exercises: capped };
 }
 
+// Full functional overlap (score === 1) — same pattern, same
+// strengthType, identical primary-muscle set. Anything less (a
+// Deadlift/RDL-style partial overlap) is deliberately NOT redundant by
+// this definition; see functional-overlap.ts's comment for why that
+// distinction matters and select-exercises.ts for where partial overlap
+// is handled instead (as a ranking preference, not a removal).
+function isRedundant(a: Exercise, b: Exercise): boolean {
+  return functionalOverlap(a, b) >= 1;
+}
+
 // Exercises are already ordered primary → secondary → accessory (the
-// pipeline never reorders), so keeping the first occurrence of a pattern
-// and dropping later ones structurally can't drop a primary/secondary
-// exercise in favor of an accessory one — a later duplicate of a
-// required pattern would have to be a required exercise appearing
-// earlier too, which splits.ts's distinct-pattern invariant rules out.
-function dedupeByMovementPattern(
+// pipeline never reorders). Only an ACCESSORY-tier exercise can be
+// dropped here, and only when it's redundant with something already kept
+// (any role, earlier in the list) — a primary/secondary exercise is
+// never removed even if two required slots happen to resolve to
+// genuinely redundant exercises (that means the day template asked for
+// it, which is a split-design decision, not something this pass should
+// silently override).
+function dedupeRedundantWork(
   exercises: PlannedExercise[],
   byId: Map<string, Exercise>,
 ): PlannedExercise[] {
-  const seenPatterns = new Set<string>();
-  return exercises.filter((plannedExercise) => {
+  const kept: PlannedExercise[] = [];
+  for (const plannedExercise of exercises) {
     const exercise = byId.get(plannedExercise.exerciseId);
-    if (!exercise) return true;
-    if (seenPatterns.has(exercise.movementPattern)) return false;
-    seenPatterns.add(exercise.movementPattern);
-    return true;
-  });
+    if (!exercise) {
+      kept.push(plannedExercise);
+      continue;
+    }
+    const redundant =
+      plannedExercise.role === 'accessory' &&
+      kept.some((keptExercise) => {
+        const other = byId.get(keptExercise.exerciseId);
+        return other ? isRedundant(exercise, other) : false;
+      });
+    if (!redundant) kept.push(plannedExercise);
+  }
+  return kept;
 }
 
 function capHighSystemicWork(

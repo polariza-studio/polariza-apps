@@ -2,9 +2,17 @@
 // duration, matching the exercise's own trackingMode) to a selected
 // exercise, plus its session role.
 //
-// suggestedWeight is deliberately left unset — spec §8.2 / §16 ("no fake
-// precision"): SetUp has no workout history yet to base a load
-// recommendation on, so it must not present one.
+// suggestedLoad (reps-weight / duration-weight only) comes straight from
+// Exercise.startingLoad, keyed by the user's experience — a curated,
+// per-exercise reference, never a generic formula, and never itself a
+// requirement (spec §16 "no fake precision" is about inventing precision
+// with no basis; a reviewed starting reference is the opposite of that).
+// It's undefined whenever the exercise has no startingLoad entry yet, or
+// for every non-weight-tracked mode. This is only ever a *stable
+// fallback* baked into the plan — Workout Mode may override the
+// displayed value with newer activity history at runtime without ever
+// writing back into this field, and the user can edit it regardless of
+// where it came from.
 //
 // No focus-area bonus here (a prior version added +1 set to every
 // exercise that happened to hit a focus muscle as primary — since focus
@@ -44,23 +52,63 @@ function buildPrescription(
   sets: number,
 ): ExercisePrescription {
   const mode = exercise.trackingMode;
+  const suggestedLoad = exercise.startingLoad?.[answers.experience];
+  const adjustedSets = accessorySets(exercise, slot.role, sets);
 
-  if (mode === 'duration' || mode === 'duration-side' || mode === 'duration-weight') {
+  // Each branch narrows `mode` to the exact literal(s) it returns —
+  // deliberately not one combined "duration-ish" or "reps-ish" branch
+  // for the weight-tracked variants, since a returned object's `mode`
+  // field has to match a single discriminated-union member exactly (see
+  // domain/plan.ts's ExercisePrescription comment on why grouped
+  // literals silently break narrowing elsewhere in the pipeline).
+  if (mode === 'duration-weight') {
     const rules = durationRules[slot.role];
-    return {
-      mode,
-      sets,
-      durationSeconds: rules.durationSeconds,
-      restSeconds: rules.restSeconds,
-    };
+    return { mode, sets: adjustedSets, durationSeconds: rules.durationSeconds, restSeconds: rules.restSeconds, suggestedLoad };
+  }
+  if (mode === 'duration' || mode === 'duration-side') {
+    const rules = durationRules[slot.role];
+    return { mode, sets: adjustedSets, durationSeconds: rules.durationSeconds, restSeconds: rules.restSeconds };
+  }
+  if (mode === 'reps-weight' || mode === 'reps-weight-side') {
+    const rules = goalRules[answers.goal][slot.role];
+    const repRange = accessoryRepRange(exercise, slot.role, rules.repRange);
+    return { mode, sets: adjustedSets, repRange, restSeconds: rules.restSeconds, targetRir: rules.targetRir, suggestedLoad };
   }
 
   const rules = goalRules[answers.goal][slot.role];
-  return {
-    mode,
-    sets,
-    repRange: rules.repRange,
-    restSeconds: rules.restSeconds,
-    targetRir: rules.targetRir,
-  };
+  const repRange = accessoryRepRange(exercise, slot.role, rules.repRange);
+  return { mode, sets: adjustedSets, repRange, restSeconds: rules.restSeconds, targetRir: rules.targetRir };
+}
+
+// Small, function-driven refinements layered on top of the role-based
+// base prescription (goalRules/durationRules) — grounded in
+// exercise.category/strengthType, real domain properties, never a
+// specific exercise ID (spec: two accessory-tier exercises can
+// legitimately carry different prescriptions because of what they ARE,
+// not because of which one they happen to be — see the Golden Plan
+// benchmark's Lateral Raise 2×12-15 vs Pallof Press 3×10/side vs Biceps
+// Curl 2×10, all "accessory" but not identical).
+//
+// Core/anti-rotation accessory work (dead bug, Pallof press) is
+// conventionally programmed with more, lighter sets than strength
+// accessory work — it's stability/endurance training, not load
+// progression, so an extra set costs little fatigue.
+function accessorySets(exercise: Exercise, role: PatternSlot['role'], baseSets: number): number {
+  if (role === 'accessory' && exercise.category === 'core') return baseSets + 1;
+  return baseSets;
+}
+
+// Isolation accessory work (lateral raise, biceps curl, face pull)
+// tolerates and benefits from higher reps than compound accessory work —
+// small muscle, low systemic cost, closer to a "pump" stimulus than a
+// strength stimulus. Compound accessory work keeps the role's own range.
+function accessoryRepRange(
+  exercise: Exercise,
+  role: PatternSlot['role'],
+  baseRange: [number, number],
+): [number, number] {
+  if (role === 'accessory' && exercise.strengthType === 'isolation') {
+    return [baseRange[0] + 2, baseRange[1] + 2];
+  }
+  return baseRange;
 }

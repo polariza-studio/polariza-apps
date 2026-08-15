@@ -14,6 +14,7 @@ import type { MovementPattern } from '../../domain/exercise';
 export type SplitId =
   | 'full-body-2day'
   | 'full-body-3day'
+  | 'lower-upper-athletic-3day'
   | 'upper-lower'
   | 'upper-lower-push-pull-legs';
 
@@ -24,17 +25,20 @@ export type SplitDayTemplate = {
   primaryPattern: MovementPattern;
   // Mandatory, substantial complementary lifts — like primaryPattern,
   // only ever equipment-flexible patterns (squat/hinge/lunge/
-  // horizontal-push/vertical-push/horizontal-pull/core), and always a
-  // *different* pattern from primaryPattern and from each other, so a
-  // session's mandatory work never doubles up on the same movement (the
-  // old design let e.g. a squat-pattern and a lunge-pattern exercise both
-  // be "required" on the same day, and — combined with the old fill-to-
-  // budget accessory loop — a THIRD squat-family exercise would get added
-  // as filler on top of that; assign-movement-patterns.ts no longer fills
-  // by cycling patterns at all, so that specific failure mode is gone,
-  // but keeping this pattern-distinctness invariant here is still what
-  // makes session-quality-pass.ts's redundancy dedup a no-op in the
-  // normal case rather than something papering over the template design).
+  // horizontal-push/vertical-push/horizontal-pull/core/carry).
+  //
+  // CAN repeat primaryPattern or each other (changed 2026-08-16) — a
+  // template may deliberately want two exercises sharing a broad pattern
+  // in one session (e.g. hinge + hinge for Hip Thrust + Romanian
+  // Deadlift on a lower-body day, see 'lower-upper-athletic-3day' below)
+  // when they serve genuinely different training functions despite the
+  // shared pattern label. session-quality-pass.ts's redundancy dedup is
+  // what actually guards against a same-pattern pairing that ISN'T a
+  // deliberate choice (e.g. two exercises with the same strengthType and
+  // the same primary-muscle set) — see that file's isRedundant. A
+  // template author repeating a pattern is asserting "these two are not
+  // redundant"; the dedup pass is the safety net if that assertion turns
+  // out wrong for the specific exercises selected.
   secondaryPatterns: MovementPattern[];
   // Ordered by priority. How many actually get included is goal-driven
   // (rules/session-composition.ts's accessoryBudgetByGoal), then further
@@ -89,6 +93,47 @@ export const splitDefinitions: Record<SplitId, SplitDefinition> = {
         primaryPattern: 'lunge',
         secondaryPatterns: ['vertical-push', 'horizontal-pull'],
         optionalPatterns: ['core', 'hip-abduction'],
+      },
+    ],
+  },
+  // A deliberate WEEK-INTENT archetype (2026-08-16), not a fourth
+  // interchangeable "Full Body A/B/C" — each day has a distinct purpose:
+  // a lower/glute-emphasis day, an upper-pull-emphasis day, and an
+  // athletic full-body day that intentionally mixes hinge + unilateral +
+  // pull + push + carry + core in one session. Selected by
+  // generator/select-split.ts alongside 'full-body-3day' (never in place
+  // of it) when the user's experience/duration/goal can actually make
+  // use of a richer, higher-exercise-count session — see that file's
+  // prefersWeeklyIntentSplit. Pattern slots only, same as every other
+  // split — which SPECIFIC exercises fill them still depends on the
+  // user's equipment/goal/experience via select-exercises.ts, so this is
+  // not a hardcoded reproduction of any one reference plan.
+  //
+  // Two days below deliberately repeat a pattern within
+  // secondaryPatterns (hinge+hinge on Lower Body, horizontal-pull twice
+  // on Upper Body and again on Athletic Full Body) — see splits.ts's
+  // SplitDayTemplate comment on why that's allowed now and how
+  // session-quality-pass.ts's redundancy check is the actual safety net.
+  'lower-upper-athletic-3day': {
+    id: 'lower-upper-athletic-3day',
+    days: [
+      {
+        name: 'Lower Body',
+        primaryPattern: 'hinge',
+        secondaryPatterns: ['hinge', 'squat', 'lunge'],
+        optionalPatterns: ['knee-flexion', 'hip-abduction', 'core'],
+      },
+      {
+        name: 'Upper Body',
+        primaryPattern: 'horizontal-pull',
+        secondaryPatterns: ['vertical-pull', 'horizontal-pull'],
+        optionalPatterns: ['shoulder-abduction', 'elbow-flexion', 'elbow-extension', 'core'],
+      },
+      {
+        name: 'Athletic Full Body',
+        primaryPattern: 'hinge',
+        secondaryPatterns: ['lunge', 'horizontal-pull', 'horizontal-push', 'carry'],
+        optionalPatterns: ['core'],
       },
     ],
   },

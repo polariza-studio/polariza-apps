@@ -5,11 +5,15 @@ import type { DaysPerWeek, Goal } from '../../domain/onboarding';
 import type { SplitId } from './splits';
 
 // First entry is the default split used by generator/select-split.ts.
-// One option per frequency for v1 — deliberately not offering split
-// variety we don't have an evidence-backed reason to pick between yet.
+// One option per frequency for most cases — deliberately not offering
+// split variety we don't have an evidence-backed reason to pick between
+// yet. daysPerWeek 3 is the one exception (2026-08-16): a second, richer
+// week-intent archetype exists alongside the default — see
+// select-split.ts's prefersWeeklyIntentSplit for when it's actually
+// chosen instead of the default.
 export const allowedSplitsByFrequency: Record<DaysPerWeek, SplitId[]> = {
   2: ['full-body-2day'],
-  3: ['full-body-3day'],
+  3: ['full-body-3day', 'lower-upper-athletic-3day'],
   4: ['upper-lower'],
   5: ['upper-lower-push-pull-legs'],
 };

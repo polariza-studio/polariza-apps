@@ -14,16 +14,20 @@
 // request, which isn't a plausible real-world session length.
 
 import type { Goal } from '../../domain/onboarding';
-import type { PlannedExercise } from '../../domain/plan';
+import type { ExercisePrescription } from '../../domain/plan';
 import type { ExerciseRole } from '../rules/goals';
 import { goalRules } from '../rules/goals';
 
 const SECONDS_PER_REP = 3;
 const TRANSITION_OVERHEAD_SECONDS = 60;
 
-export function estimateDuration(exercises: PlannedExercise[]): number {
+// Structural (`{ prescription }`), not PlannedExercise specifically — so
+// the same estimate covers both the main exercise list and the warm-up/
+// cool-down entries (WarmupCooldownExercise), which share the
+// prescription shape but not the rest of PlannedExercise.
+export function estimateDuration(exercises: { prescription: ExercisePrescription }[]): number {
   const totalSeconds = exercises.reduce(
-    (sum, exercise) => sum + exerciseSeconds(exercise) + TRANSITION_OVERHEAD_SECONDS,
+    (sum, exercise) => sum + exerciseSeconds(exercise.prescription) + TRANSITION_OVERHEAD_SECONDS,
     0,
   );
   return Math.round(totalSeconds / 60);
@@ -47,8 +51,7 @@ export function estimateSlotSeconds(role: ExerciseRole, goal: Goal, sets: number
   return sets * (avgReps * SECONDS_PER_REP + rules.restSeconds) + TRANSITION_OVERHEAD_SECONDS;
 }
 
-function exerciseSeconds(exercise: PlannedExercise): number {
-  const { prescription } = exercise;
+function exerciseSeconds(prescription: ExercisePrescription): number {
   const restSeconds = prescription.restSeconds ?? 0;
 
   if (prescription.mode === 'duration' || prescription.mode === 'duration-side' || prescription.mode === 'duration-weight') {

@@ -11,13 +11,23 @@
 // least one bodyweight-only, beginner-difficulty candidate — see that
 // file's comment for why that guarantee matters.
 //
+// Extended 2026-08-16 (58 exercises) against a hand-authored quality
+// benchmark (generator/__fixtures__/golden-quality-benchmark.md): added
+// dumbbell-reverse-lunge, dumbbell-step-up, cable-face-pull,
+// cable-pallof-press, machine-hip-abduction, barbell-rdl — each a normal,
+// fully fleshed-out selectable exercise (not a one-off matched only to
+// the benchmark's exact names). dead-bug's trackingMode was reclassified
+// 'reps' → 'reps-side' at the same time — see its own comment.
+//
 // The movements and technique cues follow widely-established coaching
 // consensus for these specific exercises (not contested programming
 // science like training/rules/*.ts), but have not been reviewed by a
 // certified professional — treat this as a functional starting point, not
-// final authoritative guidance. suggestedWeight is never set here for the
-// same "no fake precision" reason as prescribe-exercise.ts. imagePath is
-// intentionally unset everywhere — no image assets exist yet.
+// final authoritative guidance. startingLoad is deliberately unset here
+// for every exercise as of 2026-08-16 — the schema shipped ahead of the
+// curated numbers, which are pending review (see the per-exercise
+// starting-load table under review). imagePath is intentionally unset
+// everywhere — no image assets exist yet.
 
 import type { Exercise } from '../../domain/exercise';
 
@@ -171,6 +181,36 @@ export const exerciseLibrary: Exercise[] = [
     trackingMode: 'reps-weight',
   },
   {
+    id: 'barbell-rdl',
+    name: 'Barbell Romanian deadlift',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'hinge',
+    muscles: { primary: ['hamstrings', 'glutes'], secondary: ['back'] },
+    equipment: ['barbell'],
+    difficulty: 'intermediate',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    // One tier up from dumbbell-rdl (same pattern, same primary muscles)
+    // for the same reason barbell-bench-press sits above dumbbell-bench-
+    // press and barbell-row sits above dumbbell-row throughout this file:
+    // a bar path and heavier loading raise the technical/systemic cost
+    // over the dumbbell version, even though the movement itself is the
+    // same hip-hinge. Kept as a genuinely separate exercise, not a
+    // replacement — see this exercise's id vs 'dumbbell-rdl'.
+    demands: { technical: 'medium', balance: 'low', mobility: 'medium', systemic: 'medium' },
+    technique: {
+      description: 'A barbell hip-hinge that loads the hamstrings and glutes through a stretch, with more external load than the dumbbell version.',
+      setup: ['Hold the bar at hip height with a shoulder-width grip.'],
+      execution: [
+        'Push the hips back while keeping a soft knee bend, lowering the bar along the legs.',
+        'Feel a stretch in the hamstrings, then drive the hips forward to stand.',
+      ],
+      cues: ['Push the hips back, not down.', 'Keep the bar close to the legs throughout.'],
+      commonMistakes: ['Rounding the lower back.', 'Bending the knees too much, turning it into a squat.'],
+    },
+    trackingMode: 'reps-weight',
+  },
+  {
     id: 'barbell-deadlift',
     name: 'Barbell deadlift',
     category: 'strength',
@@ -238,6 +278,31 @@ export const exerciseLibrary: Exercise[] = [
     trackingMode: 'reps-side',
   },
   {
+    id: 'dumbbell-reverse-lunge',
+    name: 'Dumbbell reverse lunge',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'lunge',
+    muscles: { primary: ['quadriceps', 'glutes'], secondary: ['hamstrings'] },
+    equipment: ['dumbbells'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    // balance: 'medium', not 'high' — stepping BACK into the lunge and
+    // returning to a stable two-foot base each rep is more forgiving than
+    // a continuous walking lunge or a rear-foot-elevated split squat
+    // (both never return to a stable base mid-set), even though all three
+    // share the 'lunge' pattern.
+    demands: { technical: 'low', balance: 'medium', mobility: 'medium', systemic: 'low' },
+    technique: {
+      description: 'A loaded single-leg pattern that steps backward, easier to balance than a walking or forward lunge.',
+      setup: ['Stand tall, a dumbbell in each hand at the sides.'],
+      execution: ['Step one foot back and lower until both knees reach roughly 90 degrees.', 'Push through the front foot to return to standing.'],
+      cues: ['Keep the torso upright.', 'Front knee tracks over the foot.'],
+      commonMistakes: ['Letting the front knee cave inward.', 'Stepping back too short a distance.'],
+    },
+    trackingMode: 'reps-weight-side',
+  },
+  {
     id: 'dumbbell-walking-lunge',
     name: 'Dumbbell walking lunge',
     category: 'strength',
@@ -255,7 +320,7 @@ export const exerciseLibrary: Exercise[] = [
       cues: ['Tall chest.', 'Control the descent each step.'],
       commonMistakes: ['Rushing the steps and losing balance.', 'Leaning forward from the hips.'],
     },
-    trackingMode: 'reps-side',
+    trackingMode: 'reps-weight-side',
   },
   {
     id: 'dumbbell-split-squat',
@@ -270,12 +335,32 @@ export const exerciseLibrary: Exercise[] = [
     demands: { technical: 'high', balance: 'high', mobility: 'high', systemic: 'medium' },
     technique: {
       description: 'A single-leg squat variant with the rear foot elevated for a deeper stretch and load.',
-      setup: ['Rear foot up on a bench behind you, front foot far enough forward for a vertical shin at the bottom.'],
+      setup: ['Rear foot up on a bench behind you, a dumbbell in each hand at your sides, front foot far enough forward for a vertical shin at the bottom.'],
       execution: ['Lower straight down until the rear knee nearly touches the floor.', 'Drive through the front foot to stand.'],
       cues: ['Front shin vertical.', 'Most of the weight through the front foot.'],
       commonMistakes: ['Front foot too close, driving the knee far past the toes.', 'Losing balance sideways.'],
     },
-    trackingMode: 'reps-side',
+    trackingMode: 'reps-weight-side',
+  },
+  {
+    id: 'dumbbell-step-up',
+    name: 'Dumbbell step-up',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'lunge',
+    muscles: { primary: ['quadriceps', 'glutes'], secondary: ['hamstrings'] },
+    equipment: ['dumbbells', 'bench'],
+    difficulty: 'intermediate',
+    suitableGoals: ['stronger', 'muscle', 'athletic'],
+    demands: { technical: 'medium', balance: 'high', mobility: 'medium', systemic: 'medium' },
+    technique: {
+      description: 'A single-leg pattern that drives up onto an elevated platform — real-world leg strength and stability.',
+      setup: ['Stand facing a sturdy bench or box, a dumbbell in each hand at the sides.'],
+      execution: ['Drive through the lead foot to step fully onto the platform, avoiding a push off the trailing leg.', 'Step back down under control and repeat.'],
+      cues: ['Drive through the whole lead foot.', 'Stand fully tall at the top before stepping down.'],
+      commonMistakes: ['Pushing off the back leg to help the rep.', 'Using a platform too high to control.'],
+    },
+    trackingMode: 'reps-weight-side',
   },
 
   // ============================================================
@@ -430,7 +515,7 @@ export const exerciseLibrary: Exercise[] = [
       cues: ['Keep the torso still, avoid rotating.', 'Lead with the elbow, not the hand.'],
       commonMistakes: ['Rotating the torso to help the pull.', 'Using a short, partial range of motion.'],
     },
-    trackingMode: 'reps-side',
+    trackingMode: 'reps-weight-side',
   },
   {
     id: 'barbell-row',
@@ -707,7 +792,11 @@ export const exerciseLibrary: Exercise[] = [
       cues: ['Keep the lower back pressed to the floor.', 'Move slowly and under control.'],
       commonMistakes: ['Letting the lower back arch off the floor.', 'Moving too fast to stay controlled.'],
     },
-    trackingMode: 'reps',
+    // Reclassified 2026-08-16 (was 'reps'): real coaching convention
+    // counts dead bug reps per side (alternating arm/leg pairs), not as
+    // one shared rep count — matches cable-woodchop's own 'reps-side' a
+    // few entries down.
+    trackingMode: 'reps-side',
   },
   {
     id: 'hanging-knee-raise',
@@ -765,6 +854,25 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the hips sag toward the floor.', 'Rotating the torso forward or back.'],
     },
     trackingMode: 'duration-side',
+  },
+  {
+    id: 'cable-pallof-press',
+    name: 'Cable Pallof press',
+    category: 'core',
+    movementPattern: 'core',
+    muscles: { primary: ['core'], secondary: ['shoulders'] },
+    equipment: ['cable'],
+    difficulty: 'intermediate',
+    suitableGoals: ['muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'medium', balance: 'medium', mobility: 'low', systemic: 'low' },
+    technique: {
+      description: 'An anti-rotation core exercise — resisting the cable’s pull to the side, rather than moving through rotation.',
+      setup: ['Stand sideways to a cable set at chest height, handle held with both hands at the sternum.'],
+      execution: ['Press the handle straight out in front of the chest, resisting the pull toward the machine.', 'Hold briefly, then return under control without letting the torso rotate.'],
+      cues: ['Brace like you’re about to be pushed.', 'Keep the hips and shoulders square to the front throughout.'],
+      commonMistakes: ['Letting the torso rotate toward the cable.', 'Pressing out too fast and losing tension.'],
+    },
+    trackingMode: 'reps-side',
   },
 
   // ============================================================
@@ -940,6 +1048,36 @@ export const exerciseLibrary: Exercise[] = [
   },
 
   // ============================================================
+  // ISOLATION — rear delts / upper back (horizontal-pull, isolation)
+  // ============================================================
+  // Deliberately tagged movementPattern: 'horizontal-pull', same as the
+  // compound rows above — strengthType: 'isolation' is what makes
+  // select-exercises.ts's ranking correctly prefer this for an
+  // *accessory* horizontal-pull slot over a compound row, the same way
+  // dumbbell-chest-fly (horizontal-adduction) sits alongside the
+  // horizontal-push presses. No new MovementPattern needed.
+  {
+    id: 'cable-face-pull',
+    name: 'Cable face pull',
+    category: 'strength',
+    strengthType: 'isolation',
+    movementPattern: 'horizontal-pull',
+    muscles: { primary: ['shoulders'], secondary: ['back'] },
+    equipment: ['cable'],
+    difficulty: 'beginner',
+    suitableGoals: ['muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'low', systemic: 'low' },
+    technique: {
+      description: 'A rear-delt and upper-back isolation pull that also reinforces healthy shoulder positioning.',
+      setup: ['Set a cable with a rope attachment at face height, grip with both hands, palms facing in.'],
+      execution: ['Pull the rope toward the face, separating the hands and driving the elbows out and back.', 'Return under control to a full stretch.'],
+      cues: ['Lead with the elbows, high and wide.', 'Squeeze the shoulder blades together at the end.'],
+      commonMistakes: ['Pulling low, toward the chest instead of the face.', 'Using the arms only, without rotating at the shoulder.'],
+    },
+    trackingMode: 'reps-weight',
+  },
+
+  // ============================================================
   // ISOLATION — quads (knee-extension)
   // ============================================================
   {
@@ -1054,6 +1192,26 @@ export const exerciseLibrary: Exercise[] = [
     },
     trackingMode: 'reps-side',
   },
+  {
+    id: 'machine-hip-abduction',
+    name: 'Machine hip abduction',
+    category: 'strength',
+    strengthType: 'isolation',
+    movementPattern: 'hip-abduction',
+    muscles: { primary: ['glutes'], secondary: [] },
+    equipment: ['machine'],
+    difficulty: 'beginner',
+    suitableGoals: ['athletic', 'general-fitness', 'muscle'],
+    demands: { technical: 'low', balance: 'low', mobility: 'low', systemic: 'low' },
+    technique: {
+      description: 'A seated, machine-guided glute medius isolation exercise — a standard-gym equivalent to the band lateral walk.',
+      setup: ['Sit in the machine, outer thighs against the pads, back flat against the seat.'],
+      execution: ['Push the legs apart against the resistance until fully open.', 'Return under control without letting the weight stack slam.'],
+      cues: ['Keep the back flat against the pad.', 'Control the return, don’t let the resistance snap the legs shut.'],
+      commonMistakes: ['Using a fast, bouncy tempo.', 'Only using a partial range of motion.'],
+    },
+    trackingMode: 'reps-weight',
+  },
 
   // ============================================================
   // WARM-UP / COOL-DOWN
@@ -1114,5 +1272,47 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the back to reach further.', 'Bouncing instead of holding steady.'],
     },
     trackingMode: 'duration',
+  },
+  {
+    // Added 2026-08-17 alongside Workout Mode's warm-up/cool-down
+    // assignment (rules/warmup-cooldown.ts) — the library previously had
+    // no upper-body-specific warm-up at all, only the general full-body
+    // flow and two lower-body-leaning stretches.
+    id: 'upper-body-dynamic-warmup',
+    name: 'Upper body dynamic warm-up',
+    category: 'warmup',
+    movementPattern: 'horizontal-pull',
+    muscles: { primary: ['shoulders'], secondary: ['chest', 'back'] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'medium', systemic: 'low' },
+    technique: {
+      description: 'A short upper-body movement flow to prime the shoulders and upper back before pressing/pulling work.',
+      setup: ['Clear space to move the arms freely in every direction.'],
+      execution: ['Cycle through arm circles, band-free pull-aparts (or shoulder blade squeezes), and light torso twists.', 'Keep the effort light — this is preparation, not the workout.'],
+      cues: ['Move through a full range of motion.', 'Gradually increase reach each round.'],
+      commonMistakes: ['Skipping straight into heavy pressing/pulling cold.', 'Rushing through with a small range of motion.'],
+    },
+    trackingMode: 'duration',
+  },
+  {
+    id: 'cross-body-shoulder-stretch',
+    name: 'Cross-body shoulder stretch',
+    category: 'cooldown',
+    movementPattern: 'horizontal-pull',
+    muscles: { primary: ['shoulders'], secondary: ['back'] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'high', systemic: 'low' },
+    technique: {
+      description: 'A post-workout static stretch for the rear shoulder and upper back.',
+      setup: ['Stand tall, bring one arm straight across the chest.'],
+      execution: ['Use the other arm to gently pull the extended arm closer to the chest.', 'Hold, then switch sides.'],
+      cues: ['Keep the shoulder of the extended arm relaxed, down away from the ear.', 'Ease in gradually rather than forcing it.'],
+      commonMistakes: ['Shrugging the shoulder up toward the ear.', 'Yanking the arm instead of easing into the stretch.'],
+    },
+    trackingMode: 'duration-side',
   },
 ];

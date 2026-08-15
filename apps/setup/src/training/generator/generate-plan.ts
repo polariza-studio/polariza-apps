@@ -21,9 +21,11 @@ import { selectExercises } from './select-exercises';
 import { prescribeExercise } from './prescribe-exercise';
 import { applyFocusEmphasis } from './apply-focus-emphasis';
 import { sessionQualityPass } from './session-quality-pass';
+import { assignWarmupCooldown } from './assign-warmup-cooldown';
 import { estimateDuration } from './estimate-duration';
 import { validatePlan } from './validate-plan';
 import { hasUnsupportedContext } from '../rules/safety';
+import { resolveAvailableEquipment } from '../rules/equipment';
 
 export function generatePlan(answers: OnboardingAnswers, exerciseLibrary: Exercise[]): TrainingPlan {
   // Structural safety guarantee (spec §4.1 step 8): this call exists so any
@@ -37,24 +39,40 @@ export function generatePlan(answers: OnboardingAnswers, exerciseLibrary: Exerci
   const movementDays = assignMovementPatterns(split, answers, roleSets);
   const prioritizedDays = applyPriorities(movementDays, answers);
   const selectedDays = selectExercises(prioritizedDays, answers, exerciseLibrary);
+  const availableEquipment = resolveAvailableEquipment(answers.trainingEnvironment, answers.equipment);
 
   const days: TrainingDay[] = selectedDays.map((day, index) => {
     const exercises = day.exercises.map(({ exercise, slot }) =>
       prescribeExercise(exercise, slot, answers, roleSets),
     );
+    const { warmup, cooldown } = assignWarmupCooldown(
+      split.days[index].primaryPattern,
+      split.id,
+      exerciseLibrary,
+      availableEquipment,
+    );
     const baseDay: TrainingDay = {
       id: `day-${index + 1}`,
       name: day.name,
       estimatedDurationMinutes: 0,
+      warmup,
       exercises,
+      cooldown,
     };
     // Focus emphasis (bounded, ≤1 exercise/day) and the quality pass
     // (redundancy dedup + high-systemic cap) can both change a day's
     // sets/exercise list, so duration is estimated once, after both, not
-    // from the raw selection.
+    // from the raw selection. Both only ever touch the main `exercises`
+    // list — warm-up/cool-down are fixed, not subject to focus bias or
+    // fatigue-cap trimming.
     const emphasized = applyFocusEmphasis(baseDay, answers, exerciseLibrary);
     const qualityChecked = sessionQualityPass(emphasized, exerciseLibrary, answers);
-    return { ...qualityChecked, estimatedDurationMinutes: estimateDuration(qualityChecked.exercises) };
+    const estimatedDurationMinutes = estimateDuration([
+      ...qualityChecked.warmup,
+      ...qualityChecked.exercises,
+      ...qualityChecked.cooldown,
+    ]);
+    return { ...qualityChecked, estimatedDurationMinutes };
   });
 
   const plan: TrainingPlan = {
