@@ -18,10 +18,19 @@ export default defineConfig(({
   base: mode === 'production' ? '/polariza-apps/setup/' : '/',
   plugins: [react(), tailwindcss(), VitePWA({
     registerType: 'autoUpdate',
-    // Icons/splash are generated at build time from the existing brand
-    // mark (public/favicon.svg) — no separate icon asset to maintain.
+    // Icons/splash are generated at build time from the brand mark
+    // (public/favicon.png) — no separate icon asset to maintain. The
+    // generator's defaults shrink maskable/apple icons to 70% on a white
+    // pad (meant for logos with breathing room); our mark is already a
+    // full-bleed lime square, so padding is disabled and the fallback
+    // fill matches its background instead of the default white.
     pwaAssets: {
-      image: 'public/favicon.svg'
+      image: 'public/favicon.png',
+      preset: {
+        transparent: { sizes: [64, 192, 512], favicons: [[48, 'favicon.ico']] },
+        maskable: { sizes: [512], padding: 0, resizeOptions: { background: '#BFF753' } },
+        apple: { sizes: [180], padding: 0, resizeOptions: { background: '#BFF753' } }
+      }
     },
     manifest: {
       name: 'SetUp',
