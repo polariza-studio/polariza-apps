@@ -8,6 +8,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
+import { VitePWA } from 'vite-plugin-pwa';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
@@ -15,7 +16,22 @@ export default defineConfig(({
   mode
 }) => ({
   base: mode === 'production' ? '/polariza-apps/setup/' : '/',
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), VitePWA({
+    registerType: 'autoUpdate',
+    // Icons/splash are generated at build time from the existing brand
+    // mark (public/favicon.svg) — no separate icon asset to maintain.
+    pwaAssets: {
+      image: 'public/favicon.svg'
+    },
+    manifest: {
+      name: 'SetUp',
+      short_name: 'SetUp',
+      description: 'Plan, organize and track your workouts',
+      theme_color: '#294000',
+      background_color: '#CEFB83',
+      display: 'standalone'
+    }
+  })],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src')

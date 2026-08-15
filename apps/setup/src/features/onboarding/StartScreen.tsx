@@ -59,7 +59,7 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
           'linear-gradient(in oklab 168.34deg, oklab(81% -0.132 0.164 / 98%) 5.36%, oklab(90.8% -0.117 0.159) 38.13%, oklab(93.1% -0.092 0.126) 98.45%)',
       }}
     >
-      <div className="flex flex-1 flex-col items-center justify-center gap-space-8 px-[64px] pt-[224px]">
+      <div className="flex flex-1 flex-col items-center gap-space-8 px-[64px] pt-[224px] pb-space-9">
         <span className="text-display-md leading-display-md text-foreground">SetUp</span>
         <p className="text-body leading-body text-foreground-secondary text-center">
           Plan, organize and track
