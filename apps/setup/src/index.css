@@ -58,6 +58,7 @@
     --color-interactive-subtle-inverse: var(--interactive-subtle-inverse);
     --color-state-active: var(--state-active);
     --color-state-inactive: var(--state-inactive);
+    --color-success: var(--success);
 
     /* Button v1 Interaction States — Foundations v1, approved 2026-08-14
        (visually reviewed in Storybook, see Foundations.mdx "Buttons" >
@@ -195,7 +196,7 @@
        the semantic tokens below are meant to be used. */
     --moss: #294000;
     --lime: #BFF753;
-    --lime-soft: #CEFB83; /* not yet assigned to a semantic token in v1 */
+    --lime-soft: #CEFB83; /* assigned to --success 2026-08-17, see below */
     --neutral-0: #FFFFFF;
     --neutral-50: #FAFAFA;
 
@@ -216,6 +217,10 @@
     --interactive-subtle-inverse: color-mix(in srgb, var(--neutral-0) 10%, transparent);
     --state-active: var(--lime);
     --state-inactive: color-mix(in srgb, var(--moss) 10%, transparent);
+    /* --success — added 2026-08-17 for "workout-page-ending" in Paper
+       (the "Good Work!" text): first real use of --lime-soft, which
+       existed as an unassigned primitive since Color Foundations v1. */
+    --success: var(--lime-soft);
 
     /* --secondary / --secondary-foreground — CANONICAL Color Foundations v1,
        promoted 2026-08-14 (previously a shadcn-alias placeholder pointing at

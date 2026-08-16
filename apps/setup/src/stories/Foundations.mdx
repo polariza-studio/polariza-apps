@@ -297,21 +297,25 @@ Sizing is established by `components/ui/button.tsx` (Button v1): `size-5` (20px)
 
 **Default icon** — `stroke="currentColor"`, `fill="none"` (Lucide's own default `fill`; don't override it). Color comes entirely from `currentColor`, so an icon sitting inside a colored button automatically picks up the right ink — Button never sets an icon color directly, and never will (no filled Button variants, no filled-icon color tokens, no component-specific icon colors). (Paper itself has no explicit color set on any icon yet — `currentColor` is a codebase convention, not something measured in Paper.)
 
-**Filled workout action icon** (an approved, named exception) — `stroke="none"`, `fill="currentColor"`. This is an *icon-level* choice made where the icon is used, not a Button prop or variant — each approved filled icon decides for itself. Exactly three icons carry this treatment today:
+**Filled workout action icon** (an approved, named exception) — `stroke="none"`, `fill="currentColor"`. This is an *icon-level* choice made where the icon is used, not a Button prop or variant — each approved filled icon decides for itself. Exactly four icons carry this treatment today:
 
 | Icon | Lucide component | Used for |
 | --- | --- | --- |
 | Play | `Play` | Start Workout, Resume |
 | Pause | `Pause` | Pause |
 | Finish | `Square` | Finish |
+| Next | `SkipForward` | Next (Active Workout) — approved 2026-08-17, same treatment as Play/Pause/Finish, but keeps its stroke (see note below) |
 
 ```tsx
 <Play data-icon="inline-start" fill="currentColor" stroke="none" />
 <Pause data-icon="inline-start" fill="currentColor" stroke="none" />
 <Square data-icon="inline-start" fill="currentColor" stroke="none" />
+<SkipForward data-icon="inline-end" fill="currentColor" stroke="currentColor" />
 ```
 
 **Both props are required, not just `fill`.** Every Lucide icon component ships `stroke="currentColor"` and `stroke-width="2"` on its root `<svg>` regardless of what `fill` you pass — adding `fill="currentColor"` alone leaves a 2px outline stroke doubled on top of the fill, which Paper's equivalent icons don't have (confirmed via `get_jsx`: Paper's filled icons carry a `fill` attribute and *no* `stroke` attribute at all). `stroke="none"` removes that leftover outline.
+
+**`SkipForward` is the one exception that keeps `stroke="currentColor"`** (corrected 2026-08-17): unlike Play/Pause/Square, which are single filled shapes, SkipForward is a filled triangle *plus* a separate stroked line (the leading bar) — Lucide draws that bar as a zero-width `<line>`, which has no fill area at all and renders only via its stroke. `stroke="none"` on the whole icon silently deletes the bar, leaving what reads as a plain `Play` triangle. `fill="currentColor"` still fills the triangle; `stroke="currentColor"` is what makes the bar visible (Button's own CSS already sets `stroke-width: 1.5` on descendant icons, so no explicit width is needed here).
 
 Don't extend this treatment to any other icon without adding it to this table first — it's a short, named list, not a general rule for "icons that feel like actions."
 

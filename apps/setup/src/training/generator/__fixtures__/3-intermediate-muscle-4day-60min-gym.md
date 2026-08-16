@@ -6,11 +6,11 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell back squat | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 |
-| 2 | Rear-foot-elevated split squat | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 |
+| 1 | Barbell back squat | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 · ~40kg |
+| 2 | Rear-foot-elevated split squat | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 · ~10kg/db |
 | 3 | Plank | accessory | 4 × 30s hold · rest 30s |
 | 4 | Bodyweight calf raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
-| 5 | Leg extension | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
+| 5 | Leg extension | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~20kg |
 
 **Cool-down:** Standing quad stretch (1 × 30s hold · rest 0s)
 
@@ -20,11 +20,11 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell bench press | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 |
-| 2 | Barbell row | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 |
-| 3 | Triceps pushdown | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
-| 4 | Dumbbell lateral raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
-| 5 | Dumbbell chest fly | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
+| 1 | Barbell bench press | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 · ~40kg |
+| 2 | Barbell row | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 · ~35kg |
+| 3 | Triceps pushdown | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~12kg |
+| 4 | Dumbbell lateral raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~4kg/db |
+| 5 | Dumbbell chest fly | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~8kg/db |
 
 **Cool-down:** Cross-body shoulder stretch (1 × 30s hold · rest 0s)
 
@@ -34,11 +34,11 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell Romanian deadlift | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 |
-| 2 | Dumbbell step-up | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 |
+| 1 | Barbell Romanian deadlift | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 · ~40kg |
+| 2 | Dumbbell step-up | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 · ~10kg/db |
 | 3 | Dead bug | accessory | 4 × 10-15 reps · rest 60s · RIR 0-2 |
-| 4 | Machine calf raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
-| 5 | Leg curl | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
+| 4 | Machine calf raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~30kg |
+| 5 | Leg curl | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~18kg |
 
 **Cool-down:** Standing quad stretch (1 × 30s hold · rest 0s)
 
@@ -49,10 +49,10 @@
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
 | 1 | Pike push-up | primary | 3 × 6-10 reps · rest 120s · RIR 1-3 |
-| 2 | Barbell row | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 |
-| 3 | Lat pulldown | accessory | 3 × 10-15 reps · rest 60s · RIR 0-2 |
-| 4 | Dumbbell biceps curl | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
-| 5 | Dumbbell lateral raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 |
+| 2 | Barbell row | secondary | 3 × 8-12 reps · rest 90s · RIR 1-3 · ~35kg |
+| 3 | Lat pulldown | accessory | 3 × 10-15 reps · rest 60s · RIR 0-2 · ~30kg |
+| 4 | Dumbbell biceps curl | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~8kg/db |
+| 5 | Dumbbell lateral raise | accessory | 3 × 12-17 reps · rest 60s · RIR 0-2 · ~4kg/db |
 
 **Cool-down:** Cross-body shoulder stretch (1 × 30s hold · rest 0s)
 

@@ -31,6 +31,8 @@ class FakeStorage implements Storage {
 
 const preferences: OnboardingAnswers = {
   name: 'Test User',
+  weightKg: 70,
+  heightCm: 170,
   goal: 'muscle',
   experience: 'some-experience',
   daysPerWeek: 3,
@@ -54,8 +56,11 @@ const activeWorkout: ActiveWorkout = {
   trainingDayId: 'day-1',
   startedAt: new Date().toISOString(),
   elapsedSeconds: 0,
+  phase: 'main',
   currentExerciseIndex: 0,
+  warmup: [],
   exercises: [],
+  cooldown: [],
 };
 
 const activity: Activity = {
@@ -65,6 +70,8 @@ const activity: Activity = {
   startedAt: new Date().toISOString(),
   completedAt: new Date().toISOString(),
   durationSeconds: 600,
+  warmup: [],
+  cooldown: [],
   exercises: [],
 };
 

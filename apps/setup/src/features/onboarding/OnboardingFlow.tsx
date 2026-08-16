@@ -12,7 +12,6 @@ import {
   ENVIRONMENT_OPTIONS,
   EQUIPMENT_OPTIONS,
   EXPERIENCE_OPTIONS,
-  FOCUS_OPTIONS,
   GOAL_OPTIONS,
 } from './step-options';
 import { getStepNumber } from './steps';
@@ -29,6 +28,16 @@ const STEP_COPY: Record<string, { label: string; title: string; description?: st
     label: 'Name',
     title: 'What should we call you?',
     description: 'No need to share your real name.\nAn alias works perfectly.',
+  },
+  weight: {
+    label: 'Weight',
+    title: "What's your weight?",
+    description: 'We use this to better adjust your training and starting weights.',
+  },
+  height: {
+    label: 'Height',
+    title: 'How tall are you?',
+    description: 'This helps us better tailor your training.',
   },
   goal: {
     label: 'Goal',
@@ -52,23 +61,28 @@ const STEP_COPY: Record<string, { label: string; title: string; description?: st
     title: 'What equipment do you have?',
     description: 'Select everything you can use.',
   },
-  focusAreas: {
-    label: 'Focus',
-    title: 'Anything you want to focus on?',
-    description: "Optional. We'll keep your plan\nbalanced either way.",
-  },
 };
 
 export function OnboardingFlow() {
   const [started, setStarted] = useState(false);
-  const onboarding = useOnboarding();
+  const { stepId, isFirstStep, isLastStep, canGoNext, showsContinueButton, answers, updateAnswer, goNext, goBack } =
+    useOnboarding();
+  // Local text mirrors for the two numeric fields: `answers.weightKg`/
+  // `heightCm` can only ever hold a valid positive number (updateAnswer's
+  // type doesn't allow undefined for a required field), but the input
+  // needs to represent "empty" and "mid-edit" states while typing —
+  // without this, backspacing to clear the field would have nothing to
+  // set state to and the controlled input would appear stuck. Committed
+  // to `answers` (and so to canAdvance) only once the text parses to a
+  // valid positive number; initialized from any already-committed value
+  // so going back to a completed step still shows what was entered.
+  const [weightText, setWeightText] = useState(() => (answers.weightKg ? String(answers.weightKg) : ''));
+  const [heightText, setHeightText] = useState(() => (answers.heightCm ? String(answers.heightCm) : ''));
 
   if (!started) {
     return <StartScreen onStart={() => setStarted(true)} />;
   }
 
-  const { stepId, isFirstStep, isLastStep, canGoNext, showsContinueButton, answers, updateAnswer, goNext, goBack } =
-    onboarding;
   const copy = STEP_COPY[stepId];
   const stepNumber = getStepNumber(stepId);
 
@@ -125,6 +139,50 @@ export function OnboardingFlow() {
                   // left edge, which would otherwise read as off-center.
                   className={`text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full max-w-[184px] border-none bg-transparent outline-none ${answers.name ? 'text-center' : 'text-left'}`}
                 />
+              </div>
+            )}
+
+            {stepId === 'weight' && (
+              <div className="flex flex-col items-center justify-center gap-space-8 py-space-7">
+                <div className="flex items-baseline gap-space-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={weightText}
+                    onChange={(event) => {
+                      const text = event.target.value;
+                      setWeightText(text);
+                      const value = Number(text);
+                      if (text !== '' && Number.isFinite(value) && value > 0) updateAnswer('weightKg', value);
+                    }}
+                    placeholder="55"
+                    autoFocus
+                    className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-[120px] border-none bg-transparent text-right outline-none"
+                  />
+                  <span className="text-display-md leading-display-md text-foreground-secondary">kg</span>
+                </div>
+              </div>
+            )}
+
+            {stepId === 'height' && (
+              <div className="flex flex-col items-center justify-center gap-space-8 py-space-7">
+                <div className="flex items-baseline gap-space-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={heightText}
+                    onChange={(event) => {
+                      const text = event.target.value;
+                      setHeightText(text);
+                      const value = Number(text);
+                      if (text !== '' && Number.isFinite(value) && value > 0) updateAnswer('heightCm', value);
+                    }}
+                    placeholder="165"
+                    autoFocus
+                    className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-[120px] border-none bg-transparent text-right outline-none"
+                  />
+                  <span className="text-display-md leading-display-md text-foreground-secondary">cm</span>
+                </div>
               </div>
             )}
 
@@ -217,27 +275,6 @@ export function OnboardingFlow() {
               </div>
             )}
 
-            {stepId === 'focusAreas' && (
-              <div className="flex flex-wrap justify-center gap-space-6 py-space-7">
-                {FOCUS_OPTIONS.map((option) => {
-                  const selected = answers.focusAreas?.includes(option.value) ?? false;
-                  return (
-                    <MultiSelectChip
-                      key={option.value}
-                      label={option.label}
-                      selected={selected}
-                      onToggle={() => {
-                        const current = answers.focusAreas ?? [];
-                        updateAnswer(
-                          'focusAreas',
-                          selected ? current.filter((item) => item !== option.value) : [...current, option.value],
-                        );
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
       </div>

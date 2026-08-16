@@ -1,16 +1,47 @@
 import { useParams } from 'react-router-dom';
 
-// Placeholder — Workout Completion's real UI is a separate, not-yet-approved
-// implementation phase. Exists only to verify route params and guards.
+import { Button } from '@/components/ui/button';
+import { formatElapsed } from './active-workout';
+import { useActiveWorkout } from './use-active-workout';
+
+// Same dark-gradient surface as WorkoutOverviewPage ("workout-page-ending"
+// in Paper) — foreground-inverse tokens, ghost-inverse for the
+// lower-emphasis action. Light-to-dark (not dark-to-light) and front-loaded
+// into the top quarter (26.17%), matching Paper's stops exactly rather than
+// spreading the transition across the full height.
+const GRADIENT = 'linear-gradient(in oklab 180deg, oklab(42.4% -0.056 0.070) 0%, oklab(33.9% -0.056 0.070) 26.17%)';
+
 export function WorkoutCompletePage() {
-  const { dayId } = useParams<{ dayId: string }>();
+  const { dayId = '' } = useParams<{ dayId: string }>();
+  const { ready, workout, saveActivity, discardActivity } = useActiveWorkout(dayId);
+
+  if (!ready || !workout) return null;
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-space-5 p-space-8 text-center">
-      <h1 className="text-heading leading-heading text-foreground">Workout Complete</h1>
-      <p className="text-body leading-body max-w-sm text-foreground-secondary">
-        Day: {dayId} — not implemented yet.
-      </p>
-    </main>
+    <div className="flex min-h-svh flex-col items-center" style={{ backgroundImage: GRADIENT }}>
+      {/* Empty top-section spacer — Paper hides the back button on this
+          screen (no way back once the workout is finished), but keeps the
+          64px reserved header space. */}
+      <div className="mx-auto h-16 w-full max-w-[440px] px-space-7 py-space-7" />
+
+      <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col items-center justify-center gap-space-8 px-space-7 text-center">
+        <div className="flex flex-col items-center gap-space-3">
+          <span className="text-body leading-body text-foreground-inverse-secondary">Your time activity</span>
+          <span className="text-display-lg leading-display-lg font-light text-foreground-inverse">
+            {formatElapsed(workout.elapsedSeconds)}
+          </span>
+        </div>
+        <span className="text-display-md leading-display-md font-light text-success">Good Work!</span>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-5 px-space-7 pt-8 pb-8">
+        <Button variant="primary" className="w-full" onClick={() => void saveActivity()}>
+          Save Activity
+        </Button>
+        <Button variant="ghost-inverse" className="w-full" onClick={() => void discardActivity()}>
+          Discard Activity
+        </Button>
+      </div>
+    </div>
   );
 }

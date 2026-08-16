@@ -6,8 +6,8 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell back squat | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 |
-| 2 | Rear-foot-elevated split squat | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 |
+| 1 | Barbell back squat | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 · ~60kg |
+| 2 | Rear-foot-elevated split squat | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 · ~16kg/db |
 | 3 | Plank | accessory | 4 × 30s hold · rest 30s |
 
 **Cool-down:** Standing quad stretch (1 × 30s hold · rest 0s)
@@ -18,9 +18,9 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell bench press | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 |
-| 2 | Barbell row | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 |
-| 3 | Triceps pushdown | accessory | 3 × 10-14 reps · rest 75s · RIR 0-2 |
+| 1 | Barbell bench press | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 · ~60kg |
+| 2 | Barbell row | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 · ~55kg |
+| 3 | Triceps pushdown | accessory | 3 × 10-14 reps · rest 75s · RIR 0-2 · ~18kg |
 
 **Cool-down:** Cross-body shoulder stretch (1 × 30s hold · rest 0s)
 
@@ -30,8 +30,8 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell deadlift | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 |
-| 2 | Dumbbell step-up | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 |
+| 1 | Barbell deadlift | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 · ~80kg |
+| 2 | Dumbbell step-up | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 · ~16kg/db |
 | 3 | Dead bug | accessory | 4 × 8-12 reps · rest 75s · RIR 0-2 |
 
 **Cool-down:** Standing quad stretch (1 × 30s hold · rest 0s)
@@ -42,8 +42,8 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell overhead press | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 |
-| 2 | Barbell row | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 |
+| 1 | Barbell overhead press | primary | 5 × 3-6 reps · rest 180s · RIR 1-3 · ~40kg |
+| 2 | Barbell row | secondary | 3 × 5-8 reps · rest 120s · RIR 1-3 · ~55kg |
 | 3 | Lat pulldown | accessory | 3 × 8-12 reps · rest 75s · RIR 0-2 |
 
 **Cool-down:** Cross-body shoulder stretch (1 × 30s hold · rest 0s)

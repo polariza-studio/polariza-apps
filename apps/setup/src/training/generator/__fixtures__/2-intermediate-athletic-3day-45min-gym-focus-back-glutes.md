@@ -6,12 +6,12 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell Romanian deadlift | primary | 4 × 5-8 reps · rest 120s · RIR 2-4 |
-| 2 | Barbell hip thrust | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 3 | Barbell back squat | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 4 | Rear-foot-elevated split squat | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 5 | Leg curl | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 |
-| 6 | Machine hip abduction | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 |
+| 1 | Barbell Romanian deadlift | primary | 4 × 5-8 reps · rest 120s · RIR 2-4 · ~40kg |
+| 2 | Barbell hip thrust | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~40kg |
+| 3 | Barbell back squat | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~40kg |
+| 4 | Rear-foot-elevated split squat | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~10kg/db |
+| 5 | Leg curl | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 · ~18kg |
+| 6 | Machine hip abduction | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 · ~18kg |
 
 **Cool-down:** Standing quad stretch (1 × 30s hold · rest 0s)
 
@@ -21,12 +21,12 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Barbell row | primary | 4 × 5-8 reps · rest 120s · RIR 2-4 |
-| 2 | Lat pulldown | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
+| 1 | Barbell row | primary | 4 × 5-8 reps · rest 120s · RIR 2-4 · ~35kg |
+| 2 | Lat pulldown | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~30kg |
 | 3 | Inverted row | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 4 | Dumbbell lateral raise | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 |
-| 5 | Dumbbell biceps curl | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 |
-| 6 | Triceps pushdown | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 |
+| 4 | Dumbbell lateral raise | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 · ~4kg/db |
+| 5 | Dumbbell biceps curl | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 · ~8kg/db |
+| 6 | Triceps pushdown | accessory | 2 × 12-17 reps · rest 60s · RIR 1-3 · ~12kg |
 
 **Cool-down:** Cross-body shoulder stretch (1 × 30s hold · rest 0s)
 
@@ -37,10 +37,10 @@
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
 | 1 | Glute bridge | primary | 4 × 5-8 reps · rest 120s · RIR 2-4 |
-| 2 | Dumbbell step-up | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 3 | Dumbbell row | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 4 | Barbell bench press | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 |
-| 5 | Farmer's carry | secondary | 3 × 35s hold · rest 45s |
+| 2 | Dumbbell step-up | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~10kg/db |
+| 3 | Dumbbell row | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~14kg |
+| 4 | Barbell bench press | secondary | 3 × 8-12 reps · rest 90s · RIR 2-4 · ~40kg |
+| 5 | Farmer's carry | secondary | 3 × 35s hold · rest 45s · ~16kg/db |
 | 6 | Plank | accessory | 3 × 30s hold · rest 30s |
 
 **Cool-down:** Standing quad stretch (1 × 30s hold · rest 0s)

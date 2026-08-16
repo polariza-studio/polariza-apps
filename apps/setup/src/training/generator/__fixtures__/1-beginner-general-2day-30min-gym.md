@@ -6,9 +6,9 @@
 
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
-| 1 | Goblet squat | primary | 2 × 8-12 reps · rest 90s · RIR 2-4 |
-| 2 | Machine chest press | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 |
-| 3 | Seated cable row | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 |
+| 1 | Goblet squat | primary | 2 × 8-12 reps · rest 90s · RIR 2-4 · ~8kg |
+| 2 | Machine chest press | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 · ~15kg |
+| 3 | Seated cable row | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 · ~15kg |
 | 4 | Plank | accessory | 3 × 30s hold · rest 30s |
 
 **Cool-down:** Standing hamstring stretch (1 × 30s hold · rest 0s)
@@ -20,8 +20,8 @@
 | # | Exercise | Role | Prescription |
 |---|---|---|---|
 | 1 | Glute bridge | primary | 2 × 8-12 reps · rest 90s · RIR 2-4 |
-| 2 | Machine shoulder press | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 |
-| 3 | Dumbbell reverse lunge | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 |
+| 2 | Machine shoulder press | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 · ~10kg |
+| 3 | Dumbbell reverse lunge | secondary | 2 × 10-14 reps · rest 75s · RIR 2-4 · ~6kg/db |
 | 4 | Plank | accessory | 3 × 30s hold · rest 30s |
 
 **Cool-down:** Standing hamstring stretch (1 × 30s hold · rest 0s)

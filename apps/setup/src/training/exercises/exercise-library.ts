@@ -23,11 +23,24 @@
 // consensus for these specific exercises (not contested programming
 // science like training/rules/*.ts), but have not been reviewed by a
 // certified professional — treat this as a functional starting point, not
-// final authoritative guidance. startingLoad is deliberately unset here
-// for every exercise as of 2026-08-16 — the schema shipped ahead of the
-// curated numbers, which are pending review (see the per-exercise
-// starting-load table under review). imagePath is intentionally unset
-// everywhere — no image assets exist yet.
+// final authoritative guidance.
+//
+// startingLoad (2026-08-17): populated for every weight-tracked exercise
+// (reps-weight / reps-weight-side / duration-weight), one curated figure
+// per experience level (new/some-experience/experienced), matching the
+// exercise's own equipment type (two-dumbbells uses weightPerDumbbell,
+// everything else uses weight). These are reasonable general-population
+// starting points, not a formula derived from user data (weight/height,
+// 1RM, etc.) — spec §16 "no fake precision" is about inventing precision
+// the system doesn't have grounds for; a curated coaching reference is
+// the opposite of that, same category as the rep ranges/rest times in
+// training/rules/goals.ts. Same review status as the rest of this file:
+// functional starting point, not certified-professional-reviewed.
+// Workout Mode overrides the displayed value with the user's own history
+// once it exists (see features/workout/active-workout.ts's
+// resolveInitialWeight) — this is only ever the first-time fallback.
+//
+// imagePath is intentionally unset everywhere — no image assets exist yet.
 
 import type { Exercise } from '../../domain/exercise';
 
@@ -86,6 +99,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back at the bottom.', 'Letting the dumbbell drift forward.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'single-dumbbell', weight: 8, unit: 'kg' },
+      'some-experience': { type: 'single-dumbbell', weight: 14, unit: 'kg' },
+      experienced: { type: 'single-dumbbell', weight: 20, unit: 'kg' },
+    },
   },
   {
     id: 'barbell-back-squat',
@@ -109,6 +127,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Losing core brace at the bottom.', 'Knees collapsing inward under load.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 20, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
+    },
   },
   {
     id: 'leg-press',
@@ -132,6 +155,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the lower back round off the pad.', 'Locking the knees out aggressively at the top.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 40, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 70, unit: 'kg' },
+      experienced: { type: 'machine', weight: 100, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -179,6 +207,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back.', 'Bending the knees too much, turning it into a squat.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 18, unit: 'kg' },
+    },
   },
   {
     id: 'barbell-rdl',
@@ -209,6 +242,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back.', 'Bending the knees too much, turning it into a squat.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 20, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
+    },
   },
   {
     id: 'barbell-deadlift',
@@ -232,6 +270,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back off the floor.', 'Letting the bar drift away from the shins.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 30, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 50, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 80, unit: 'kg' },
+    },
   },
   {
     id: 'hip-thrust',
@@ -252,6 +295,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Hyperextending the lower back at the top.', 'Pushing through the toes.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 20, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -301,6 +349,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the front knee cave inward.', 'Stepping back too short a distance.'],
     },
     trackingMode: 'reps-weight-side',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
+    },
   },
   {
     id: 'dumbbell-walking-lunge',
@@ -321,6 +374,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rushing the steps and losing balance.', 'Leaning forward from the hips.'],
     },
     trackingMode: 'reps-weight-side',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
+    },
   },
   {
     id: 'dumbbell-split-squat',
@@ -341,6 +399,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Front foot too close, driving the knee far past the toes.', 'Losing balance sideways.'],
     },
     trackingMode: 'reps-weight-side',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
+    },
   },
   {
     id: 'dumbbell-step-up',
@@ -361,6 +424,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Pushing off the back leg to help the rep.', 'Using a platform too high to control.'],
     },
     trackingMode: 'reps-weight-side',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -409,6 +477,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Flaring the elbows to a full 90 degrees.', 'Bouncing the dumbbells at the bottom.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 20, unit: 'kg' },
+    },
   },
   {
     id: 'barbell-bench-press',
@@ -429,6 +502,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Bouncing the bar off the chest.', 'Flaring the elbows straight out.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 20, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
+    },
   },
   {
     id: 'machine-chest-press',
@@ -449,6 +527,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the shoulders roll forward.', 'Using momentum instead of a controlled tempo.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 15, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 30, unit: 'kg' },
+      experienced: { type: 'machine', weight: 45, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -516,6 +599,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rotating the torso to help the pull.', 'Using a short, partial range of motion.'],
     },
     trackingMode: 'reps-weight-side',
+    startingLoad: {
+      new: { type: 'single-dumbbell', weight: 8, unit: 'kg' },
+      'some-experience': { type: 'single-dumbbell', weight: 14, unit: 'kg' },
+      experienced: { type: 'single-dumbbell', weight: 20, unit: 'kg' },
+    },
   },
   {
     id: 'barbell-row',
@@ -536,6 +624,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Standing up out of the hinge on each rep.', 'Using momentum to heave the bar up.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 20, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 35, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 55, unit: 'kg' },
+    },
   },
   {
     id: 'seated-cable-row',
@@ -556,6 +649,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back at full stretch.', 'Using the legs to heave the weight.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'cable', weight: 15, unit: 'kg' },
+      'some-experience': { type: 'cable', weight: 30, unit: 'kg' },
+      experienced: { type: 'cable', weight: 45, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -600,6 +698,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Excessive lower-back arch.', 'Flaring the elbows out to 90 degrees at the bottom.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 15, unit: 'kg' },
+    },
   },
   {
     id: 'barbell-overhead-press',
@@ -620,6 +723,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Overarching the lower back to press.', 'Pressing the bar forward instead of straight up.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'barbell', weight: 15, unit: 'kg' },
+      'some-experience': { type: 'barbell', weight: 25, unit: 'kg' },
+      experienced: { type: 'barbell', weight: 40, unit: 'kg' },
+    },
   },
   {
     id: 'machine-shoulder-press',
@@ -640,6 +748,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Arching off the back pad.', 'Using a short, partial range of motion.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 10, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 20, unit: 'kg' },
+      experienced: { type: 'machine', weight: 30, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -684,6 +797,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using body momentum to yank the bar down.', 'Pulling behind the neck.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'cable', weight: 15, unit: 'kg' },
+      'some-experience': { type: 'cable', weight: 30, unit: 'kg' },
+      experienced: { type: 'cable', weight: 45, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -708,6 +826,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Turning it into a press by bending the elbows more at the bottom.', 'Going so wide the shoulders round forward.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
+    },
   },
   {
     id: 'cable-chest-fly',
@@ -728,6 +851,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using the front delts to press instead of the chest to bring the arms together.', 'Letting the cables yank the arms back too far.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'cable', weight: 6, unit: 'kg' },
+      'some-experience': { type: 'cable', weight: 12, unit: 'kg' },
+      experienced: { type: 'cable', weight: 18, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -751,6 +879,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the shoulders round forward.', 'Leaning to one side.'],
     },
     trackingMode: 'duration-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 24, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -897,6 +1030,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Swinging the torso to help the curl.', 'Only using half the range of motion.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
+    },
   },
   {
     id: 'band-biceps-curl',
@@ -937,6 +1075,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Leaning back to help the curl.', 'Letting the elbows drift forward.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'cable', weight: 6, unit: 'kg' },
+      'some-experience': { type: 'cable', weight: 12, unit: 'kg' },
+      experienced: { type: 'cable', weight: 18, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -961,6 +1104,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the elbows drift forward/away from the body.', 'Using the shoulders to help push.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'cable', weight: 6, unit: 'kg' },
+      'some-experience': { type: 'cable', weight: 12, unit: 'kg' },
+      experienced: { type: 'cable', weight: 18, unit: 'kg' },
+    },
   },
   {
     id: 'dumbbell-overhead-triceps-extension',
@@ -981,6 +1129,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the elbows flare out wide.', 'Arching the lower back to compensate.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'single-dumbbell', weight: 6, unit: 'kg' },
+      'some-experience': { type: 'single-dumbbell', weight: 10, unit: 'kg' },
+      experienced: { type: 'single-dumbbell', weight: 14, unit: 'kg' },
+    },
   },
   {
     id: 'bench-dip',
@@ -1025,6 +1178,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using momentum/swinging the weight up.', 'Raising past shoulder height, involving the traps.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'two-dumbbells', weightPerDumbbell: 2, unit: 'kg' },
+      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
+      experienced: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
+    },
   },
   {
     id: 'band-lateral-raise',
@@ -1075,6 +1233,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Pulling low, toward the chest instead of the face.', 'Using the arms only, without rotating at the shoulder.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'cable', weight: 6, unit: 'kg' },
+      'some-experience': { type: 'cable', weight: 10, unit: 'kg' },
+      experienced: { type: 'cable', weight: 15, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -1099,6 +1262,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using momentum to kick the weight up.', 'Only using a partial range of motion.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 10, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 20, unit: 'kg' },
+      experienced: { type: 'machine', weight: 30, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -1123,6 +1291,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using momentum to swing the weight up.', 'Lifting the hips to help the curl.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 10, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 18, unit: 'kg' },
+      experienced: { type: 'machine', weight: 28, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -1167,6 +1340,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Bouncing at the bottom instead of controlling it.', 'Using a short, partial range of motion.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 15, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 30, unit: 'kg' },
+      experienced: { type: 'machine', weight: 45, unit: 'kg' },
+    },
   },
 
   // ============================================================
@@ -1211,6 +1389,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using a fast, bouncy tempo.', 'Only using a partial range of motion.'],
     },
     trackingMode: 'reps-weight',
+    startingLoad: {
+      new: { type: 'machine', weight: 10, unit: 'kg' },
+      'some-experience': { type: 'machine', weight: 18, unit: 'kg' },
+      experienced: { type: 'machine', weight: 28, unit: 'kg' },
+    },
   },
 
   // ============================================================

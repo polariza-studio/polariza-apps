@@ -45,6 +45,14 @@ export type OnboardingAnswers = {
   // instruction. Used later for Home's greeting (top-left). An alias is
   // explicitly fine per Paper's own copy, not necessarily a legal name.
   name: string;
+  // Added 2026-08-17, not in the original spec/domain model. Not generic
+  // profile data — the training engine will eventually combine this with
+  // experience/exercise/equipment/reps/RIR to estimate a better initial
+  // suggestedLoad than experience alone can give (see Exercise.startingLoad
+  // in domain/exercise.ts). That calibration model isn't built yet; these
+  // fields are collected ahead of it.
+  weightKg: number;
+  heightCm: number;
   goal: Goal;
   experience: ExperienceLevel;
   daysPerWeek: DaysPerWeek;
@@ -85,6 +93,8 @@ function sameItems<T>(a: T[] | undefined, b: T[] | undefined): boolean {
 export function answersEqual(a: OnboardingAnswers, b: OnboardingAnswers): boolean {
   return (
     a.name === b.name &&
+    a.weightKg === b.weightKg &&
+    a.heightCm === b.heightCm &&
     a.goal === b.goal &&
     a.experience === b.experience &&
     a.daysPerWeek === b.daysPerWeek &&

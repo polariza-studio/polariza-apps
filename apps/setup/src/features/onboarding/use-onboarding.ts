@@ -17,6 +17,10 @@ function canAdvance(stepId: OnboardingStepId, answers: Draft): boolean {
   switch (stepId) {
     case 'name':
       return (answers.name?.trim().length ?? 0) > 0;
+    case 'weight':
+      return typeof answers.weightKg === 'number' && answers.weightKg > 0;
+    case 'height':
+      return typeof answers.heightCm === 'number' && answers.heightCm > 0;
     case 'goal':
       return answers.goal !== undefined;
     case 'experience':
@@ -29,16 +33,15 @@ function canAdvance(stepId: OnboardingStepId, answers: Draft): boolean {
       return answers.trainingEnvironment !== undefined;
     case 'equipment':
       return (answers.equipment?.length ?? 0) > 0;
-    case 'focusAreas':
-      return true;
   }
 }
 
 // Steps with no visible "Continue" button in Paper (Goal/Experience/Days/
 // Time/Environment) advance as soon as an option is tapped — confirmed by
 // their absence of any button node in Paper across every screen checked.
-// Name, Equipment, and Focus keep an explicit Continue/Create-my-plan
-// button (free text, multi-select, and flow-end respectively).
+// Name, Weight, Height, and Equipment keep an explicit Continue/Create-my-
+// plan button (free text/numeric entry and multi-select respectively —
+// there's no tappable "option" to auto-advance on for a typed value).
 const AUTO_ADVANCE_STEPS: ReadonlySet<OnboardingStepId> = new Set([
   'goal',
   'experience',
@@ -79,27 +82,36 @@ export function useOnboarding() {
   const canGoNext = canAdvance(stepId, answers);
   const showsContinueButton = !AUTO_ADVANCE_STEPS.has(stepId);
 
-  async function goNext() {
-    if (!canGoNext) return;
-    if (!isLastStep) {
-      setStepIndex((index) => index + 1);
-      return;
-    }
-    // deprioritizedAreas/context have no screen yet (deliberately deferred,
-    // see steps.ts) — always saved empty, not left undefined, since the
-    // rest of the domain depends on them existing. equipment is only ever
-    // asked for 'home' users (see steps.ts) — defaulted the same way for
-    // 'gym' users, rather than left undefined, so every saved
-    // OnboardingAnswers actually satisfies its type.
+  // focusAreas/deprioritizedAreas/context have no screen (focusAreas
+  // deliberately removed from onboarding 2026-08-17 — product decision,
+  // not a deferred build; the other two are deferred, see steps.ts) —
+  // always saved empty, not left undefined, since the rest of the domain
+  // (generator, safety rules, Adjust Plan) depends on them existing. This
+  // is the neutral/no-focus state the generator already expects, not an
+  // invented default. equipment is only ever asked for 'home' users (see
+  // steps.ts) — defaulted the same way for 'gym' users, rather than left
+  // undefined, so every saved OnboardingAnswers actually satisfies its
+  // type.
+  async function completeOnboarding(finalAnswers: Draft) {
     const completed: OnboardingAnswers = {
-      ...(answers as OnboardingAnswers),
-      equipment: answers.equipment ?? [],
+      ...(finalAnswers as OnboardingAnswers),
+      equipment: finalAnswers.equipment ?? [],
+      focusAreas: [],
       deprioritizedAreas: [],
       context: [],
     };
     await storageRepository.savePreferences(completed);
     // Plan generation happens on the loading screen, not here.
     navigate('/loading', { replace: true });
+  }
+
+  async function goNext() {
+    if (!canGoNext) return;
+    if (!isLastStep) {
+      setStepIndex((index) => index + 1);
+      return;
+    }
+    await completeOnboarding(answers);
   }
 
   function goBack() {
@@ -121,9 +133,21 @@ export function useOnboarding() {
     // replaces it rather than stacking two pending advances.
     if (AUTO_ADVANCE_STEPS.has(stepId) && canAdvance(stepId, next)) {
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+      // trainingEnvironment is an auto-advance step, and for a gym user
+      // (no equipment step follows) it's now the *final* step — picking
+      // "Gym" has to complete onboarding here, not just bump the index.
+      // Bumping unconditionally left gym users stuck: min(index+1,
+      // length-1) is a no-op on the last index, and this step never
+      // shows a Continue button to fall back on. This only mattered once
+      // focusAreas (always the true last step before) was removed.
+      const isCurrentlyLastStep = stepIndex === getOnboardingSteps(next).length - 1;
       advanceTimeoutRef.current = setTimeout(() => {
         advanceTimeoutRef.current = null;
-        setStepIndex((index) => Math.min(index + 1, getOnboardingSteps(next).length - 1));
+        if (isCurrentlyLastStep) {
+          void completeOnboarding(next);
+        } else {
+          setStepIndex((index) => Math.min(index + 1, getOnboardingSteps(next).length - 1));
+        }
       }, AUTO_ADVANCE_DELAY_MS);
     }
   }

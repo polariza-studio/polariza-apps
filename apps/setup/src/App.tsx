@@ -15,6 +15,7 @@ import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { HomePage } from '@/features/home/HomePage'
 import { PlanLoadingScreen } from '@/features/plan/PlanLoadingScreen'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { TechniquePage } from '@/features/workout/TechniquePage'
 import { WorkoutActivePage } from '@/features/workout/WorkoutActivePage'
 import { WorkoutCompletePage } from '@/features/workout/WorkoutCompletePage'
 import { WorkoutOverviewPage } from '@/features/workout/WorkoutOverviewPage'
@@ -90,6 +91,14 @@ function App() {
           element={
             <RequireOnboarding>
               <WorkoutCompletePage />
+            </RequireOnboarding>
+          }
+        />
+        <Route
+          path="/workout/:dayId/technique/:exerciseId"
+          element={
+            <RequireOnboarding>
+              <TechniquePage />
             </RequireOnboarding>
           }
         />
