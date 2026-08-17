@@ -4,15 +4,34 @@ import { ChevronRight, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { answersEqual } from '@/domain/onboarding';
+import { answersEqual, type FocusArea } from '@/domain/onboarding';
 import { MultiSelectChip } from '@/features/onboarding/MultiSelectChip';
-import { EQUIPMENT_OPTIONS, EXPERIENCE_OPTIONS, FOCUS_OPTIONS, GOAL_OPTIONS } from '@/features/onboarding/step-options';
+import {
+  CURRENT_FREQUENCY_OPTIONS,
+  EQUIPMENT_OPTIONS,
+  FOCUS_OPTIONS,
+  GOAL_OPTIONS,
+  TRAINING_HISTORY_OPTIONS,
+} from '@/features/onboarding/step-options';
 import { storageRepository } from '@/services/storage';
 
 import { useAdjustPlan } from './adjust-plan-context';
 
 const GOAL_LABEL = Object.fromEntries(GOAL_OPTIONS.map((option) => [option.value, option.label]));
-const EXPERIENCE_LABEL = Object.fromEntries(EXPERIENCE_OPTIONS.map((option) => [option.value, option.label]));
+const TRAINING_HISTORY_LABEL = Object.fromEntries(TRAINING_HISTORY_OPTIONS.map((option) => [option.value, option.label]));
+const CURRENT_FREQUENCY_LABEL = Object.fromEntries(CURRENT_FREQUENCY_OPTIONS.map((option) => [option.value, option.label]));
+
+// "Glutes, Legs, Back & Core" (≤4, last joined with "&"), "Glutes, Legs,
+// Back, Core, …" (>4, first 4 + ellipsis), or "No preferences" (none) —
+// matches Paper's three shown states of the Focus summary row exactly.
+// Order follows FOCUS_OPTIONS' own order, not selection order.
+function formatFocusSummary(focusAreas: FocusArea[]): string {
+  if (focusAreas.length === 0) return 'No preferences';
+  const labels = FOCUS_OPTIONS.filter((option) => focusAreas.includes(option.value)).map((option) => option.label);
+  if (labels.length > 4) return `${labels.slice(0, 4).join(', ')}, …`;
+  if (labels.length === 1) return labels[0];
+  return `${labels.slice(0, -1).join(', ')} & ${labels[labels.length - 1]}`;
+}
 
 // A row is either a static fact (Name — read-only, no chevron) or a link
 // to one of the field pickers (Goal/Experience/Days/Time/Equipment —
@@ -104,7 +123,7 @@ export function AdjustPlanPage() {
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <div className="flex h-16 shrink-0 items-center justify-between p-space-7">
-        <span className="text-body leading-body text-foreground">Adjust plan</span>
+        <span className="text-body leading-body text-foreground">Settings</span>
         <IconButton aria-label="Close" onClick={() => navigate('/home')}>
           <X />
         </IconButton>
@@ -130,9 +149,18 @@ export function AdjustPlanPage() {
             onClick={() => navigate('/adjust-plan/goal')}
           />
           <SettingsRow
-            label="Experience"
-            value={EXPERIENCE_LABEL[draft.experience]}
-            onClick={() => navigate('/adjust-plan/experience')}
+            label="Training history"
+            value={TRAINING_HISTORY_LABEL[draft.trainingHistory]}
+            onClick={() => navigate('/adjust-plan/training-history')}
+          />
+          <SettingsRow
+            label="Current training"
+            value={
+              draft.currentStrengthTrainingFrequency
+                ? CURRENT_FREQUENCY_LABEL[draft.currentStrengthTrainingFrequency]
+                : 'Not set'
+            }
+            onClick={() => navigate('/adjust-plan/current-frequency')}
           />
         </Section>
 
@@ -178,29 +206,11 @@ export function AdjustPlanPage() {
             )}
           </div>
 
-          <div className="flex flex-col items-start gap-space-7 self-stretch py-space-6">
-            <span className="text-heading leading-heading font-light text-foreground">Focus</span>
-            <div className="flex flex-wrap gap-space-6">
-              {FOCUS_OPTIONS.map((option) => {
-                const selected = draft.focusAreas.includes(option.value);
-                return (
-                  <MultiSelectChip
-                    key={option.value}
-                    label={option.label}
-                    selected={selected}
-                    onToggle={() =>
-                      setField(
-                        'focusAreas',
-                        selected
-                          ? draft.focusAreas.filter((item) => item !== option.value)
-                          : [...draft.focusAreas, option.value],
-                      )
-                    }
-                  />
-                );
-              })}
-            </div>
-          </div>
+          <SettingsRow
+            label="Focus"
+            value={formatFocusSummary(draft.focusAreas)}
+            onClick={() => navigate('/adjust-plan/focus')}
+          />
         </Section>
       </div>
 
