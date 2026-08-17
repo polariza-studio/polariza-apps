@@ -203,6 +203,7 @@ export const exerciseLibrary: Exercise[] = [
     // accessory pattern in any current split (always primary/secondary,
     // see splits.ts), so the two can never be collapsed by that pass.
     id: 'single-leg-glute-bridge',
+    videoId: '3NXv0Nany-Q',
     name: 'Single-leg glute bridge',
     category: 'strength',
     strengthType: 'compound',
@@ -522,6 +523,7 @@ export const exerciseLibrary: Exercise[] = [
     // full stretch) and removes any risk of losing balance off a narrow
     // bench, so balance/mobility read lower here despite the same load.
     id: 'dumbbell-floor-press',
+    videoId: 'qHCI9rK7HqM',
     name: 'Dumbbell floor press',
     category: 'strength',
     strengthType: 'compound',
@@ -804,6 +806,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'incline-pike-push-up',
+    videoId: '2Dezk4Datwc',
     name: 'Incline pike push-up',
     category: 'strength',
     strengthType: 'compound',
@@ -896,6 +899,7 @@ export const exerciseLibrary: Exercise[] = [
     // canonical variant only (kneeling, single anchor point) — not
     // multiple band-pulldown variants — per explicit scope.
     id: 'band-lat-pulldown',
+    videoId: '2K6U6ScTdUI',
     name: 'Band lat pulldown',
     category: 'strength',
     strengthType: 'compound',
@@ -1495,6 +1499,7 @@ export const exerciseLibrary: Exercise[] = [
   // exercise in this library.
   {
     id: 'leg-swings',
+    videoId: 'D17eUtUt0zQ',
     name: 'Leg swings',
     category: 'warmup',
     movementPattern: 'hinge',
@@ -1514,6 +1519,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'arm-circles',
+    videoId: 'hne3nHGXPRM',
     name: 'Arm circles',
     category: 'warmup',
     movementPattern: 'shoulder-abduction',
@@ -1533,6 +1539,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'scapular-push-up',
+    videoId: '6Cqp03P8sHo',
     name: 'Scapular push-up',
     category: 'warmup',
     movementPattern: 'horizontal-push',
@@ -1552,6 +1559,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'band-pull-apart',
+    videoId: 'FXbommJ-Q-Q',
     name: 'Band pull-apart',
     category: 'warmup',
     movementPattern: 'horizontal-pull',
@@ -1620,6 +1628,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'hip-flexor-stretch',
+    videoId: 'bnVfloe6yTo',
     name: 'Hip flexor stretch',
     category: 'cooldown',
     movementPattern: 'lunge',
@@ -1639,6 +1648,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'chest-stretch',
+    videoId: 'M850sCj9LHQ',
     name: 'Chest stretch',
     category: 'cooldown',
     movementPattern: 'horizontal-push',
@@ -1658,6 +1668,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'lat-stretch',
+    videoId: '-ezgahciJD0',
     name: 'Lat stretch',
     category: 'cooldown',
     movementPattern: 'vertical-pull',
