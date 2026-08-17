@@ -2,17 +2,22 @@
 // duration, matching the exercise's own trackingMode) to a selected
 // exercise, plus its session role.
 //
-// suggestedLoad (reps-weight / duration-weight only) comes straight from
-// Exercise.startingLoad, keyed by the user's experience — a curated,
-// per-exercise reference, never a generic formula, and never itself a
-// requirement (spec §16 "no fake precision" is about inventing precision
-// with no basis; a reviewed starting reference is the opposite of that).
-// It's undefined whenever the exercise has no startingLoad entry yet, or
-// for every non-weight-tracked mode. This is only ever a *stable
-// fallback* baked into the plan — Workout Mode may override the
+// suggestedLoad (reps-weight / reps-weight-side / duration-weight only)
+// is computed from Exercise.startingLoad — ONE curated reference per
+// exercise (never a lookup table, never derived from another exercise) —
+// scaled by trainingHistory, currentStrengthTrainingFrequency, and the
+// exercise's own ACTUAL prescribed rep range/RIR (computed just above
+// this call, after accessoryRepRange's adjustment, so the load formula
+// reflects exactly what the user will be asked to do, not a pre-
+// adjustment guess). See training/rules/starting-load.ts for the full
+// formula. It's undefined whenever the exercise has no startingLoad
+// entry, or for every non-weight-tracked mode. This is only ever a
+// *stable fallback* baked into the plan — Workout Mode may override the
 // displayed value with newer activity history at runtime without ever
 // writing back into this field, and the user can edit it regardless of
-// where it came from.
+// where it came from (spec §16 "no fake precision" is about inventing
+// precision with no basis; a reviewed starting reference run through a
+// bounded, disclosed formula is the opposite of that).
 //
 // No focus-area bonus here (a prior version added +1 set to every
 // exercise that happened to hit a focus muscle as primary — since focus
@@ -31,6 +36,7 @@ import type { PatternSlot } from './apply-priorities';
 import type { RoleSets } from './calculate-volume';
 import { goalRules } from '../rules/goals';
 import { durationRules } from '../rules/duration-prescription';
+import { computeStartingLoad } from '../rules/starting-load';
 
 export function prescribeExercise(
   exercise: Exercise,
@@ -52,7 +58,6 @@ function buildPrescription(
   sets: number,
 ): ExercisePrescription {
   const mode = exercise.trackingMode;
-  const suggestedLoad = exercise.startingLoad?.[answers.experience];
   const adjustedSets = accessorySets(exercise, slot.role, sets);
 
   // Each branch narrows `mode` to the exact literal(s) it returns —
@@ -63,6 +68,12 @@ function buildPrescription(
   // literals silently break narrowing elsewhere in the pipeline).
   if (mode === 'duration-weight') {
     const rules = durationRules[slot.role];
+    // No rep range/RIR for a duration-based prescription — the
+    // prescription-load band is neutral (x1.0) for this mode, see
+    // starting-load.ts's prescriptionLoadBand.
+    const suggestedLoad = exercise.startingLoad
+      ? computeStartingLoad(exercise.startingLoad, answers.trainingHistory, answers.currentStrengthTrainingFrequency, undefined, undefined)
+      : undefined;
     return { mode, sets: adjustedSets, durationSeconds: rules.durationSeconds, restSeconds: rules.restSeconds, suggestedLoad };
   }
   if (mode === 'duration' || mode === 'duration-side') {
@@ -72,6 +83,9 @@ function buildPrescription(
   if (mode === 'reps-weight' || mode === 'reps-weight-side') {
     const rules = goalRules[answers.goal][slot.role];
     const repRange = accessoryRepRange(exercise, slot.role, rules.repRange);
+    const suggestedLoad = exercise.startingLoad
+      ? computeStartingLoad(exercise.startingLoad, answers.trainingHistory, answers.currentStrengthTrainingFrequency, repRange, rules.targetRir)
+      : undefined;
     return { mode, sets: adjustedSets, repRange, restSeconds: rules.restSeconds, targetRir: rules.targetRir, suggestedLoad };
   }
 

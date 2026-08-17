@@ -1,5 +1,5 @@
 // Stage 5: fill each role-tagged slot with an approved exercise from the
-// library — filtered by equipment, experience-appropriate difficulty, and
+// library — filtered by equipment, complexity-appropriate difficulty, and
 // programming category (warm-up/cool-down exercises are library content
 // for the Technique UI and future use, not candidates the generator
 // programs into a session); ranked by fit with focus/deprioritized areas,
@@ -17,15 +17,15 @@
 
 import type {
   Equipment,
-  ExperienceLevel,
   Goal,
   OnboardingAnswers,
+  TrainingHistory,
 } from '../../domain/onboarding';
 import type { DemandLevel, Exercise, MovementPattern, MuscleGroup } from '../../domain/exercise';
 import type { PatternSlot, PrioritizedDayPlan } from './apply-priorities';
 import type { ExerciseRole } from '../rules/goals';
 import { resolveAvailableEquipment } from '../rules/equipment';
-import { experienceRules } from '../rules/experience';
+import { complexityRules } from '../rules/exercise-complexity';
 import { functionalOverlap } from './functional-overlap';
 
 const difficultyRank: Record<Exercise['difficulty'], number> = {
@@ -56,7 +56,7 @@ export function selectExercises(
     answers.trainingEnvironment,
     answers.equipment,
   );
-  const maxDifficultyRank = difficultyRank[experienceRules[answers.experience].maxDifficulty];
+  const maxDifficultyRank = difficultyRank[complexityRules[answers.trainingHistory].maxDifficulty];
 
   // Tracked across the whole week (not reset per day) so ranking can
   // mildly discourage — without banning — using the identical exercise in
@@ -83,7 +83,7 @@ export function selectExercises(
         availableEquipment,
         maxDifficultyRank,
         answers.goal,
-        answers.experience,
+        answers.trainingHistory,
         usedInDay,
         weekUsage,
         { selectedInDay },
@@ -106,7 +106,7 @@ export function findExerciseForSlot(
   availableEquipment: Equipment[],
   maxDifficultyRank: number,
   goal: Goal,
-  experience: ExperienceLevel,
+  trainingHistory: TrainingHistory,
   excludeIds: Set<string>,
   weekUsage: Map<string, number>,
   options: { excludeSystemicHigh?: boolean; selectedInDay?: Exercise[] } = {},
@@ -127,8 +127,8 @@ export function findExerciseForSlot(
   const selectedInDay = options.selectedInDay ?? [];
   const ranked = [...candidates].sort(
     (a, b) =>
-      rank(b, slot, goal, experience, weekUsage, selectedInDay) -
-      rank(a, slot, goal, experience, weekUsage, selectedInDay),
+      rank(b, slot, goal, trainingHistory, weekUsage, selectedInDay) -
+      rank(a, slot, goal, trainingHistory, weekUsage, selectedInDay),
   );
   return ranked[0];
 }
@@ -140,7 +140,7 @@ function rank(
   exercise: Exercise,
   slot: { pattern: MovementPattern; role: ExerciseRole; preferredMuscles: MuscleGroup[]; avoidMuscles: MuscleGroup[] },
   goal: Goal,
-  experience: ExperienceLevel,
+  trainingHistory: TrainingHistory,
   weekUsage: Map<string, number>,
   selectedInDay: Exercise[],
 ): number {
@@ -162,29 +162,34 @@ function rank(
   // filters ties on every other term (0 focus hits, same goalMatch, same
   // roleMatch) whenever focus areas are empty or don't apply — and a tie
   // falls back to array order, silently favoring whatever's listed first
-  // in the library regardless of the user's experience. That's how an
-  // 'experienced' + 'stronger' user could end up with a bodyweight squat
-  // as their primary lift over a barbell back squat: nothing in ranking
-  // ever preferred the more advanced, more loadable option. Difficulty is
-  // still a hard ceiling (findExerciseForSlot's filter), not a target —
-  // this only breaks ties among already-eligible candidates, and only for
-  // primary/secondary roles: accessory work stays biased toward simpler
-  // movements even for advanced users, which matches how accessory
-  // exercises are actually programmed.
+  // in the library regardless of the user's training background. That's
+  // how an advanced-ceiling 'stronger' user could end up with a
+  // bodyweight squat as their primary lift over a barbell back squat:
+  // nothing in ranking ever preferred the more advanced, more loadable
+  // option. Difficulty is still a hard ceiling (findExerciseForSlot's
+  // filter), not a target — this only breaks ties among already-eligible
+  // candidates, and only for primary/secondary roles: accessory work
+  // stays biased toward simpler movements even for advanced users, which
+  // matches how accessory exercises are actually programmed.
   const difficultyFit = slot.role === 'accessory' ? 0 : difficultyRank[exercise.difficulty] * 0.5;
 
   // "Beginner" isn't the same as "bodyweight" — a free-standing bodyweight
   // squat asks more of balance/coordination than a machine-guided leg
   // press or a counterbalanced goblet squat, even though a difficulty
   // label alone can't tell them apart (all three are tagged 'beginner').
-  // Scoped to 'new' only: once a user has some training background,
-  // stability is no longer the limiting factor, and this must never
-  // compete with difficultyFit's preference for more advanced/loadable
-  // work at higher experience levels.
+  // Graded across all 4 trainingHistory tiers via complexityRules'
+  // stabilityWeight (0 for six-to-eighteen-months/more-than-18-months,
+  // same as the old experience !== 'new' behavior) rather than a binary
+  // check — 'less-than-6-months' gets a real but smaller aversion to
+  // technical/balance demand than 'just-starting', a distinction the old
+  // flat experience variable couldn't express. Never scaled by
+  // currentStrengthTrainingFrequency: how often someone trains right now
+  // says nothing about accumulated technique exposure. Must never compete
+  // with difficultyFit's preference for more advanced/loadable work once
+  // a tier's ceiling allows it.
   const stabilityFit =
-    experience === 'new'
-      ? -(demandRank[exercise.demands.technical] + demandRank[exercise.demands.balance]) * 0.2
-      : 0;
+    -(demandRank[exercise.demands.technical] + demandRank[exercise.demands.balance]) *
+    complexityRules[trainingHistory].stabilityWeight;
 
   // A tie-breaker, not a hard requirement — nudging toward variety when
   // candidates are otherwise close, not a signal strong enough to compete

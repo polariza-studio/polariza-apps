@@ -27,7 +27,7 @@ import type { Exercise, MuscleGroup } from '../../domain/exercise';
 import type { Equipment } from '../../domain/onboarding';
 import type { PlannedExercise, TrainingPlan, WarmupCooldownExercise } from '../../domain/plan';
 import type { SplitDefinition } from '../rules/splits';
-import { experienceRules } from '../rules/experience';
+import { complexityRules } from '../rules/exercise-complexity';
 import { resolveAvailableEquipment } from '../rules/equipment';
 import { weeklyVolumeTargets } from '../rules/volume';
 import { focusAreaMuscles } from '../rules/priorities';
@@ -70,7 +70,7 @@ export function validatePlan(
     plan.preferences.trainingEnvironment,
     plan.preferences.equipment,
   );
-  const maxDifficultyRank = difficultyRank[experienceRules[plan.preferences.experience].maxDifficulty];
+  const maxDifficultyRank = difficultyRank[complexityRules[plan.preferences.trainingHistory].maxDifficulty];
 
   if (plan.days.length === 0) {
     errors.push('Plan has no training days.');
@@ -113,7 +113,7 @@ export function validatePlan(
       }
 
       if (difficultyRank[exercise.difficulty] > maxDifficultyRank) {
-        errors.push(`${label(exercise.id)} exceeds the user's experience level (${exercise.difficulty}).`);
+        errors.push(`${label(exercise.id)} exceeds the user's training-history complexity ceiling (${exercise.difficulty}).`);
       }
 
       if (!exercise.equipment.every((eq) => availableEquipment.includes(eq))) {

@@ -79,10 +79,9 @@ function planWithDay(overrides: Partial<TrainingDay> = {}): TrainingPlan {
     createdAt: new Date().toISOString(),
     preferences: {
       name: 'Test User',
-      weightKg: 70,
-      heightCm: 170,
       goal: 'muscle',
-      experience: 'some-experience',
+      trainingHistory: 'six-to-eighteen-months',
+      currentStrengthTrainingFrequency: 'one-to-two',
       daysPerWeek: 2,
       sessionDuration: 30,
       trainingEnvironment: 'home',
@@ -150,18 +149,20 @@ describe('validatePlan', () => {
     expect(validatePlan(plan, library, split).errors.some((e) => e.includes('negative restSeconds'))).toBe(true);
   });
 
-  it('rejects an exercise above the experience ceiling', () => {
+  it('rejects an exercise above the training-history complexity ceiling', () => {
     const plan = planWithDay({
       exercises: [{ exerciseId: 'advanced-lift', role: 'primary', prescription: reps() }],
     });
     expect(
-      validatePlan(plan, library, split).errors.some((e) => e.includes("exceeds the user's experience level")),
+      validatePlan(plan, library, split).errors.some((e) =>
+        e.includes("exceeds the user's training-history complexity ceiling"),
+      ),
     ).toBe(true);
   });
 
   it('rejects an exercise requiring equipment the user does not have', () => {
     const plan = planWithDay();
-    plan.preferences.experience = 'experienced';
+    plan.preferences.trainingHistory = 'more-than-18-months';
     plan.days[0].exercises = [{ exerciseId: 'advanced-lift', role: 'primary', prescription: reps() }];
     expect(
       validatePlan(plan, library, split).errors.some((e) => e.includes("equipment the user doesn't have")),

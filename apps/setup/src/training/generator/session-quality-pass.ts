@@ -50,7 +50,7 @@ import type { OnboardingAnswers } from '../../domain/onboarding';
 import type { PlannedExercise, TrainingDay } from '../../domain/plan';
 import { maxHighSystemicPerSession } from '../rules/session-composition';
 import { resolveAvailableEquipment } from '../rules/equipment';
-import { experienceRules } from '../rules/experience';
+import { complexityRules } from '../rules/exercise-complexity';
 import { findExerciseForSlot } from './select-exercises';
 import { functionalOverlap } from './functional-overlap';
 
@@ -145,7 +145,7 @@ function capHighSystemicWork(
   if (overCapacity.length === 0) return exercises;
 
   const availableEquipment = resolveAvailableEquipment(answers.trainingEnvironment, answers.equipment);
-  const maxDifficultyRank = difficultyRank[experienceRules[answers.experience].maxDifficulty];
+  const maxDifficultyRank = difficultyRank[complexityRules[answers.trainingHistory].maxDifficulty];
   const usedIds = new Set(exercises.map((pe) => pe.exerciseId));
 
   let result = exercises;
@@ -162,7 +162,7 @@ function capHighSystemicWork(
       availableEquipment,
       maxDifficultyRank,
       answers.goal,
-      answers.experience,
+      answers.trainingHistory,
       usedIds,
       new Map(),
       { excludeSystemicHigh: true },

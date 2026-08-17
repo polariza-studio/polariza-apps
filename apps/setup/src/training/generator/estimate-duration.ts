@@ -21,16 +21,45 @@ import { goalRules } from '../rules/goals';
 const SECONDS_PER_REP = 3;
 const TRANSITION_OVERHEAD_SECONDS = 60;
 
+// Warm-up/cool-down movements are brief prep/recovery work, not full
+// exercises with equipment setup or loading — reusing the 60s main-
+// workout transition (calibrated for walking to a station, adjusting a
+// machine) would blow the 2-5 minute target on its own. A separate,
+// smaller, explicitly-named assumption instead of weakening the 60s
+// constant globally. Applied only BETWEEN movements — see
+// estimateWarmupCooldownSeconds — never after the last one, since
+// there's no "next station" to walk to after the block ends.
+const WARMUP_COOLDOWN_TRANSITION_SECONDS = 15;
+
 // Structural (`{ prescription }`), not PlannedExercise specifically — so
 // the same estimate covers both the main exercise list and the warm-up/
 // cool-down entries (WarmupCooldownExercise), which share the
 // prescription shape but not the rest of PlannedExercise.
 export function estimateDuration(exercises: { prescription: ExercisePrescription }[]): number {
-  const totalSeconds = exercises.reduce(
+  return Math.round(estimateMainWorkoutSeconds(exercises) / 60);
+}
+
+// Raw seconds (not rounded to minutes) for the main exercise list, using
+// the original per-exercise-including-the-last transition assumption.
+// Exported alongside estimateWarmupCooldownSeconds so generate-plan.ts
+// can sum all three blocks' raw seconds and round exactly once for a
+// day's total — summing three independently-rounded minute figures would
+// compound rounding error across blocks.
+export function estimateMainWorkoutSeconds(exercises: { prescription: ExercisePrescription }[]): number {
+  return exercises.reduce(
     (sum, exercise) => sum + exerciseSeconds(exercise.prescription) + TRANSITION_OVERHEAD_SECONDS,
     0,
   );
-  return Math.round(totalSeconds / 60);
+}
+
+// Raw seconds for a warm-up or cool-down block. The 15s transition
+// applies only BETWEEN movements (n-1 times for n movements) — never
+// after the final one — per the MVP warm-up/cool-down duration
+// assumption above.
+export function estimateWarmupCooldownSeconds(exercises: { prescription: ExercisePrescription }[]): number {
+  const movementSeconds = exercises.reduce((sum, exercise) => sum + exerciseSeconds(exercise.prescription), 0);
+  const transitionSeconds = Math.max(exercises.length - 1, 0) * WARMUP_COOLDOWN_TRANSITION_SECONDS;
+  return movementSeconds + transitionSeconds;
 }
 
 // A planning-time estimate for a slot that doesn't have a specific

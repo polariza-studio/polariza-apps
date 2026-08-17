@@ -5,10 +5,9 @@ import type { DaysPerWeek, OnboardingAnswers } from '../../domain/onboarding';
 function answersWithDays(daysPerWeek: DaysPerWeek): OnboardingAnswers {
   return {
     name: 'Test User',
-    weightKg: 70,
-    heightCm: 170,
     goal: 'muscle',
-    experience: 'some-experience',
+    trainingHistory: 'six-to-eighteen-months',
+    currentStrengthTrainingFrequency: 'one-to-two',
     daysPerWeek,
     sessionDuration: 45,
     trainingEnvironment: 'gym',
@@ -27,12 +26,13 @@ describe('selectSplit', () => {
   it('picks full-body-3day for 3 days/week when not eligible for the weekly-intent split', () => {
     // Same 3-day frequency as the eligible case below, but each answer
     // fails prefersWeeklyIntentSplit for a different reason.
-    expect(selectSplit({ ...answersWithDays(3), experience: 'new' }).id).toBe('full-body-3day');
+    expect(selectSplit({ ...answersWithDays(3), trainingHistory: 'just-starting' }).id).toBe('full-body-3day');
+    expect(selectSplit({ ...answersWithDays(3), trainingHistory: 'less-than-6-months' }).id).toBe('full-body-3day');
     expect(selectSplit({ ...answersWithDays(3), sessionDuration: 30 }).id).toBe('full-body-3day');
     expect(selectSplit({ ...answersWithDays(3), goal: 'stronger' }).id).toBe('full-body-3day');
   });
 
-  it('picks the weekly-intent split for 3 days/week when experience/duration/goal allow it', () => {
+  it('picks the weekly-intent split for 3 days/week when trainingHistory/duration/goal allow it', () => {
     expect(selectSplit(answersWithDays(3)).id).toBe('lower-upper-athletic-3day');
   });
 

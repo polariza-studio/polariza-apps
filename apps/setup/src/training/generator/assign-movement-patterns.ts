@@ -12,7 +12,7 @@
 // using real remaining session time (currently just 'muscle') instead walk
 // the template's optionalPatterns in duration-budget order — MINIMUM
 // SESSION → GOAL-BENEFICIAL ADDITIONS → STOP. Either way, duration and
-// experience remain a ceiling that can only *trim*, never pad — a
+// workload readiness remain a ceiling that can only *trim*, never pad — a
 // session's exercise count is a programming decision, not a function of
 // how much clock time happens to be available, even for the goals that
 // are allowed to use more of that time when there's genuine coverage
@@ -24,7 +24,7 @@ import type { SplitDefinition, SplitDayTemplate } from '../rules/splits';
 import type { ExerciseRole } from '../rules/goals';
 import type { RoleSets } from './calculate-volume';
 import { durationConstraints } from '../rules/duration';
-import { experienceRules } from '../rules/experience';
+import { deriveWorkloadReadiness, workloadReadinessRules } from '../rules/workload-readiness';
 import { accessoryBudgetByGoal, usesRemainingCapacityByGoal } from '../rules/session-composition';
 import { estimateSlotSeconds } from './estimate-duration';
 
@@ -42,16 +42,26 @@ export function assignMovementPatterns(
   split: SplitDefinition,
   answers: OnboardingAnswers,
   roleSets: RoleSets,
+  // Defaults to the full session length for backward compatibility.
+  // generate-plan.ts passes a reduced value — the session budget minus a
+  // warm-up/cool-down reservation — so the two new blocks fit inside the
+  // user's selected duration instead of adding on top of it. Only
+  // affects buildSlotsUsingRemainingCapacity: 'stronger' (the other
+  // branch) never reads sessionDuration for padding, so it's unaffected
+  // regardless of this value — see rules/session-composition.ts's
+  // usesRemainingCapacityByGoal.
+  mainWorkoutBudgetSeconds: number = answers.sessionDuration * 60,
 ): DayMovementPlan[] {
+  const readiness = deriveWorkloadReadiness(answers.trainingHistory, answers.currentStrengthTrainingFrequency);
   const ceiling = Math.min(
     durationConstraints[answers.sessionDuration].maxExercises,
-    experienceRules[answers.experience].maxExercisesPerSession,
+    workloadReadinessRules[readiness].maxExercisesPerSession,
   );
 
   return split.days.map((template) => ({
     name: template.name,
     slots: usesRemainingCapacityByGoal[answers.goal]
-      ? buildSlotsUsingRemainingCapacity(template, answers, roleSets, ceiling)
+      ? buildSlotsUsingRemainingCapacity(template, answers, roleSets, ceiling, mainWorkoutBudgetSeconds)
       : buildSlotsWithFixedBudget(template, answers, ceiling),
   }));
 }
@@ -87,9 +97,9 @@ function buildSlotsUsingRemainingCapacity(
   answers: OnboardingAnswers,
   roleSets: RoleSets,
   ceiling: number,
+  budgetSeconds: number,
 ): RoleSlot[] {
   const slots = baseSlots(template);
-  const budgetSeconds = answers.sessionDuration * 60;
   let estimatedSeconds = slots.reduce(
     (sum, slot) => sum + estimateSlotSeconds(slot.role, answers.goal, roleSets[slot.role]),
     0,
