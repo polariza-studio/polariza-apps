@@ -25,20 +25,29 @@
 // certified professional — treat this as a functional starting point, not
 // final authoritative guidance.
 //
-// startingLoad (2026-08-17): populated for every weight-tracked exercise
-// (reps-weight / reps-weight-side / duration-weight), one curated figure
-// per experience level (new/some-experience/experienced), matching the
-// exercise's own equipment type (two-dumbbells uses weightPerDumbbell,
-// everything else uses weight). These are reasonable general-population
-// starting points, not a formula derived from user data (weight/height,
-// 1RM, etc.) — spec §16 "no fake precision" is about inventing precision
-// the system doesn't have grounds for; a curated coaching reference is
-// the opposite of that, same category as the rep ranges/rest times in
-// training/rules/goals.ts. Same review status as the rest of this file:
-// functional starting point, not certified-professional-reviewed.
-// Workout Mode overrides the displayed value with the user's own history
-// once it exists (see features/workout/active-workout.ts's
-// resolveInitialWeight) — this is only ever the first-time fallback.
+// startingLoad (2026-08-17, redesigned 2026-08-19): populated for every
+// weight-tracked exercise (reps-weight / reps-weight-side /
+// duration-weight) as ONE curated reference point — not a lookup table.
+// Each exercise's number is reviewed independently (matching its own
+// equipment type: two-dumbbells uses weightPerDumbbell, everything else
+// uses weight) and never derived from another exercise's reference at
+// runtime; training/generator/prescribe-exercise.ts scales this single
+// value by trainingHistory/currentStrengthTrainingFrequency/prescription
+// via training/rules/starting-load.ts. Relative-load ratios between
+// exercises (e.g. Hip Thrust loading heavier than Squat) were used only
+// as a review-time sanity check while curating these numbers — they are
+// not encoded as a live formula anywhere. These are reasonable
+// general-population starting points, not a formula derived from user
+// data (weight/height, 1RM, etc.) — spec §16 "no fake precision" is
+// about inventing precision the system doesn't have grounds for; a
+// curated coaching reference is the opposite of that, same category as
+// the rep ranges/rest times in training/rules/goals.ts. Same review
+// status as the rest of this file: functional starting point, not
+// certified-professional-reviewed. Workout Mode overrides the displayed
+// value with the user's own history once it exists (see
+// features/workout/active-workout.ts's resolveInitialWeight) — this is
+// only ever the first-time fallback, and is always presented as
+// "Suggested start," never a claimed truth.
 //
 // imagePath is intentionally unset everywhere — no image assets exist yet.
 
@@ -50,6 +59,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'bodyweight-squat',
+    videoId: 'P-yaD24bUE8',
     name: 'Bodyweight squat',
     category: 'strength',
     strengthType: 'compound',
@@ -99,14 +109,12 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back at the bottom.', 'Letting the dumbbell drift forward.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'single-dumbbell', weight: 8, unit: 'kg' },
-      'some-experience': { type: 'single-dumbbell', weight: 14, unit: 'kg' },
-      experienced: { type: 'single-dumbbell', weight: 20, unit: 'kg' },
-    },
+    startingLoad: { type: 'single-dumbbell', weight: 14, unit: 'kg' },
+    videoId: 'nfX7IFK9UNI',
   },
   {
     id: 'barbell-back-squat',
+    videoId: 'aVWLY26UDUw',
     name: 'Barbell back squat',
     category: 'strength',
     strengthType: 'compound',
@@ -127,14 +135,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Losing core brace at the bottom.', 'Knees collapsing inward under load.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 20, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 40, unit: 'kg' },
   },
   {
     id: 'leg-press',
+    videoId: 'P-FZknD_DxM',
     name: 'Leg press',
     category: 'strength',
     strengthType: 'compound',
@@ -155,11 +160,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the lower back round off the pad.', 'Locking the knees out aggressively at the top.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 40, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 70, unit: 'kg' },
-      experienced: { type: 'machine', weight: 100, unit: 'kg' },
-    },
+    startingLoad: { type: 'machine', weight: 70, unit: 'kg' },
   },
 
   // ============================================================
@@ -167,6 +168,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'glute-bridge',
+    videoId: 'nbjJjSa0cKo',
     name: 'Glute bridge',
     category: 'strength',
     strengthType: 'compound',
@@ -186,7 +188,42 @@ export const exerciseLibrary: Exercise[] = [
     trackingMode: 'reps',
   },
   {
+    // Added 2026-08-19 (library-quality pass): a bodyweight hinge
+    // progression beyond Glute Bridge — that pattern previously had
+    // exactly one bodyweight-only option at every difficulty level.
+    // Deliberately kept at 'beginner' (not overrated) so it stays
+    // selectable for the least-experienced trainingHistory tier too —
+    // the single-leg balance demand is real but modest, and is already
+    // handled by the graded stabilityFit ranking (rules/exercise-
+    // complexity.ts) rather than a hard difficulty-ceiling exclusion.
+    // Same primary muscles as Glute Bridge (an honest reflection of the
+    // movement, not gamed to dodge redundancy scoring) — this is safe
+    // because session-quality-pass.ts's dedup only ever drops an
+    // ACCESSORY-tier exercise, and 'hinge' is never used as an optional/
+    // accessory pattern in any current split (always primary/secondary,
+    // see splits.ts), so the two can never be collapsed by that pass.
+    id: 'single-leg-glute-bridge',
+    name: 'Single-leg glute bridge',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'hinge',
+    muscles: { primary: ['glutes', 'hamstrings'], secondary: ['core'] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'medium', mobility: 'low', systemic: 'low' },
+    technique: {
+      description: 'A single-leg hip hinge that builds on the bilateral glute bridge with a real but manageable balance and unilateral-control challenge.',
+      setup: ['Lie on the back, knees bent, feet flat close to the glutes.', 'Extend one leg straight, holding it a few inches off the floor.'],
+      execution: ['Drive through the heel of the grounded foot to lift the hips until the body forms a straight line.', 'Lower under control, then repeat for the set before switching legs.'],
+      cues: ['Keep the hips level, not rotating toward the lifted leg.', 'Squeeze the glute of the grounded leg at the top.'],
+      commonMistakes: ['Letting the hips tilt or rotate to compensate for the lifted leg.', 'Overarching the lower back at the top.'],
+    },
+    trackingMode: 'reps-side',
+  },
+  {
     id: 'dumbbell-rdl',
+    videoId: 'aa57T45iFSE',
     name: 'Dumbbell Romanian deadlift',
     category: 'strength',
     strengthType: 'compound',
@@ -207,14 +244,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back.', 'Bending the knees too much, turning it into a squat.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 18, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
   },
   {
     id: 'barbell-rdl',
+    videoId: 'xgusDooVfKU',
     name: 'Barbell Romanian deadlift',
     category: 'strength',
     strengthType: 'compound',
@@ -242,14 +276,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back.', 'Bending the knees too much, turning it into a squat.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 20, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 32.5, unit: 'kg' },
   },
   {
     id: 'barbell-deadlift',
+    videoId: 'S5JSZKURFPo',
     name: 'Barbell deadlift',
     category: 'strength',
     strengthType: 'compound',
@@ -270,11 +301,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back off the floor.', 'Letting the bar drift away from the shins.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 30, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 50, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 80, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 50, unit: 'kg' },
   },
   {
     id: 'hip-thrust',
@@ -295,11 +322,8 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Hyperextending the lower back at the top.', 'Pushing through the toes.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 20, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 52.5, unit: 'kg' },
+    videoId: 'fbM2OXVEqY8',
   },
 
   // ============================================================
@@ -307,6 +331,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'bodyweight-lunge',
+    videoId: 'M-w-SjY6Di0',
     name: 'Bodyweight lunge',
     category: 'strength',
     strengthType: 'compound',
@@ -327,6 +352,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'dumbbell-reverse-lunge',
+    videoId: 'RZKXLMxPF_I',
     name: 'Dumbbell reverse lunge',
     category: 'strength',
     strengthType: 'compound',
@@ -349,21 +375,30 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the front knee cave inward.', 'Stepping back too short a distance.'],
     },
     trackingMode: 'reps-weight-side',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
   },
   {
     id: 'dumbbell-walking-lunge',
+    videoId: 'I34ysEkPK7w',
     name: 'Dumbbell walking lunge',
     category: 'strength',
     strengthType: 'compound',
     movementPattern: 'lunge',
     muscles: { primary: ['quadriceps', 'glutes'], secondary: ['hamstrings', 'core'] },
     equipment: ['dumbbells'],
-    difficulty: 'beginner',
+    // Reclassified 2026-08-19 (was 'beginner', library-quality pass): the
+    // only lunge-pattern exercise with 'medium' across all 4 demand axes
+    // among the beginner-tagged set — Bodyweight Lunge and Dumbbell
+    // Reverse Lunge both have at least two 'low' axes. Its profile sits
+    // closer to the already-intermediate split squat/step-up than to its
+    // former beginner peers. Kept at 'beginner' relied entirely on
+    // stabilityFit's ranking preference to steer true-beginner users
+    // toward gentler options when one was available in the same
+    // slot — a real but weaker guarantee than the hard difficulty
+    // ceiling, and one that only matters for the trainingHistory tiers
+    // this determination is actually about (six-to-eighteen-months+
+    // already clears an 'intermediate' ceiling either way).
+    difficulty: 'intermediate',
     suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
     demands: { technical: 'medium', balance: 'medium', mobility: 'medium', systemic: 'medium' },
     technique: {
@@ -374,15 +409,17 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rushing the steps and losing balance.', 'Leaning forward from the hips.'],
     },
     trackingMode: 'reps-weight-side',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
   },
   {
+    // Renamed 2026-08-19 (was 'Rear-foot-elevated split squat', library-
+    // quality pass): "Bulgarian split squat" is the standard/common name
+    // for this exact exercise — the clinical description was accurate
+    // but unusual next to how it's named everywhere else. ID kept
+    // unchanged (dumbbell-split-squat) — no technical reason to churn it.
     id: 'dumbbell-split-squat',
-    name: 'Rear-foot-elevated split squat',
+    videoId: '3fxmRoIE_fk',
+    name: 'Bulgarian split squat',
     category: 'strength',
     strengthType: 'compound',
     movementPattern: 'lunge',
@@ -399,11 +436,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Front foot too close, driving the knee far past the toes.', 'Losing balance sideways.'],
     },
     trackingMode: 'reps-weight-side',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
   },
   {
     id: 'dumbbell-step-up',
@@ -424,11 +457,8 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Pushing off the back leg to help the rep.', 'Using a platform too high to control.'],
     },
     trackingMode: 'reps-weight-side',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
+    videoId: 'Zp7RG4jFScw',
   },
 
   // ============================================================
@@ -436,6 +466,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'push-up',
+    videoId: 'WDIpL0pjun0',
     name: 'Push-up',
     category: 'strength',
     strengthType: 'compound',
@@ -460,6 +491,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'dumbbell-bench-press',
+    videoId: 'J-gWN5hYwRU',
     name: 'Dumbbell bench press',
     category: 'strength',
     strengthType: 'compound',
@@ -477,14 +509,41 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Flaring the elbows to a full 90 degrees.', 'Bouncing the dumbbells at the bottom.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 20, unit: 'kg' },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
+  },
+  {
+    // Added 2026-08-19 (library-quality pass): the only loaded
+    // horizontal-push option for dumbbells-only home users (no bench) —
+    // that scenario previously had exactly one option, Push-up, with no
+    // progression path. Does NOT replace Dumbbell Bench Press, which
+    // stays the equipment-appropriate pick whenever a bench is
+    // available. Demands set relative to Dumbbell Bench Press: the floor
+    // limits the ROM (elbows stop at the floor, well short of a bench's
+    // full stretch) and removes any risk of losing balance off a narrow
+    // bench, so balance/mobility read lower here despite the same load.
+    id: 'dumbbell-floor-press',
+    name: 'Dumbbell floor press',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'horizontal-push',
+    muscles: { primary: ['chest', 'triceps'], secondary: ['shoulders'] },
+    equipment: ['dumbbells'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'low', systemic: 'medium' },
+    technique: {
+      description: 'A dumbbell press performed lying on the floor — a chest press with a shortened, joint-friendly range of motion for anyone without a bench.',
+      setup: ['Lie on the floor, knees bent, feet flat, a dumbbell in each hand held at chest level.'],
+      execution: ['Press the dumbbells up until the arms are extended over the chest.', 'Lower under control until the upper arms rest lightly on the floor, then press back up.'],
+      cues: ['Let the elbows touch down lightly at the bottom, don’t bounce off the floor.', 'Drive to a full, controlled lockout at the top.'],
+      commonMistakes: ['Bouncing the elbows off the floor to help the next rep.', 'Flaring the elbows out to a full 90 degrees.'],
     },
+    trackingMode: 'reps-weight',
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 14, unit: 'kg' },
   },
   {
     id: 'barbell-bench-press',
+    videoId: 'CayG6UYqL8g',
     name: 'Barbell bench press',
     category: 'strength',
     strengthType: 'compound',
@@ -502,14 +561,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Bouncing the bar off the chest.', 'Flaring the elbows straight out.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 20, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 40, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 60, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 27.5, unit: 'kg' },
   },
   {
     id: 'machine-chest-press',
+    videoId: 'pLofEAcfsO8',
     name: 'Machine chest press',
     category: 'strength',
     strengthType: 'compound',
@@ -527,11 +583,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the shoulders roll forward.', 'Using momentum instead of a controlled tempo.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 15, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 30, unit: 'kg' },
-      experienced: { type: 'machine', weight: 45, unit: 'kg' },
-    },
+    startingLoad: { type: 'machine', weight: 30, unit: 'kg' },
   },
 
   // ============================================================
@@ -539,11 +591,23 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'bodyweight-inverted-row',
+    videoId: 'ytFnYaoIkSg',
     name: 'Inverted row',
     category: 'strength',
     strengthType: 'compound',
     movementPattern: 'horizontal-pull',
     muscles: { primary: ['back'], secondary: ['biceps'] },
+    // Reviewed 2026-08-19 (library-quality pass): 'bodyweight-only' is
+    // technically imprecise — this exercise needs a low anchor (a table
+    // edge, low bar, or suspension point) that not every "no equipment"
+    // home user has to hand, even though no equipment needs to be
+    // purchased. Kept as-is rather than tagging 'pull-up-bar' (most
+    // pull-up bars are mounted too high for an inverted row's waist-
+    // height anchor — that tag would be equally imprecise, and would
+    // wrongly exclude the low-table/low-bar case) or inventing a new
+    // equipment type for one exercise. The technique text below already
+    // states the real requirement explicitly (see description/setup) —
+    // this is a deliberate, reviewed choice, not an oversight.
     equipment: ['bodyweight-only'],
     difficulty: 'beginner',
     suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
@@ -553,7 +617,7 @@ export const exerciseLibrary: Exercise[] = [
     demands: { technical: 'medium', balance: 'medium', mobility: 'low', systemic: 'low' },
     technique: {
       description: 'A no-equipment horizontal pull using a sturdy table edge or low bar.',
-      setup: ['Lie under a sturdy table/bar, grip the edge, body straight, heels on the floor.'],
+      setup: ['Find a sturdy low anchor — a table edge, low bar, or suspension point — you can lie under and grip.', 'Lie under it, grip the edge, body straight, heels on the floor.'],
       execution: ['Pull the chest up to the edge, squeezing the shoulder blades together.', 'Lower under control.'],
       cues: ['Pull with the elbows, not just the hands.', 'Keep the body in a straight line.'],
       commonMistakes: ['Letting the hips sag.', 'Using a half range of motion.'],
@@ -562,6 +626,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'band-row',
+    videoId: 'db43OS-4ruY',
     name: 'Resistance-band row',
     category: 'strength',
     strengthType: 'compound',
@@ -582,6 +647,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'dumbbell-row',
+    videoId: 'nMFCMNKnLgQ',
     name: 'Dumbbell row',
     category: 'strength',
     strengthType: 'compound',
@@ -599,14 +665,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rotating the torso to help the pull.', 'Using a short, partial range of motion.'],
     },
     trackingMode: 'reps-weight-side',
-    startingLoad: {
-      new: { type: 'single-dumbbell', weight: 8, unit: 'kg' },
-      'some-experience': { type: 'single-dumbbell', weight: 14, unit: 'kg' },
-      experienced: { type: 'single-dumbbell', weight: 20, unit: 'kg' },
-    },
+    startingLoad: { type: 'single-dumbbell', weight: 12, unit: 'kg' },
   },
   {
     id: 'barbell-row',
+    videoId: 'rqTOAM8WoeM',
     name: 'Barbell row',
     category: 'strength',
     strengthType: 'compound',
@@ -624,14 +687,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Standing up out of the hinge on each rep.', 'Using momentum to heave the bar up.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 20, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 35, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 55, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 35, unit: 'kg' },
   },
   {
     id: 'seated-cable-row',
+    videoId: 'EU7bOadUsNI',
     name: 'Seated cable row',
     category: 'strength',
     strengthType: 'compound',
@@ -649,11 +709,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Rounding the lower back at full stretch.', 'Using the legs to heave the weight.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'cable', weight: 15, unit: 'kg' },
-      'some-experience': { type: 'cable', weight: 30, unit: 'kg' },
-      experienced: { type: 'cable', weight: 45, unit: 'kg' },
-    },
+    startingLoad: { type: 'cable', weight: 30, unit: 'kg' },
   },
 
   // ============================================================
@@ -661,6 +717,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'pike-push-up',
+    videoId: '2b5t0Cu2nQI',
     name: 'Pike push-up',
     category: 'strength',
     strengthType: 'compound',
@@ -681,6 +738,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'dumbbell-shoulder-press',
+    videoId: '0JfYxMRsUCQ',
     name: 'Dumbbell shoulder press',
     category: 'strength',
     strengthType: 'compound',
@@ -698,14 +756,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Excessive lower-back arch.', 'Flaring the elbows out to 90 degrees at the bottom.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 15, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
   },
   {
     id: 'barbell-overhead-press',
+    videoId: 'a81SaIpjGlA',
     name: 'Barbell overhead press',
     category: 'strength',
     strengthType: 'compound',
@@ -723,14 +778,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Overarching the lower back to press.', 'Pressing the bar forward instead of straight up.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'barbell', weight: 15, unit: 'kg' },
-      'some-experience': { type: 'barbell', weight: 25, unit: 'kg' },
-      experienced: { type: 'barbell', weight: 40, unit: 'kg' },
-    },
+    startingLoad: { type: 'barbell', weight: 17.5, unit: 'kg' },
   },
   {
     id: 'machine-shoulder-press',
+    videoId: 'e5gJP7quyGk',
     name: 'Machine shoulder press',
     category: 'strength',
     strengthType: 'compound',
@@ -748,18 +800,50 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Arching off the back pad.', 'Using a short, partial range of motion.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 10, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 20, unit: 'kg' },
-      experienced: { type: 'machine', weight: 30, unit: 'kg' },
+    startingLoad: { type: 'machine', weight: 20, unit: 'kg' },
+  },
+  {
+    id: 'incline-pike-push-up',
+    name: 'Incline pike push-up',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'vertical-push',
+    muscles: { primary: ['shoulders', 'triceps'], secondary: ['chest'] },
+    // Kept bodyweight-only for consistency with the Inverted Row decision: needs a
+    // surface to elevate the hands on (step, low table, sturdy chair), not a purchased
+    // item. The elevated-surface requirement is disclosed in the setup steps instead.
+    //
+    // Listed last in this section deliberately: every other vertical-push exercise
+    // here beats it or ties with it in rank() whenever it's genuinely available
+    // (see select-exercises.ts's tie-break comment — ties fall back to array
+    // order). Placing it last means it only ever wins a slot when it's the sole
+    // eligible candidate, i.e. exactly the bodyweight-only beginner case this
+    // exists to unblock — it never displaces Machine/Dumbbell/Barbell press in a
+    // gym or equipped-home scenario where those remain tied on every other term.
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'medium', systemic: 'low' },
+    technique: {
+      description: 'An easier pike push-up variant with the hands elevated on a sturdy surface — reduces the fraction of bodyweight loaded through the shoulders, a natural stepping stone toward the standard floor version.',
+      setup: ['Place both hands on a sturdy elevated surface — a step, low table, or sturdy chair, roughly hip to waist height.', 'Walk the feet back and push the hips up into a pike position, forming an inverted V.'],
+      execution: ['Lower the head toward the hands by bending the elbows, keeping the hips high.', 'Press back up to the starting pike position.'],
+      cues: ['Keep the hips high throughout — don’t let it sag into an incline push-up.', 'Head travels toward the hands, not forward.'],
+      commonMistakes: ['Letting the hips drop, turning it into an incline push-up.', 'Using a surface so high it stops feeling like a press at all.'],
     },
+    trackingMode: 'reps',
   },
 
   // ============================================================
   // VERTICAL PULL
   // ============================================================
+  // No bodyweight-only exercise exists in this section by design: a vertical pull needs
+  // an anchor above the body (bar, band, cable) to pull against — unlike vertical-push,
+  // which can always press against the floor. This is an accepted physical/equipment
+  // limitation, not a coverage gap to patch with an invented movement.
   {
     id: 'pull-up',
+    videoId: '9yVGh3XbJ34',
     name: 'Pull-up',
     category: 'strength',
     strengthType: 'compound',
@@ -780,6 +864,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'lat-pulldown',
+    videoId: 'j9jtjL8FhPI',
     name: 'Lat pulldown',
     category: 'strength',
     strengthType: 'compound',
@@ -797,11 +882,40 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using body momentum to yank the bar down.', 'Pulling behind the neck.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'cable', weight: 15, unit: 'kg' },
-      'some-experience': { type: 'cable', weight: 30, unit: 'kg' },
-      experienced: { type: 'cable', weight: 45, unit: 'kg' },
+    startingLoad: { type: 'cable', weight: 30, unit: 'kg' },
+  },
+  {
+    // Added 2026-08-19 (library-quality pass) — the single highest-
+    // priority addition from the exercise-library audit. Fixes a real,
+    // reachable failure: 'lower-upper-athletic-3day''s "Upper Body" day
+    // requires vertical-pull as a hard secondary pattern (splits.ts), and
+    // before this exercise existed, a home user with resistance-bands
+    // but no cable/pull-up-bar had ZERO vertical-pull candidates —
+    // validate-plan.ts would hard-fail plan generation for that user
+    // whenever the richer 3-day split was reached. Deliberately one
+    // canonical variant only (kneeling, single anchor point) — not
+    // multiple band-pulldown variants — per explicit scope.
+    id: 'band-lat-pulldown',
+    name: 'Band lat pulldown',
+    category: 'strength',
+    strengthType: 'compound',
+    movementPattern: 'vertical-pull',
+    muscles: { primary: ['back'], secondary: ['biceps'] },
+    equipment: ['resistance-bands'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'medium', systemic: 'low' },
+    technique: {
+      description: 'A resistance-band vertical pull that mimics a lat pulldown using an overhead anchor point — a home-friendly substitute when no cable machine or pull-up bar is available.',
+      setup: [
+        'Anchor a resistance band to a sturdy point directly overhead — a door anchor, pull-up bar, or similar fixed point well above head height.',
+        'Kneel facing the anchor, holding the band with both hands at shoulder width.',
+      ],
+      execution: ['Pull the band down and slightly out toward the chest, driving the elbows down and back.', 'Extend back up under control to a full stretch, then repeat.'],
+      cues: ['Lead with the elbows, not the hands.', 'Keep the chest up throughout — don’t lean back to help the pull.'],
+      commonMistakes: ['Using a low or unstable anchor point that lets the band slip or lose tension.', 'Leaning the torso back to substitute for pulling with the lats.'],
     },
+    trackingMode: 'reps',
   },
 
   // ============================================================
@@ -809,6 +923,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'dumbbell-chest-fly',
+    videoId: '98aRvyw-IGg',
     name: 'Dumbbell chest fly',
     category: 'strength',
     strengthType: 'isolation',
@@ -826,14 +941,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Turning it into a press by bending the elbows more at the bottom.', 'Going so wide the shoulders round forward.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
   },
   {
     id: 'cable-chest-fly',
+    videoId: 'Iwe6AmxVf7o',
     name: 'Cable chest fly',
     category: 'strength',
     strengthType: 'isolation',
@@ -851,11 +963,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using the front delts to press instead of the chest to bring the arms together.', 'Letting the cables yank the arms back too far.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'cable', weight: 6, unit: 'kg' },
-      'some-experience': { type: 'cable', weight: 12, unit: 'kg' },
-      experienced: { type: 'cable', weight: 18, unit: 'kg' },
-    },
+    startingLoad: { type: 'cable', weight: 12, unit: 'kg' },
   },
 
   // ============================================================
@@ -863,6 +971,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'farmers-carry',
+    videoId: 'lLAw6fUccKA',
     name: "Farmer's carry",
     category: 'carry',
     movementPattern: 'carry',
@@ -879,11 +988,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the shoulders round forward.', 'Leaning to one side.'],
     },
     trackingMode: 'duration-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 10, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 24, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 16, unit: 'kg' },
   },
 
   // ============================================================
@@ -891,6 +996,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'plank',
+    videoId: 'mwlp75MS6Rg',
     name: 'Plank',
     category: 'core',
     movementPattern: 'core',
@@ -930,9 +1036,11 @@ export const exerciseLibrary: Exercise[] = [
     // one shared rep count — matches cable-woodchop's own 'reps-side' a
     // few entries down.
     trackingMode: 'reps-side',
+    videoId: 'bxn9FBrt4-A',
   },
   {
     id: 'hanging-knee-raise',
+    videoId: 'l7OroezzX9k',
     name: 'Hanging knee raise',
     category: 'core',
     movementPattern: 'core',
@@ -952,6 +1060,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'cable-woodchop',
+    videoId: 'Gwcf4TOj1hc',
     name: 'Cable woodchop',
     category: 'core',
     movementPattern: 'core',
@@ -971,6 +1080,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'side-plank',
+    videoId: '44ND4bOB-T0',
     name: 'Side plank',
     category: 'core',
     movementPattern: 'core',
@@ -990,6 +1100,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'cable-pallof-press',
+    videoId: 'xeFp4MXad98',
     name: 'Cable Pallof press',
     category: 'core',
     movementPattern: 'core',
@@ -1013,6 +1124,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'dumbbell-biceps-curl',
+    videoId: 'ykJmrZ5v0Oo',
     name: 'Dumbbell biceps curl',
     category: 'strength',
     strengthType: 'isolation',
@@ -1030,14 +1142,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Swinging the torso to help the curl.', 'Only using half the range of motion.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 12, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 8, unit: 'kg' },
   },
   {
     id: 'band-biceps-curl',
+    videoId: 'KXNJwQ6wR4E',
     name: 'Band biceps curl',
     category: 'strength',
     strengthType: 'isolation',
@@ -1058,6 +1167,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'cable-biceps-curl',
+    videoId: 'u9XtfyqeJd4',
     name: 'Cable biceps curl',
     category: 'strength',
     strengthType: 'isolation',
@@ -1075,11 +1185,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Leaning back to help the curl.', 'Letting the elbows drift forward.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'cable', weight: 6, unit: 'kg' },
-      'some-experience': { type: 'cable', weight: 12, unit: 'kg' },
-      experienced: { type: 'cable', weight: 18, unit: 'kg' },
-    },
+    startingLoad: { type: 'cable', weight: 12, unit: 'kg' },
   },
 
   // ============================================================
@@ -1087,6 +1193,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'triceps-pushdown',
+    videoId: 'WUu0oK5j7Hk',
     name: 'Triceps pushdown',
     category: 'strength',
     strengthType: 'isolation',
@@ -1104,14 +1211,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the elbows drift forward/away from the body.', 'Using the shoulders to help push.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'cable', weight: 6, unit: 'kg' },
-      'some-experience': { type: 'cable', weight: 12, unit: 'kg' },
-      experienced: { type: 'cable', weight: 18, unit: 'kg' },
-    },
+    startingLoad: { type: 'cable', weight: 12, unit: 'kg' },
   },
   {
     id: 'dumbbell-overhead-triceps-extension',
+    videoId: 'DZgpCf5alfI',
     name: 'Dumbbell overhead triceps extension',
     category: 'strength',
     strengthType: 'isolation',
@@ -1129,14 +1233,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Letting the elbows flare out wide.', 'Arching the lower back to compensate.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'single-dumbbell', weight: 6, unit: 'kg' },
-      'some-experience': { type: 'single-dumbbell', weight: 10, unit: 'kg' },
-      experienced: { type: 'single-dumbbell', weight: 14, unit: 'kg' },
-    },
+    startingLoad: { type: 'single-dumbbell', weight: 10, unit: 'kg' },
   },
   {
     id: 'bench-dip',
+    videoId: 'WVeZDBhZwLA',
     name: 'Bench dip',
     category: 'strength',
     strengthType: 'isolation',
@@ -1161,6 +1262,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'dumbbell-lateral-raise',
+    videoId: 'XNKqPCDtC1k',
     name: 'Dumbbell lateral raise',
     category: 'strength',
     strengthType: 'isolation',
@@ -1178,14 +1280,11 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using momentum/swinging the weight up.', 'Raising past shoulder height, involving the traps.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'two-dumbbells', weightPerDumbbell: 2, unit: 'kg' },
-      'some-experience': { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
-      experienced: { type: 'two-dumbbells', weightPerDumbbell: 6, unit: 'kg' },
-    },
+    startingLoad: { type: 'two-dumbbells', weightPerDumbbell: 4, unit: 'kg' },
   },
   {
     id: 'band-lateral-raise',
+    videoId: 'gfEyrmxbCbw',
     name: 'Band lateral raise',
     category: 'strength',
     strengthType: 'isolation',
@@ -1233,11 +1332,8 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Pulling low, toward the chest instead of the face.', 'Using the arms only, without rotating at the shoulder.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'cable', weight: 6, unit: 'kg' },
-      'some-experience': { type: 'cable', weight: 10, unit: 'kg' },
-      experienced: { type: 'cable', weight: 15, unit: 'kg' },
-    },
+    startingLoad: { type: 'cable', weight: 10, unit: 'kg' },
+    videoId: 'eTCBSFlCJ_s',
   },
 
   // ============================================================
@@ -1245,6 +1341,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'leg-extension',
+    videoId: '4zOky6-n78I',
     name: 'Leg extension',
     category: 'strength',
     strengthType: 'isolation',
@@ -1262,11 +1359,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using momentum to kick the weight up.', 'Only using a partial range of motion.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 10, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 20, unit: 'kg' },
-      experienced: { type: 'machine', weight: 30, unit: 'kg' },
-    },
+    startingLoad: { type: 'machine', weight: 20, unit: 'kg' },
   },
 
   // ============================================================
@@ -1274,6 +1367,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'leg-curl',
+    videoId: '_2Kd0d-JEUM',
     name: 'Leg curl',
     category: 'strength',
     strengthType: 'isolation',
@@ -1291,11 +1385,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using momentum to swing the weight up.', 'Lifting the hips to help the curl.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 10, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 18, unit: 'kg' },
-      experienced: { type: 'machine', weight: 28, unit: 'kg' },
-    },
+    startingLoad: { type: 'machine', weight: 18, unit: 'kg' },
   },
 
   // ============================================================
@@ -1303,6 +1393,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'bodyweight-calf-raise',
+    videoId: 'Wh8EXjjr6JU',
     name: 'Bodyweight calf raise',
     category: 'strength',
     strengthType: 'isolation',
@@ -1323,6 +1414,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'machine-calf-raise',
+    videoId: 'GAQ-oohMhog',
     name: 'Machine calf raise',
     category: 'strength',
     strengthType: 'isolation',
@@ -1340,11 +1432,7 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Bouncing at the bottom instead of controlling it.', 'Using a short, partial range of motion.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 15, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 30, unit: 'kg' },
-      experienced: { type: 'machine', weight: 45, unit: 'kg' },
-    },
+    startingLoad: { type: 'machine', weight: 30, unit: 'kg' },
   },
 
   // ============================================================
@@ -1352,6 +1440,7 @@ export const exerciseLibrary: Exercise[] = [
   // ============================================================
   {
     id: 'band-lateral-walk',
+    videoId: 'y_bqFDQZSHQ',
     name: 'Band lateral walk',
     category: 'strength',
     strengthType: 'isolation',
@@ -1389,37 +1478,104 @@ export const exerciseLibrary: Exercise[] = [
       commonMistakes: ['Using a fast, bouncy tempo.', 'Only using a partial range of motion.'],
     },
     trackingMode: 'reps-weight',
-    startingLoad: {
-      new: { type: 'machine', weight: 10, unit: 'kg' },
-      'some-experience': { type: 'machine', weight: 18, unit: 'kg' },
-      experienced: { type: 'machine', weight: 28, unit: 'kg' },
-    },
+    startingLoad: { type: 'machine', weight: 18, unit: 'kg' },
+    videoId: 'Nw09BzZPyVs',
   },
 
   // ============================================================
-  // WARM-UP / COOL-DOWN
+  // WARM-UP
   // ============================================================
+  // Replaced 2026-08-18: the previous library had two multi-movement
+  // "flow" entries (dynamic-warmup-flow, upper-body-dynamic-warmup) that
+  // told the user nothing about what to actually do — see
+  // generator/select-warmup-cooldown.ts for the selection logic that now
+  // composes a warm-up from these individual, explicit movements instead
+  // of assigning one abstract flow per body area. Every entry here is one
+  // identifiable movement with its own technique/cues, same as any other
+  // exercise in this library.
   {
-    id: 'dynamic-warmup-flow',
-    name: 'Dynamic warm-up flow',
+    id: 'leg-swings',
+    name: 'Leg swings',
     category: 'warmup',
-    movementPattern: 'core',
-    muscles: { primary: ['core'], secondary: ['quadriceps', 'hamstrings', 'shoulders'] },
+    movementPattern: 'hinge',
+    muscles: { primary: ['hamstrings', 'glutes'], secondary: [] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'medium', mobility: 'medium', systemic: 'low' },
+    technique: {
+      description: 'A dynamic hip-mobility drill that loosens the hips and hamstrings before loaded lower-body work.',
+      setup: ['Stand tall next to a wall or sturdy support, holding on lightly for balance.'],
+      execution: ['Swing one leg forward and back in a controlled arc, keeping the knee soft.', 'Complete the set, then switch legs.'],
+      cues: ['Keep the swinging leg relaxed, not forced.', 'Stand tall through the standing leg.'],
+      commonMistakes: ['Swinging so hard the hips rock out of position.', 'Leaning heavily on the support instead of balancing.'],
+    },
+    trackingMode: 'reps-side',
+  },
+  {
+    id: 'arm-circles',
+    name: 'Arm circles',
+    category: 'warmup',
+    movementPattern: 'shoulder-abduction',
+    muscles: { primary: ['shoulders'], secondary: [] },
     equipment: ['bodyweight-only'],
     difficulty: 'beginner',
     suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
     demands: { technical: 'low', balance: 'low', mobility: 'medium', systemic: 'low' },
     technique: {
-      description: 'A short full-body movement flow to raise heart rate and prime the joints before training.',
-      setup: ['Clear space to move through a few steps in each direction.'],
-      execution: ['Cycle through bodyweight squats, leg swings, arm circles and light lunges.', 'Keep the effort light — this is preparation, not the workout.'],
-      cues: ['Move through a full range of motion.', 'Gradually increase effort each round.'],
-      commonMistakes: ['Skipping it and going straight into heavy work cold.', 'Turning it into a fatiguing effort before the session even starts.'],
+      description: 'A dynamic shoulder-mobility drill that warms up the shoulder joint before pressing or pulling work.',
+      setup: ['Stand tall, arms extended straight out to the sides at shoulder height.'],
+      execution: ['Make small circles with the arms, gradually increasing the size.', 'After half the time, reverse the direction.'],
+      cues: ['Keep the arms at shoulder height throughout.', 'Move through a full, controlled range.'],
+      commonMistakes: ['Letting the arms drop below shoulder height.', 'Circling so fast the shoulders shrug up.'],
     },
     trackingMode: 'duration',
   },
   {
+    id: 'scapular-push-up',
+    name: 'Scapular push-up',
+    category: 'warmup',
+    movementPattern: 'horizontal-push',
+    muscles: { primary: ['back'], secondary: ['shoulders'] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'low', systemic: 'low' },
+    technique: {
+      description: 'A small-range push-up variation that activates the muscles around the shoulder blade before pressing or pulling work.',
+      setup: ['Start in a push-up position, arms straight, hands under the shoulders.'],
+      execution: ['Without bending the elbows, let the shoulder blades pinch together and the chest sink slightly.', 'Push the floor away, spreading the shoulder blades apart, then repeat.'],
+      cues: ['Keep the arms locked straight throughout.', 'Move only at the shoulder blades.'],
+      commonMistakes: ['Bending the elbows, turning it into a regular push-up.', 'Letting the hips sag.'],
+    },
+    trackingMode: 'reps',
+  },
+  {
+    id: 'band-pull-apart',
+    name: 'Band pull-apart',
+    category: 'warmup',
+    movementPattern: 'horizontal-pull',
+    muscles: { primary: ['back'], secondary: ['shoulders'] },
+    equipment: ['resistance-bands'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'low', systemic: 'low' },
+    technique: {
+      description: 'A light band-resisted movement that activates the upper back and rear shoulders before pulling work.',
+      setup: ['Hold a light resistance band with both hands, arms extended in front of the chest, shoulder-width grip.'],
+      execution: ['Pull the band apart by driving the arms out to the sides, squeezing the shoulder blades together.', 'Return under control and repeat.'],
+      cues: ['Keep the arms straight throughout.', 'Lead with the elbows, not the hands.'],
+      commonMistakes: ['Bending the elbows to help pull the band apart.', 'Using a band too heavy to control smoothly.'],
+    },
+    trackingMode: 'reps',
+  },
+
+  // ============================================================
+  // COOL-DOWN
+  // ============================================================
+  {
     id: 'standing-quad-stretch',
+    videoId: 'kia2OzZiwqw',
     name: 'Standing quad stretch',
     category: 'cooldown',
     movementPattern: 'squat',
@@ -1439,6 +1595,7 @@ export const exerciseLibrary: Exercise[] = [
   },
   {
     id: 'hamstring-stretch',
+    videoId: 'B0jl9k3ImKU',
     name: 'Standing hamstring stretch',
     category: 'cooldown',
     movementPattern: 'hinge',
@@ -1454,33 +1611,73 @@ export const exerciseLibrary: Exercise[] = [
       cues: ['Hinge from the hips, keep the back flat.', 'Ease in gradually rather than forcing it.'],
       commonMistakes: ['Rounding the back to reach further.', 'Bouncing instead of holding steady.'],
     },
-    trackingMode: 'duration',
+    // Fixed 2026-08-18 (was 'duration'): technique.execution already said
+    // "switch sides" — the tracking mode just didn't match, unlike the
+    // other two stretches in this section. Flagged during the warm-up/
+    // cool-down redesign, fixed per explicit instruction rather than left
+    // silently inconsistent.
+    trackingMode: 'duration-side',
   },
   {
-    // Added 2026-08-17 alongside Workout Mode's warm-up/cool-down
-    // assignment (rules/warmup-cooldown.ts) — the library previously had
-    // no upper-body-specific warm-up at all, only the general full-body
-    // flow and two lower-body-leaning stretches.
-    id: 'upper-body-dynamic-warmup',
-    name: 'Upper body dynamic warm-up',
-    category: 'warmup',
-    movementPattern: 'horizontal-pull',
-    muscles: { primary: ['shoulders'], secondary: ['chest', 'back'] },
+    id: 'hip-flexor-stretch',
+    name: 'Hip flexor stretch',
+    category: 'cooldown',
+    movementPattern: 'lunge',
+    muscles: { primary: ['quadriceps'], secondary: ['glutes'] },
     equipment: ['bodyweight-only'],
     difficulty: 'beginner',
     suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
-    demands: { technical: 'low', balance: 'low', mobility: 'medium', systemic: 'low' },
+    demands: { technical: 'low', balance: 'medium', mobility: 'high', systemic: 'low' },
     technique: {
-      description: 'A short upper-body movement flow to prime the shoulders and upper back before pressing/pulling work.',
-      setup: ['Clear space to move the arms freely in every direction.'],
-      execution: ['Cycle through arm circles, band-free pull-aparts (or shoulder blade squeezes), and light torso twists.', 'Keep the effort light — this is preparation, not the workout.'],
-      cues: ['Move through a full range of motion.', 'Gradually increase reach each round.'],
-      commonMistakes: ['Skipping straight into heavy pressing/pulling cold.', 'Rushing through with a small range of motion.'],
+      description: 'A post-workout static stretch for the front of the hip.',
+      setup: ['Kneel in a half-kneeling lunge position, back knee on the floor.'],
+      execution: ['Shift the hips forward gently until a stretch is felt at the front of the back hip.', 'Hold, then switch sides.'],
+      cues: ['Keep the torso upright, not leaning forward.', 'Squeeze the glute of the back leg to deepen the stretch.'],
+      commonMistakes: ['Arching the lower back instead of shifting the hips.', 'Rushing the stretch instead of easing in.'],
     },
-    trackingMode: 'duration',
+    trackingMode: 'duration-side',
+  },
+  {
+    id: 'chest-stretch',
+    name: 'Chest stretch',
+    category: 'cooldown',
+    movementPattern: 'horizontal-push',
+    muscles: { primary: ['chest'], secondary: ['shoulders'] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'high', systemic: 'low' },
+    technique: {
+      description: 'A post-workout static stretch for the chest and front of the shoulder.',
+      setup: ['Stand in a doorway or next to a wall, forearm placed against the frame at shoulder height.'],
+      execution: ['Gently rotate the body away from the arm until a stretch is felt across the chest.', 'Hold, then switch sides.'],
+      cues: ['Keep the shoulder down, away from the ear.', 'Ease in gradually rather than forcing it.'],
+      commonMistakes: ['Placing the arm too high, stressing the shoulder joint instead of stretching the chest.', 'Overrotating and forcing the stretch.'],
+    },
+    trackingMode: 'duration-side',
+  },
+  {
+    id: 'lat-stretch',
+    name: 'Lat stretch',
+    category: 'cooldown',
+    movementPattern: 'vertical-pull',
+    muscles: { primary: ['back'], secondary: [] },
+    equipment: ['bodyweight-only'],
+    difficulty: 'beginner',
+    suitableGoals: ['stronger', 'muscle', 'athletic', 'general-fitness'],
+    demands: { technical: 'low', balance: 'low', mobility: 'high', systemic: 'low' },
+    technique: {
+      description: 'A post-workout static stretch for the lats and side of the torso.',
+      setup: ['Stand tall, reach one arm overhead and slightly across the body, holding a wall or door frame if useful.'],
+      execution: ['Lean away from the raised arm until a stretch is felt down the side of the torso and lat.', 'Hold, then switch sides.'],
+      cues: ['Reach long through the fingertips.', 'Keep breathing steadily through the hold.'],
+      commonMistakes: ['Collapsing through the lower back instead of side-bending from the torso.', 'Bouncing instead of holding steady.'],
+    },
+    trackingMode: 'duration-side',
   },
   {
     id: 'cross-body-shoulder-stretch',
+    videoId: '1Sfl3iYM1Jg',
     name: 'Cross-body shoulder stretch',
     category: 'cooldown',
     movementPattern: 'horizontal-pull',
