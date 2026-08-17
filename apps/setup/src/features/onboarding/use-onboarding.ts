@@ -8,23 +8,21 @@ import { getOnboardingSteps, type OnboardingStepId } from './steps';
 
 type Draft = Partial<OnboardingAnswers>;
 
-// Single-select steps require a value. "focusAreas" is valid empty (Paper's
-// "No preference" option). "equipment" requires at least one selection
-// when it's shown (it only shows for home users; "Bodyweight only" is
-// itself a valid equipment choice for someone with none). "name" requires
-// a non-blank value — Paper's field has no stated max length or format.
-function canAdvance(stepId: OnboardingStepId, answers: Draft): boolean {
+// Single-select steps require a value. "equipment" requires at least one
+// selection when it's shown (it only shows for home users; "Bodyweight
+// only" is itself a valid equipment choice for someone with none). "name"
+// requires a non-blank value — Paper's field has no stated max length or
+// format. Exported for direct unit testing (no React rendering needed).
+export function canAdvance(stepId: OnboardingStepId, answers: Draft): boolean {
   switch (stepId) {
     case 'name':
       return (answers.name?.trim().length ?? 0) > 0;
-    case 'weight':
-      return typeof answers.weightKg === 'number' && answers.weightKg > 0;
-    case 'height':
-      return typeof answers.heightCm === 'number' && answers.heightCm > 0;
     case 'goal':
       return answers.goal !== undefined;
-    case 'experience':
-      return answers.experience !== undefined;
+    case 'trainingHistory':
+      return answers.trainingHistory !== undefined;
+    case 'currentStrengthTrainingFrequency':
+      return answers.currentStrengthTrainingFrequency !== undefined;
     case 'daysPerWeek':
       return answers.daysPerWeek !== undefined;
     case 'sessionDuration':
@@ -36,15 +34,16 @@ function canAdvance(stepId: OnboardingStepId, answers: Draft): boolean {
   }
 }
 
-// Steps with no visible "Continue" button in Paper (Goal/Experience/Days/
-// Time/Environment) advance as soon as an option is tapped — confirmed by
-// their absence of any button node in Paper across every screen checked.
-// Name, Weight, Height, and Equipment keep an explicit Continue/Create-my-
-// plan button (free text/numeric entry and multi-select respectively —
-// there's no tappable "option" to auto-advance on for a typed value).
+// Steps with no visible "Continue" button in Paper (Goal/Training history/
+// Current training/Days/Time/Environment) advance as soon as an option is
+// tapped — confirmed by their absence of any button node in Paper across
+// every screen checked. Name and Equipment keep an explicit Continue/
+// Create-my-plan button (free text entry and multi-select respectively —
+// there's no tappable "option" to auto-advance on for either).
 const AUTO_ADVANCE_STEPS: ReadonlySet<OnboardingStepId> = new Set([
   'goal',
-  'experience',
+  'trainingHistory',
+  'currentStrengthTrainingFrequency',
   'daysPerWeek',
   'sessionDuration',
   'trainingEnvironment',
@@ -59,6 +58,34 @@ const AUTO_ADVANCE_STEPS: ReadonlySet<OnboardingStepId> = new Set([
 // re-derives `selected` from the same answer, so a previously-picked
 // option still reads as selected.
 const AUTO_ADVANCE_DELAY_MS = 200;
+
+// focusAreas/deprioritizedAreas/context have no screen (focusAreas
+// deliberately removed from onboarding 2026-08-17 — product decision, not
+// a deferred build; the other two are deferred, see steps.ts) — always
+// saved empty, not left undefined, since the rest of the domain
+// (generator, safety rules, Adjust Plan) depends on them existing. This is
+// the neutral/no-focus state the generator already expects, not an
+// invented default. equipment is only ever asked for 'home' users (see
+// steps.ts) — defaulted the same way for 'gym' users, rather than left
+// undefined, so every saved OnboardingAnswers actually satisfies its type.
+// The generator now reads trainingHistory/currentStrengthTrainingFrequency
+// directly (training/rules/workload-readiness.ts,
+// training/rules/exercise-complexity.ts) — no legacy `experience` field
+// exists anymore, nothing to derive here.
+//
+// Module-scope (not inside useOnboarding) and exported so it's directly
+// unit-testable without rendering React. canAdvance guarantees
+// `finalAnswers.trainingHistory` is set by the time this runs —
+// trainingHistory's own step gates advancement on it.
+export function buildCompletedAnswers(finalAnswers: Draft): OnboardingAnswers {
+  return {
+    ...(finalAnswers as OnboardingAnswers),
+    equipment: finalAnswers.equipment ?? [],
+    focusAreas: [],
+    deprioritizedAreas: [],
+    context: [],
+  };
+}
 
 // First-time onboarding only — adjusting an existing plan goes through
 // the dedicated Adjust Plan screens instead (src/features/adjust-plan),
@@ -82,25 +109,8 @@ export function useOnboarding() {
   const canGoNext = canAdvance(stepId, answers);
   const showsContinueButton = !AUTO_ADVANCE_STEPS.has(stepId);
 
-  // focusAreas/deprioritizedAreas/context have no screen (focusAreas
-  // deliberately removed from onboarding 2026-08-17 — product decision,
-  // not a deferred build; the other two are deferred, see steps.ts) —
-  // always saved empty, not left undefined, since the rest of the domain
-  // (generator, safety rules, Adjust Plan) depends on them existing. This
-  // is the neutral/no-focus state the generator already expects, not an
-  // invented default. equipment is only ever asked for 'home' users (see
-  // steps.ts) — defaulted the same way for 'gym' users, rather than left
-  // undefined, so every saved OnboardingAnswers actually satisfies its
-  // type.
   async function completeOnboarding(finalAnswers: Draft) {
-    const completed: OnboardingAnswers = {
-      ...(finalAnswers as OnboardingAnswers),
-      equipment: finalAnswers.equipment ?? [],
-      focusAreas: [],
-      deprioritizedAreas: [],
-      context: [],
-    };
-    await storageRepository.savePreferences(completed);
+    await storageRepository.savePreferences(buildCompletedAnswers(finalAnswers));
     // Plan generation happens on the loading screen, not here.
     navigate('/loading', { replace: true });
   }

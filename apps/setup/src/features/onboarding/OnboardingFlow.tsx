@@ -7,12 +7,13 @@ import { OnboardingHeader } from './OnboardingHeader';
 import { SingleSelectRow } from './SingleSelectRow';
 import { StartScreen } from './StartScreen';
 import {
+  CURRENT_FREQUENCY_OPTIONS,
   DAYS_OPTIONS,
   DURATION_OPTIONS,
-  ENVIRONMENT_OPTIONS,
+  EQUIPMENT_MODE_OPTIONS,
   EQUIPMENT_OPTIONS,
-  EXPERIENCE_OPTIONS,
   GOAL_OPTIONS,
+  TRAINING_HISTORY_OPTIONS,
 } from './step-options';
 import { getStepNumber } from './steps';
 import { useOnboarding } from './use-onboarding';
@@ -29,22 +30,21 @@ const STEP_COPY: Record<string, { label: string; title: string; description?: st
     title: 'What should we call you?',
     description: 'No need to share your real name.\nAn alias works perfectly.',
   },
-  weight: {
-    label: 'Weight',
-    title: "What's your weight?",
-    description: 'We use this to better adjust your training and starting weights.',
-  },
-  height: {
-    label: 'Height',
-    title: 'How tall are you?',
-    description: 'This helps us better tailor your training.',
-  },
   goal: {
     label: 'Goal',
     title: 'What do you want to get\nfrom your training?',
     description: 'Pick the goal that matters most\nto you right now.',
   },
-  experience: { label: 'Experience', title: 'How experienced are you with strength training?' },
+  trainingHistory: {
+    label: 'Training history',
+    title: 'How long have you been\nstrength training consistently?',
+    description: 'This helps us choose the right\nstarting level.',
+  },
+  currentStrengthTrainingFrequency: {
+    label: 'Current training',
+    title: 'How often do you strength\ntrain right now?',
+    description: 'This helps us set a realistic\nstarting workload.',
+  },
   daysPerWeek: {
     label: 'Days',
     title: 'How many days do you\nwant to train?',
@@ -53,9 +53,9 @@ const STEP_COPY: Record<string, { label: string; title: string; description?: st
   sessionDuration: {
     label: 'Time',
     title: 'How much time do you\nusually have?',
-    description: 'Per workout.',
+    description: 'Per workout. Warm-up and\ncool-down included.',
   },
-  trainingEnvironment: { label: 'Equipment', title: 'Where will you train?' },
+  trainingEnvironment: { label: 'Equipment', title: 'What equipment can you use?' },
   equipment: {
     label: 'Equipment',
     title: 'What equipment do you have?',
@@ -67,17 +67,6 @@ export function OnboardingFlow() {
   const [started, setStarted] = useState(false);
   const { stepId, isFirstStep, isLastStep, canGoNext, showsContinueButton, answers, updateAnswer, goNext, goBack } =
     useOnboarding();
-  // Local text mirrors for the two numeric fields: `answers.weightKg`/
-  // `heightCm` can only ever hold a valid positive number (updateAnswer's
-  // type doesn't allow undefined for a required field), but the input
-  // needs to represent "empty" and "mid-edit" states while typing —
-  // without this, backspacing to clear the field would have nothing to
-  // set state to and the controlled input would appear stuck. Committed
-  // to `answers` (and so to canAdvance) only once the text parses to a
-  // valid positive number; initialized from any already-committed value
-  // so going back to a completed step still shows what was entered.
-  const [weightText, setWeightText] = useState(() => (answers.weightKg ? String(answers.weightKg) : ''));
-  const [heightText, setHeightText] = useState(() => (answers.heightCm ? String(answers.heightCm) : ''));
 
   if (!started) {
     return <StartScreen onStart={() => setStarted(true)} />;
@@ -142,50 +131,6 @@ export function OnboardingFlow() {
               </div>
             )}
 
-            {stepId === 'weight' && (
-              <div className="flex flex-col items-center justify-center gap-space-8 py-space-7">
-                <div className="flex items-baseline gap-space-2">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={weightText}
-                    onChange={(event) => {
-                      const text = event.target.value;
-                      setWeightText(text);
-                      const value = Number(text);
-                      if (text !== '' && Number.isFinite(value) && value > 0) updateAnswer('weightKg', value);
-                    }}
-                    placeholder="55"
-                    autoFocus
-                    className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-[120px] border-none bg-transparent text-right outline-none"
-                  />
-                  <span className="text-display-md leading-display-md text-foreground-secondary">kg</span>
-                </div>
-              </div>
-            )}
-
-            {stepId === 'height' && (
-              <div className="flex flex-col items-center justify-center gap-space-8 py-space-7">
-                <div className="flex items-baseline gap-space-2">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={heightText}
-                    onChange={(event) => {
-                      const text = event.target.value;
-                      setHeightText(text);
-                      const value = Number(text);
-                      if (text !== '' && Number.isFinite(value) && value > 0) updateAnswer('heightCm', value);
-                    }}
-                    placeholder="165"
-                    autoFocus
-                    className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-[120px] border-none bg-transparent text-right outline-none"
-                  />
-                  <span className="text-display-md leading-display-md text-foreground-secondary">cm</span>
-                </div>
-              </div>
-            )}
-
             {stepId === 'goal' && (
               <div className="flex flex-col items-center gap-space-6 py-space-7">
                 {GOAL_OPTIONS.map((option) => (
@@ -200,15 +145,28 @@ export function OnboardingFlow() {
               </div>
             )}
 
-            {stepId === 'experience' && (
+            {stepId === 'trainingHistory' && (
               <div className="flex flex-col items-center gap-space-6 py-space-7">
-                {EXPERIENCE_OPTIONS.map((option) => (
+                {TRAINING_HISTORY_OPTIONS.map((option) => (
                   <SingleSelectRow
                     key={option.value}
                     label={option.label}
                     description={option.description}
-                    selected={answers.experience === option.value}
-                    onSelect={() => updateAnswer('experience', option.value)}
+                    selected={answers.trainingHistory === option.value}
+                    onSelect={() => updateAnswer('trainingHistory', option.value)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {stepId === 'currentStrengthTrainingFrequency' && (
+              <div className="flex flex-col items-center gap-space-6 py-space-7">
+                {CURRENT_FREQUENCY_OPTIONS.map((option) => (
+                  <SingleSelectRow
+                    key={option.value}
+                    label={option.label}
+                    selected={answers.currentStrengthTrainingFrequency === option.value}
+                    onSelect={() => updateAnswer('currentStrengthTrainingFrequency', option.value)}
                   />
                 ))}
               </div>
@@ -242,10 +200,11 @@ export function OnboardingFlow() {
 
             {stepId === 'trainingEnvironment' && (
               <div className="flex flex-col items-center gap-space-6 py-space-7">
-                {ENVIRONMENT_OPTIONS.map((option) => (
+                {EQUIPMENT_MODE_OPTIONS.map((option) => (
                   <SingleSelectRow
                     key={option.value}
                     label={option.label}
+                    description={option.description}
                     selected={answers.trainingEnvironment === option.value}
                     onSelect={() => updateAnswer('trainingEnvironment', option.value)}
                   />

@@ -1,51 +1,49 @@
 import type { OnboardingAnswers } from '@/domain/onboarding';
 
-// Matches Paper's actual onboarding flow, audited 2026-08-14 — not the
-// original 8-step spec/domain list. Two spec steps have no Paper screen
-// and are deliberately deferred, not built yet: "Areas not to prioritize"
-// (deprioritizedAreas) and "Relevant context" (context, the injury/
-// pregnancy/postpartum safety step). "Name" is new — in Paper, not in the
-// original spec — and is included per explicit instruction.
-//
-// "Focus" (focusAreas) was removed from onboarding 2026-08-17 — product
-// decision, not a Paper mismatch: the field/generator capability stays
-// (see domain/onboarding.ts), onboarding just no longer asks for it,
-// always saving it as [] (see use-onboarding.ts). It remains reachable
-// from Adjust Plan.
-//
-// "weight"/"height" are new 2026-08-17, also with no Paper screen yet —
-// see domain/onboarding.ts's comment on why they're collected (a future
-// starting-load calibration model, not generic profile data).
+// Matches Paper's actual onboarding flow. Redesigned 2026-08-18: the old
+// subjective "Experience" question was replaced by two observable
+// questions (`trainingHistory`, `currentStrengthTrainingFrequency`), and
+// the old "weight"/"height" steps (added 2026-08-17 for a starting-load
+// calibration model that was never built, and never consumed by
+// anything) were dropped along with them — see domain/onboarding.ts's
+// comment on `TrainingHistory` (the legacy `experience`/`ExperienceLevel`
+// field itself was fully removed 2026-08-19 once the generator finished
+// migrating to trainingHistory/currentStrengthTrainingFrequency). "Focus" (focusAreas)
+// stays removed, as it already was before this redesign (2026-08-17):
+// the field/generator capability is untouched, onboarding just doesn't
+// ask for it — it remains reachable from Adjust Plan. Two spec steps
+// still have no Paper screen and are deliberately deferred, not built:
+// "Areas not to prioritize" (deprioritizedAreas) and "Relevant context"
+// (context, the injury/pregnancy/postpartum safety step).
 //
 // `equipment` only applies when `trainingEnvironment` is 'home' (Paper
 // counts environment+equipment as one step, shared step number, split
-// across two conditional screens).
+// across two conditional screens) — same pattern used before this
+// redesign, unchanged.
 export type OnboardingStepId =
   | 'name'
-  | 'weight'
-  | 'height'
   | 'goal'
-  | 'experience'
+  | 'trainingHistory'
+  | 'currentStrengthTrainingFrequency'
   | 'daysPerWeek'
   | 'sessionDuration'
   | 'trainingEnvironment'
   | 'equipment';
 
-// Step counter ("N of 8") groups trainingEnvironment/equipment as a
+// Step counter ("N of 7") groups trainingEnvironment/equipment as a
 // single number — this maps each OnboardingStepId to the position shown
 // in that counter, not to its index in the steps array.
-export const ONBOARDING_STEP_COUNT = 8;
+export const ONBOARDING_STEP_COUNT = 7;
 
 const STEP_NUMBERS: Record<OnboardingStepId, number> = {
   name: 1,
-  weight: 2,
-  height: 3,
-  goal: 4,
-  experience: 5,
-  daysPerWeek: 6,
-  sessionDuration: 7,
-  trainingEnvironment: 8,
-  equipment: 8,
+  goal: 2,
+  trainingHistory: 3,
+  currentStrengthTrainingFrequency: 4,
+  daysPerWeek: 5,
+  sessionDuration: 6,
+  trainingEnvironment: 7,
+  equipment: 7,
 };
 
 export function getStepNumber(stepId: OnboardingStepId): number {
@@ -55,10 +53,9 @@ export function getStepNumber(stepId: OnboardingStepId): number {
 export function getOnboardingSteps(answers: Partial<OnboardingAnswers>): OnboardingStepId[] {
   const steps: OnboardingStepId[] = [
     'name',
-    'weight',
-    'height',
     'goal',
-    'experience',
+    'trainingHistory',
+    'currentStrengthTrainingFrequency',
     'daysPerWeek',
     'sessionDuration',
     'trainingEnvironment',
