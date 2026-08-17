@@ -11,7 +11,7 @@ import type { Activity } from '@/domain/activity';
 import type { TrainingDay, TrainingPlan } from '@/domain/plan';
 import type { ActiveExercise, ActiveWorkout, CompletedSet, WorkoutPhase } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
-import { createActiveWorkout, nextPosition, phaseList } from './active-workout';
+import { createActiveWorkout, nextPosition, phaseList, previousPosition } from './active-workout';
 
 export function useActiveWorkout(dayId: string) {
   const navigate = useNavigate();
@@ -121,6 +121,18 @@ export function useActiveWorkout(dayId: string) {
     updateWorkout((w) => ({ ...w, phase: next.phase, currentExerciseIndex: next.index }));
   }, [dayId, navigate, updateWorkout]);
 
+  // Steps back to the previous exercise/phase. No-ops on the very first
+  // exercise of the whole workout (previousPosition returns null there) —
+  // the page swaps Back for Exit in that case instead of calling this,
+  // this null-guard is just belt-and-braces.
+  const goToPrevious = useCallback(() => {
+    const current = workoutRef.current;
+    if (!current) return;
+    const prev = previousPosition(current);
+    if (!prev) return;
+    updateWorkout((w) => ({ ...w, phase: prev.phase, currentExerciseIndex: prev.index }));
+  }, [updateWorkout]);
+
   // Freezes the clock — reusing the pause mechanism, since there's no
   // "resume" affordance once the user reaches Completion — before
   // navigating there, so the duration shown on the Complete screen is
@@ -152,6 +164,11 @@ export function useActiveWorkout(dayId: string) {
     navigate('/home', { replace: true });
   }, [navigate]);
 
+  // Also doubles as "Exit" on the very first exercise of the whole
+  // workout (WorkoutActivePage — Back has nowhere to go there): exiting
+  // without finishing abandons the in-progress attempt entirely rather
+  // than leaving it resumable, so the next time this day is started it's
+  // a fresh 0:00, not wherever the user walked away from.
   const discardActivity = useCallback(async () => {
     await storageRepository.clearActiveWorkout();
     navigate('/home', { replace: true });
@@ -166,6 +183,7 @@ export function useActiveWorkout(dayId: string) {
     updateSet,
     togglePause,
     goToNext,
+    goToPrevious,
     finishWorkout,
     saveActivity,
     discardActivity,

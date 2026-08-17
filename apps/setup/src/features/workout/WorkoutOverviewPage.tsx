@@ -89,7 +89,7 @@ export function WorkoutOverviewPage() {
               illustrative, not a real range the generator computes. We
               only have one estimate, so we show exactly that. */}
           <MetaRow label="Duration" value={`${day.estimatedDurationMinutes} min`} />
-          <MetaRow label="Level" value={getSessionLevel(preferences.experience)} />
+          <MetaRow label="Level" value={getSessionLevel(preferences.trainingHistory)} />
           <MetaRow label="Muscles worked" value={muscles.map(formatMuscleGroup).join(', ') || '—'} />
         </div>
 

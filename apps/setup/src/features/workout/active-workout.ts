@@ -138,6 +138,22 @@ export function nextPosition(workout: ActiveWorkout): { phase: WorkoutPhase; ind
   return null;
 }
 
+// Symmetric with nextPosition — previous exercise in this phase, or the
+// last exercise of the previous non-empty phase, or null if this was the
+// first exercise of the whole workout (caller disables/no-ops Back).
+export function previousPosition(workout: ActiveWorkout): { phase: WorkoutPhase; index: number } | null {
+  if (workout.currentExerciseIndex - 1 >= 0) {
+    return { phase: workout.phase, index: workout.currentExerciseIndex - 1 };
+  }
+  const currentOrderIndex = PHASE_ORDER.indexOf(workout.phase);
+  for (let i = currentOrderIndex - 1; i >= 0; i--) {
+    const candidate = PHASE_ORDER[i];
+    const list = phaseList(workout, candidate);
+    if (list.length > 0) return { phase: candidate, index: list.length - 1 };
+  }
+  return null;
+}
+
 function suggestedLoadToNumber(load: SuggestedLoad): number | undefined {
   switch (load.type) {
     case 'two-dumbbells':
@@ -152,16 +168,34 @@ function suggestedLoadToNumber(load: SuggestedLoad): number | undefined {
   }
 }
 
-// HISTORY OVERRIDE (approved): the most recent completed session's actual
+// Preserves the full load-type semantics through to display — never a
+// bare number (see domain/exercise.ts's SuggestedLoad comment). Matches
+// the approved format exactly: two-dumbbells is the one type whose
+// number means something different per side, so it's the one case
+// spelled out as a multiplication rather than a suffix.
+export function formatSuggestedLoad(load: SuggestedLoad): string | undefined {
+  switch (load.type) {
+    case 'two-dumbbells':
+      return `2 × ${load.weightPerDumbbell} kg`;
+    case 'single-dumbbell':
+    case 'machine':
+    case 'cable':
+      return `${load.weight} kg`;
+    case 'barbell':
+      return `${load.weight} kg total`;
+    case 'bodyweight':
+      return undefined;
+  }
+}
+
+// HISTORY OVERRIDE (approved): the most recent COMPLETED session's actual
 // weight for the corresponding set is the default; only falls back to the
-// plan's curated suggestedLoad if no matching previous set exists. No
-// numeric formula, no progression — just "what did they actually lift
-// last time, for this exact set". `suggestedLoad` is currently always
-// undefined in production (the curated table isn't wired in yet — see
-// Exercise.startingLoad's comment), so today this always resolves to
-// undefined for a first-time exercise, which is correct: an empty input
-// is exactly what "no fake precision" calls for until either history or
-// the curated table actually has something to offer.
+// plan's curated suggestedLoad (training/rules/starting-load.ts) if no
+// matching completed previous set exists. No numeric formula, no
+// progression, no averaging/smoothing — just "what did they actually
+// lift last time, for this exact set." An in-progress/unfinished set is
+// never counted as history (added 2026-08-19 — a set the user never
+// confirmed shouldn't become next session's starting point).
 export function resolveInitialWeight(
   exerciseId: string,
   setNumber: number,
@@ -181,18 +215,42 @@ export function resolveInitialWeight(
     );
     if (!match) continue;
     const matchingSet = match.sets.find((set) => set.setNumber === setNumber);
-    if (matchingSet && 'weight' in matchingSet && matchingSet.weight !== undefined) {
+    if (matchingSet && matchingSet.completed && 'weight' in matchingSet && matchingSet.weight !== undefined) {
       return matchingSet.weight;
     }
     // Most recent session that included this exercise, even without a
-    // matching weighted set — stop here rather than searching further
-    // back; "previous workout" means the last one, not a deep history scan.
+    // matching completed weighted set — stop here rather than searching
+    // further back; "previous workout" means the last one, not a deep
+    // history scan.
     break;
   }
 
   return 'suggestedLoad' in prescription && prescription.suggestedLoad
     ? suggestedLoadToNumber(prescription.suggestedLoad)
     : undefined;
+}
+
+// Combines resolveInitialWeight (the number) with the exercise's own
+// permanent load-type tag (exercise.startingLoad?.type — see
+// domain/exercise.ts's SuggestedLoad comment) into the fully-formatted
+// display string, whether the number came from history or the curated
+// reference. The load KIND is a property of the exercise, not of any one
+// data point, so it's always re-derived here rather than stored per set
+// (CompletedSet.weight stays a bare number — see domain/workout.ts).
+export function resolveInitialWeightDisplay(
+  exercise: Exercise,
+  setNumber: number,
+  side: 'left' | 'right' | undefined,
+  prescription: ExercisePrescription,
+  activities: Activity[],
+): string | undefined {
+  const weight = resolveInitialWeight(exercise.id, setNumber, side, prescription, activities);
+  if (weight === undefined) return undefined;
+  const loadType = exercise.startingLoad?.type;
+  if (!loadType || loadType === 'bodyweight') return undefined;
+  const load: SuggestedLoad =
+    loadType === 'two-dumbbells' ? { type: loadType, weightPerDumbbell: weight, unit: 'kg' } : { type: loadType, weight, unit: 'kg' };
+  return formatSuggestedLoad(load);
 }
 
 export function exerciseLookup(library: Exercise[]): Map<string, Exercise> {

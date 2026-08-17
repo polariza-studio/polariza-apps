@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Pause, Play, SkipForward, Square } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import type { CompletedSet, WorkoutPhase } from '@/domain/workout';
 import { exerciseLibrary } from '@/training/exercises/exercise-library';
-import { entryAt, exerciseLookup, formatElapsed, nextPosition, phaseList, resolveInitialWeight } from './active-workout';
+import {
+  entryAt,
+  exerciseLookup,
+  formatElapsed,
+  nextPosition,
+  phaseList,
+  previousPosition,
+  resolveInitialWeightDisplay,
+} from './active-workout';
 import { useActiveWorkout } from './use-active-workout';
+import { YouTubeEmbed } from './YouTubeEmbed';
 
 const PHASE_LABEL: Record<WorkoutPhase, string> = { warmup: 'Warm-up', main: '', cooldown: 'Cool-down' };
 
@@ -14,7 +24,7 @@ function hasWeightField(mode: CompletedSet['mode']): boolean {
   return mode === 'reps-weight' || mode === 'reps-weight-side' || mode === 'duration-weight';
 }
 
-// Stat chip shared by the 2x2 grid (Sets x reps / Initial weight / Rest /
+// Stat chip shared by the 2x2 grid (Sets x reps / Suggested start / Rest /
 // RIR) — matches Paper's exercise-stats block exactly (bg-interactive-
 // subtle, rounded-lg, py-space-4/px-space-5).
 function StatChip({ label, value }: { label: string; value: string }) {
@@ -28,8 +38,19 @@ function StatChip({ label, value }: { label: string; value: string }) {
 
 export function WorkoutActivePage() {
   const { dayId = '' } = useParams<{ dayId: string }>();
-  const { ready, plan, day, workout, activities, updateSet, togglePause, goToNext, finishWorkout } =
-    useActiveWorkout(dayId);
+  const {
+    ready,
+    plan,
+    day,
+    workout,
+    activities,
+    updateSet,
+    togglePause,
+    goToNext,
+    goToPrevious,
+    finishWorkout,
+    discardActivity,
+  } = useActiveWorkout(dayId);
   const byId = exerciseLookup(exerciseLibrary);
 
   // Bottom action bar only casts its "content still hidden below" shadow
@@ -64,6 +85,7 @@ export function WorkoutActivePage() {
     workout.phase === 'main' ? `Exercise ${workout.currentExerciseIndex + 1}` : PHASE_LABEL[workout.phase];
 
   const isLast = nextPosition(workout) === null;
+  const hasPrevious = previousPosition(workout) !== null;
   const paused = Boolean(workout.pausedAt);
   // "Finish" (variant secondary, Square icon) replaces "Next" (variant
   // primary, SkipForward icon) whenever there's nowhere further forward
@@ -78,59 +100,99 @@ export function WorkoutActivePage() {
   // History-first (what the user actually lifted last time for this exact
   // set), falling back to the plan's curated suggestedLoad — same
   // resolution active-workout.ts already uses to prefill the set inputs,
-  // reused here for the "Initial weight" stat chip. Set 1 specifically:
-  // this chip is a single exercise-level "starting point" figure, not a
-  // per-set one.
-  const initialWeight =
+  // formatted with the exercise's own load-type semantics preserved (see
+  // resolveInitialWeightDisplay) rather than a bare number, e.g.
+  // "2 × 8 kg" for a two-dumbbell exercise, "40 kg total" for a barbell
+  // one. Set 1 specifically: this chip is a single exercise-level
+  // "starting point" figure, not a per-set one. Labeled "Suggested
+  // start" (not "Initial weight") — this is a conservative first number
+  // to try and edit, never a claimed truth, especially for machine/cable
+  // exercises where the same number means different resistance on
+  // different equipment.
+  const suggestedStartText =
     prescription.mode === 'reps-weight' ||
     prescription.mode === 'reps-weight-side' ||
     prescription.mode === 'duration-weight'
-      ? resolveInitialWeight(exercise.id, 1, activeExercise.side, prescription, activities)
-      : undefined;
-  const initialWeightText = initialWeight !== undefined ? `${initialWeight} kg` : null;
+      ? (resolveInitialWeightDisplay(exercise, 1, activeExercise.side, prescription, activities) ?? null)
+      : null;
   const rirText =
     'targetRir' in prescription && prescription.targetRir
       ? `${prescription.targetRir[0]}-${prescription.targetRir[1]}`
       : null;
+  // "reps"/"duration" for what's tracked, plus "x weight" only when the
+  // mode actually has a weight field — side variants (reps-side,
+  // duration-side, etc.) follow the same base wording, side isn't a
+  // distinct tracked value.
+  const setsSectionTitle = `Save your ${prescription.mode.startsWith('duration') ? 'duration' : 'reps'}${hasWeightField(prescription.mode) ? ' x weight' : ''}:`;
   // Skips the warm-up/cool-down case (restSeconds: 0 there — rules/
   // warmup-cooldown.ts) same as the existing rest-divider-between-sets
   // check below; a "Rest · 0s" chip isn't meaningful.
   const restText =
     'restSeconds' in prescription && prescription.restSeconds ? `${prescription.restSeconds}s` : null;
 
-  // Segment order matches Paper's step-bar: one segment for warm-up, one
-  // per main step, one for cool-down. Counts come from the ActiveWorkout's
-  // own (expanded) arrays, not day.* — a *-side exercise is two steps, so
-  // it gets two segments.
-  const segments: { phase: WorkoutPhase; index: number }[] = [
-    ...workout.warmup.map((_, i) => ({ phase: 'warmup' as const, index: i })),
-    ...workout.exercises.map((_, i) => ({ phase: 'main' as const, index: i })),
-    ...workout.cooldown.map((_, i) => ({ phase: 'cooldown' as const, index: i })),
-  ];
+  // Step-bar segment counts come from the ActiveWorkout's own (expanded)
+  // arrays, not day.* — a *-side exercise is two steps, so it gets two
+  // segments. Warm-up and cool-down each render as their own fixed-width
+  // cluster (Paper: 12% of the bar, however many segments are inside it)
+  // separated by a divider from the main-exercises cluster (flex-1,
+  // taking the remaining width) — not a flat row of equal-width segments,
+  // so a warm-up/cool-down with more than one exercise still reads as one
+  // compact zone instead of stretching to match the main cluster.
   const phaseOrder: WorkoutPhase[] = ['warmup', 'main', 'cooldown'];
   const currentPhaseOrder = phaseOrder.indexOf(workout.phase);
+  const isSegmentFilled = (phase: WorkoutPhase, index: number) => {
+    const segmentOrder = phaseOrder.indexOf(phase);
+    return segmentOrder < currentPhaseOrder || (segmentOrder === currentPhaseOrder && index <= workout.currentExerciseIndex);
+  };
+  const renderCluster = (phase: WorkoutPhase, count: number) =>
+    Array.from({ length: count }, (_, i) => (
+      <div
+        key={`${phase}-${i}`}
+        className={`h-1 flex-1 rounded-full ${isSegmentFilled(phase, i) ? 'bg-state-active' : 'bg-state-inactive'}`}
+      />
+    ));
 
   return (
     <div className="bg-background flex min-h-svh flex-col items-center">
       <div className="w-full px-space-7 pb-space-7">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-6">
-          <div className="flex items-baseline gap-space-3 pt-space-7">
-            <span className="text-heading leading-heading text-foreground">{formatElapsed(workout.elapsedSeconds)}</span>
-            <span className="text-label leading-label text-foreground-secondary">{paused ? 'Time · Stopped' : 'Time'}</span>
+          <div className="flex items-baseline justify-between gap-space-3 pt-space-7">
+            <div className="flex items-end gap-space-3">
+              <span className="text-heading leading-heading text-foreground">{formatElapsed(workout.elapsedSeconds)}</span>
+              <span className="text-label leading-label text-foreground-secondary">{paused ? 'Time · Paused' : 'Time'}</span>
+            </div>
+            {/* IconButton's own convention is outlined icons (no fill
+                override) — but Play/Pause keep the same filled treatment
+                they already had as Button icons elsewhere on this page
+                (Resume/Finish), just relocated here. */}
+            <IconButton aria-label={paused ? 'Resume' : 'Pause'} className="text-foreground" onClick={togglePause}>
+              {paused ? (
+                <Play fill="currentColor" stroke="none" />
+              ) : (
+                <Pause fill="currentColor" stroke="none" />
+              )}
+            </IconButton>
           </div>
-          <div className="flex items-center gap-space-1">
-            {segments.map((segment, i) => {
-              const segmentOrder = phaseOrder.indexOf(segment.phase);
-              const filled =
-                segmentOrder < currentPhaseOrder ||
-                (segmentOrder === currentPhaseOrder && segment.index <= workout.currentExerciseIndex);
-              return (
-                <div
-                  key={`${segment.phase}-${segment.index}`}
-                  className={`h-1 flex-1 rounded-full ${filled ? 'bg-state-active' : 'bg-state-inactive'} ${i > 0 && segments[i - 1].phase !== segment.phase ? 'ml-space-2' : ''}`}
-                />
-              );
-            })}
+          <div className="flex items-center justify-center gap-space-1">
+            {workout.warmup.length > 0 && (
+              <>
+                <div className="flex w-[12%] shrink-0 items-center gap-px overflow-clip">
+                  {renderCluster('warmup', workout.warmup.length)}
+                </div>
+                <div className="bg-border-subtle h-1 w-px shrink-0" />
+              </>
+            )}
+            <div className="flex flex-1 items-center gap-px overflow-clip">
+              {renderCluster('main', workout.exercises.length)}
+            </div>
+            {workout.cooldown.length > 0 && (
+              <>
+                <div className="bg-border-subtle h-1 w-px shrink-0" />
+                <div className="flex w-[12%] shrink-0 items-center gap-px overflow-clip">
+                  {renderCluster('cooldown', workout.cooldown.length)}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -154,23 +216,28 @@ export function WorkoutActivePage() {
 
           <div className="grid grid-cols-2 gap-space-5">
             <StatChip label={setsStatLabel} value={setsStatValue} />
-            {initialWeightText && <StatChip label="Initial weight" value={initialWeightText} />}
+            {suggestedStartText && <StatChip label="Suggested start" value={suggestedStartText} />}
             {restText && <StatChip label="Rest" value={restText} />}
             {rirText && <StatChip label="RIR" value={rirText} />}
           </div>
 
-          {/* No exercise illustration assets exist yet (same gap as
-              Technique's video placeholder) — a neutral placeholder keeps
-              the layout structured for when real artwork lands, without
-              implying content that isn't there. */}
-          <div className="bg-interactive-subtle aspect-[350/200] w-full rounded-lg" />
+          {/* No exercise illustration assets exist yet — falls back to a
+              YouTube demo (exercise.videoId) where one's been curated,
+              same neutral placeholder as before otherwise. */}
+          {exercise.videoId ? (
+            <YouTubeEmbed videoId={exercise.videoId} title={exercise.name} />
+          ) : (
+            <div className="bg-interactive-subtle aspect-video w-full rounded-lg" />
+          )}
 
           <div className="flex flex-col gap-space-5">
+            {/* Extra pb-space-3 (8px) on top of the list's own gap-space-5
+                (12px) — matches Paper's title frame, which carries its own
+                8px vertical padding independent of the parent gap. */}
+            <span className="text-body leading-body text-foreground-secondary pb-space-3">{setsSectionTitle}</span>
             {activeExercise.sets.map((set, setIndex) => {
               const showsWeight = hasWeightField(set.mode);
               const isDuration = set.mode.startsWith('duration');
-              const isLastSetOfExercise = setIndex === activeExercise.sets.length - 1;
-              const restSeconds = 'restSeconds' in prescription ? prescription.restSeconds : undefined;
 
               return (
                 <div key={setIndex}>
@@ -240,12 +307,6 @@ export function WorkoutActivePage() {
                       )}
                     </div>
                   </div>
-                  {!isLastSetOfExercise && Boolean(restSeconds) && (
-                    <div className="flex items-center justify-center gap-space-5 py-space-2">
-                      <div className="w-12 shrink-0" />
-                      <span className="text-label leading-label text-foreground-secondary">Rest · {restSeconds}s</span>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -258,14 +319,34 @@ export function WorkoutActivePage() {
         className={`bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8 ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
       >
         <div className="mx-auto flex w-full max-w-[440px] items-center gap-space-6">
-          <Button variant={paused ? 'primary' : 'ghost'} className="flex-1" onClick={togglePause}>
-            {paused ? (
+          {/* Pause/Resume moved to the header, next to the timer (Paper
+              2026-08-17) — this slot is Back (steps to the previous
+              exercise) normally, Resume when paused (no Back while
+              stopped, matching Paper's paused state showing only
+              Resume + Finish), or Exit on the very first exercise of the
+              whole workout, where there's nowhere for Back to go. */}
+          {paused ? (
+            <Button variant="primary" className="flex-1" onClick={togglePause}>
               <Play data-icon="inline-start" fill="currentColor" stroke="none" />
-            ) : (
-              <Pause data-icon="inline-start" fill="currentColor" stroke="none" />
-            )}
-            {paused ? 'Resume' : 'Pause'}
-          </Button>
+              Resume
+            </Button>
+          ) : hasPrevious ? (
+            <Button variant="ghost" className="flex-1" onClick={goToPrevious}>
+              {/* Same construction as SkipForward below (a bar + a filled
+                  triangle) — needs the same stroke="currentColor" fix to
+                  render its bar, not stroke="none". */}
+              <SkipBack data-icon="inline-start" fill="currentColor" stroke="currentColor" />
+              Back
+            </Button>
+          ) : (
+            // Discards the in-progress attempt rather than leaving it
+            // resumable — exiting without finishing means the next time
+            // this day is started it's a fresh 0:00, not wherever the
+            // user walked away from (see discardActivity's own comment).
+            <Button variant="ghost" className="flex-1" onClick={() => void discardActivity()}>
+              Exit
+            </Button>
+          )}
           <Button
             variant={showFinish ? 'secondary' : 'primary'}
             className="flex-1"

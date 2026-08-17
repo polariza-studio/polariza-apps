@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 
 import { IconButton } from '@/components/ui/icon-button';
 import { exerciseLibrary } from '@/training/exercises/exercise-library';
+import { YouTubeEmbed } from './YouTubeEmbed';
 
 // Paper's "How to do it" section shows a single paragraph, but the domain
 // model (domain/exercise.ts) keeps setup/execution as separate step
@@ -30,7 +31,11 @@ export function TechniquePage() {
       </div>
 
       <div className="mx-auto w-full max-w-[440px] px-space-7">
-        <div className="bg-interactive-subtle aspect-[358/189] w-full rounded-lg" />
+        {exercise.videoId ? (
+          <YouTubeEmbed videoId={exercise.videoId} title={exercise.name} />
+        ) : (
+          <div className="bg-interactive-subtle aspect-video w-full rounded-lg" />
+        )}
       </div>
 
       <div className="mx-auto flex w-full max-w-[440px] flex-col px-space-7 py-space-7">

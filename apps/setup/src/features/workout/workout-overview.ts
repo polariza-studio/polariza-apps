@@ -3,22 +3,26 @@
 // influence programming), so it lives under features/workout, same
 // precedent as weekly-activity.ts under features/home.
 
-import type { Exercise, MuscleGroup } from '@/domain/exercise';
-import type { ExperienceLevel } from '@/domain/onboarding';
+import type { Exercise, ExerciseDifficulty, MuscleGroup } from '@/domain/exercise';
+import type { TrainingHistory } from '@/domain/onboarding';
 import type { TrainingDay } from '@/domain/plan';
+import { complexityRules } from '@/training/rules/exercise-complexity';
 
-const LEVEL_LABEL: Record<ExperienceLevel, string> = {
-  new: 'Beginner',
-  'some-experience': 'Intermediate',
-  experienced: 'Advanced',
+const DIFFICULTY_LABEL: Record<ExerciseDifficulty, string> = {
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
 };
 
-// Directly the user's own onboarding answer, not derived from exercise
-// difficulty — explicit product decision: a session's level reflects who
-// it's for, not a property re-computed from whichever exercises happened
-// to get selected.
-export function getSessionLevel(experience: ExperienceLevel): string {
-  return LEVEL_LABEL[experience];
+// Derived from the user's trainingHistory via the same complexityRules
+// table that actually governs exercise selection (see
+// training/rules/exercise-complexity.ts) — not re-derived from whichever
+// exercises happened to get selected. Reuses ExerciseDifficulty's 3-word
+// vocabulary since that ceiling only ever has 3 achievable values; the
+// underlying signal is trainingHistory's 4 tiers, not a re-creation of
+// the old 3-bucket experience model.
+export function getSessionLevel(trainingHistory: TrainingHistory): string {
+  return DIFFICULTY_LABEL[complexityRules[trainingHistory].maxDifficulty];
 }
 
 // Union of primary muscles across the day's *main* exercises only —
