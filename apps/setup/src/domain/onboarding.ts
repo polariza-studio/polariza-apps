@@ -3,7 +3,32 @@
 
 export type Goal = 'stronger' | 'muscle' | 'athletic' | 'general-fitness';
 
-export type ExperienceLevel = 'new' | 'some-experience' | 'experienced';
+// How long the user has been strength training CONSISTENTLY — an
+// observable duration, not a subjective self-rating. Replaced the old
+// "Experience" onboarding question and its 3-tier ExperienceLevel
+// (removed 2026-08-19 once every generator consumer migrated — see
+// training/rules/exercise-complexity.ts and training/rules/
+// workload-readiness.ts). Drives exercise-complexity ceiling only —
+// never workload/volume on its own, see CurrentStrengthTrainingFrequency.
+export type TrainingHistory =
+  | 'just-starting'
+  | 'less-than-6-months'
+  | 'six-to-eighteen-months'
+  | 'more-than-18-months';
+
+// How often the user CURRENTLY strength trains, independent of
+// `daysPerWeek` (how many days they want the NEW SetUp plan to contain).
+// Combines with TrainingHistory to drive initial workload readiness
+// (training/rules/workload-readiness.ts) — never affects exercise
+// complexity on its own (see TrainingHistory's comment).
+//
+// Optional: legacy users migrated from the old `experience` field (see
+// features/onboarding/legacy-preferences-migration.ts) have no real
+// answer for this — it is never fabricated. `undefined` is a genuine
+// "unknown" state that the generator must treat as neutral (no
+// detraining discount, no frequency bonus), not defaulted to any
+// specific tier.
+export type CurrentStrengthTrainingFrequency = 'none' | 'one-to-two' | 'three-to-four' | 'five-plus';
 
 export type DaysPerWeek = 2 | 3 | 4 | 5;
 
@@ -45,31 +70,30 @@ export type OnboardingAnswers = {
   // instruction. Used later for Home's greeting (top-left). An alias is
   // explicitly fine per Paper's own copy, not necessarily a legal name.
   name: string;
-  // Added 2026-08-17, not in the original spec/domain model. Not generic
-  // profile data — the training engine will eventually combine this with
-  // experience/exercise/equipment/reps/RIR to estimate a better initial
-  // suggestedLoad than experience alone can give (see Exercise.startingLoad
-  // in domain/exercise.ts). That calibration model isn't built yet; these
-  // fields are collected ahead of it.
-  weightKg: number;
-  heightCm: number;
   goal: Goal;
-  experience: ExperienceLevel;
+  trainingHistory: TrainingHistory;
+  // Optional — see CurrentStrengthTrainingFrequency's comment. Every
+  // fresh onboarding completion sets this; only legacy-migrated records
+  // may lack it.
+  currentStrengthTrainingFrequency?: CurrentStrengthTrainingFrequency;
   daysPerWeek: DaysPerWeek;
   sessionDuration: SessionDuration;
   trainingEnvironment: TrainingEnvironment;
   // Only meaningful when trainingEnvironment is 'home'; gym users get
   // rules/equipment.ts's standardGymEquipment regardless of this value.
   equipment: Equipment[];
-  // "No preference" (step 6/7) is represented as an empty array, not a
-  // union member — there's nothing to filter or modify when it's empty.
+  // Not asked in onboarding (removed 2026-08-17 — product decision, not a
+  // deferred build) — always saved as [] on completion, so a first plan
+  // is balanced by default. Still fully live outside onboarding: the
+  // generator (apply-priorities.ts, apply-focus-emphasis.ts) and Adjust
+  // Plan both read/write this field normally.
   focusAreas: FocusArea[];
   // deprioritizedAreas and context have no screen in Paper's current
-  // onboarding flow (7 steps: Name/Goal/Experience/Days/Time/Environment+
-  // Equipment/Focus) — deliberately deferred 2026-08-14, not dropped. The
-  // onboarding UI always saves these as [] for now; the fields stay
-  // required here since the rest of the domain (generator, safety rules)
-  // already depends on them existing.
+  // onboarding flow (7 steps: Name/Goal/Training history/Current
+  // training/Days/Time/Equipment) — deliberately deferred 2026-08-14, not
+  // dropped. The onboarding UI always saves these as [] for now; the
+  // fields stay required here since the rest of the domain (generator,
+  // safety rules) already depends on them existing.
   deprioritizedAreas: FocusArea[];
   // "None" (step 8) is represented as an empty array.
   context: TrainingContext[];
@@ -93,10 +117,9 @@ function sameItems<T>(a: T[] | undefined, b: T[] | undefined): boolean {
 export function answersEqual(a: OnboardingAnswers, b: OnboardingAnswers): boolean {
   return (
     a.name === b.name &&
-    a.weightKg === b.weightKg &&
-    a.heightCm === b.heightCm &&
     a.goal === b.goal &&
-    a.experience === b.experience &&
+    a.trainingHistory === b.trainingHistory &&
+    a.currentStrengthTrainingFrequency === b.currentStrengthTrainingFrequency &&
     a.daysPerWeek === b.daysPerWeek &&
     a.sessionDuration === b.sessionDuration &&
     a.trainingEnvironment === b.trainingEnvironment &&

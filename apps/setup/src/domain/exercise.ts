@@ -1,7 +1,7 @@
 // Exercise library domain types.
 // Spec: setup-functional-spec.md §5.3 (conceptual Exercise model) and §8.4 (technique in workout mode).
 
-import type { Equipment, ExperienceLevel, Goal } from './onboarding';
+import type { Equipment, Goal } from './onboarding';
 
 export type MovementPattern =
   | 'squat'
@@ -141,13 +141,27 @@ export type Exercise = {
 
   trackingMode: TrackingMode;
 
-  // One curated starting-weight reference per experience level — only
-  // meaningful when trackingMode is 'reps-weight' or 'duration-weight'.
-  // Deliberately not populated for v1 until the numbers themselves are
-  // reviewed (see generator/__fixtures__ review process) — the schema
-  // ships ahead of the data.
-  startingLoad?: Record<ExperienceLevel, SuggestedLoad>;
+  // One curated starting-weight reference — only meaningful when
+  // trackingMode is 'reps-weight'/'reps-weight-side'/'duration-weight'.
+  // A single flat data point per exercise (changed 2026-08-19 from a
+  // 3-tier Record keyed by the old ExperienceLevel): each exercise
+  // stands on its own, reviewed independently — never derived from
+  // another exercise's reference at runtime (see
+  // training/rules/starting-load.ts). The generator scales THIS number
+  // by trainingHistory/currentStrengthTrainingFrequency/prescription at
+  // prescribe-exercise.ts time; it is never itself a lookup table.
+  startingLoad?: SuggestedLoad;
 
   // Placeholder for future asset work — no images generated yet.
   imagePath?: string;
+
+  // Interim exercise demonstration while imagePath has no real assets:
+  // a YouTube video ID (the part after "v=", not a full URL) embedded via
+  // the standard youtube-nocookie.com/embed/<id> iframe. Curated by
+  // searching for reputable-looking tutorials per exercise — not
+  // personally verified frame-by-frame, so technique accuracy rests on
+  // the source channel's own credibility, not a review pass like
+  // startingLoad's. Undefined for any exercise without one yet (see
+  // features/workout/YouTubeEmbed.tsx for the fallback).
+  videoId?: string;
 };
