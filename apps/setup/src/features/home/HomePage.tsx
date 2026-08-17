@@ -139,7 +139,7 @@ export function HomePage() {
         <div className="mx-auto w-full max-w-[440px]">
           <Button variant="ghost" className="w-full" onClick={() => navigate('/adjust-plan')}>
             <SlidersHorizontal data-icon="inline-start" />
-            Adjust plan
+            Settings
           </Button>
         </div>
       </div>

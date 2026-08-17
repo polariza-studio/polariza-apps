@@ -5,11 +5,13 @@ import { RootRedirect } from '@/app/RootRedirect'
 import { AdjustPlanLayout } from '@/features/adjust-plan/AdjustPlanLayout'
 import { AdjustPlanPage } from '@/features/adjust-plan/AdjustPlanPage'
 import {
+  AdjustPlanCurrentFrequencyPage,
   AdjustPlanDaysPage,
   AdjustPlanEnvironmentPage,
-  AdjustPlanExperiencePage,
+  AdjustPlanFocusPage,
   AdjustPlanGoalPage,
   AdjustPlanTimePage,
+  AdjustPlanTrainingHistoryPage,
 } from '@/features/adjust-plan/field-pages'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { HomePage } from '@/features/home/HomePage'
@@ -65,10 +67,12 @@ function App() {
         >
           <Route index element={<AdjustPlanPage />} />
           <Route path="goal" element={<AdjustPlanGoalPage />} />
-          <Route path="experience" element={<AdjustPlanExperiencePage />} />
+          <Route path="training-history" element={<AdjustPlanTrainingHistoryPage />} />
+          <Route path="current-frequency" element={<AdjustPlanCurrentFrequencyPage />} />
           <Route path="days" element={<AdjustPlanDaysPage />} />
           <Route path="time" element={<AdjustPlanTimePage />} />
           <Route path="environment" element={<AdjustPlanEnvironmentPage />} />
+          <Route path="focus" element={<AdjustPlanFocusPage />} />
         </Route>
         <Route
           path="/workout/:dayId"
