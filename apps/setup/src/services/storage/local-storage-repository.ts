@@ -9,6 +9,7 @@ import type { TrainingPlan } from '../../domain/plan';
 import type { ActiveWorkout } from '../../domain/workout';
 import type { Activity } from '../../domain/activity';
 import type { StorageRepository } from './storage-repository';
+import { migrateLegacyPreferences } from './legacy-preferences-migration';
 
 const KEYS = {
   preferences: 'setup:preferences',
@@ -24,8 +25,22 @@ export class LocalStorageRepository implements StorageRepository {
     this.storage = storage;
   }
 
+  // Self-healing migration: a record saved before the trainingHistory
+  // redesign (2026-08-19) has no schema version, so this is checked on
+  // every read — but only ever WRITES when migration actually happened,
+  // so it's a one-time upgrade per legacy user, not a repeated cost. See
+  // legacy-preferences-migration.ts for exactly what's migrated and why
+  // currentStrengthTrainingFrequency is deliberately left unset rather
+  // than guessed.
   async getPreferences(): Promise<OnboardingAnswers | null> {
-    return this.readJson<OnboardingAnswers>(KEYS.preferences);
+    const raw = this.readJson<unknown>(KEYS.preferences);
+    if (raw === null) return null;
+    const migrated = migrateLegacyPreferences(raw);
+    if (migrated === null) return null;
+    if (!(raw as Record<string, unknown>).trainingHistory) {
+      this.writeJson(KEYS.preferences, migrated);
+    }
+    return migrated;
   }
 
   async savePreferences(data: OnboardingAnswers): Promise<void> {

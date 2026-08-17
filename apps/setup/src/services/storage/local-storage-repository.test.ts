@@ -31,10 +31,9 @@ class FakeStorage implements Storage {
 
 const preferences: OnboardingAnswers = {
   name: 'Test User',
-  weightKg: 70,
-  heightCm: 170,
   goal: 'muscle',
-  experience: 'some-experience',
+  trainingHistory: 'six-to-eighteen-months',
+  currentStrengthTrainingFrequency: 'one-to-two',
   daysPerWeek: 3,
   sessionDuration: 45,
   trainingEnvironment: 'home',
@@ -112,5 +111,53 @@ describe('LocalStorageRepository', () => {
     const activities = await repository.getActivities();
     expect(activities).toHaveLength(2);
     expect(activities.map((a) => a.id)).toEqual(['activity-1', 'activity-2']);
+  });
+
+  // Existing users: the experience-to-trainingHistory migration
+  // (2026-08-19) reads a pre-migration blob (has legacy `experience`, no
+  // `trainingHistory`) and derives trainingHistory from the exact
+  // approved mapping — never fabricating currentStrengthTrainingFrequency,
+  // which stays genuinely absent. The migrated record is also
+  // self-healed (written back), so a second read sees the modern shape
+  // directly, without re-migrating.
+  it('migrates a legacy preferences blob (experience, no trainingHistory) on read and self-heals storage', async () => {
+    const storage = new FakeStorage();
+    const legacyBlob = {
+      name: 'Existing User',
+      goal: 'stronger',
+      experience: 'experienced',
+      daysPerWeek: 4,
+      sessionDuration: 60,
+      trainingEnvironment: 'gym',
+      equipment: [],
+      focusAreas: [],
+      deprioritizedAreas: [],
+      context: [],
+    };
+    storage.setItem('setup:preferences', JSON.stringify(legacyBlob));
+    const legacyRepository = new LocalStorageRepository(storage);
+
+    const loaded = await legacyRepository.getPreferences();
+    expect(loaded).not.toBeNull();
+    expect(loaded?.goal).toBe('stronger');
+    // legacy 'experienced' -> trainingHistory 'more-than-18-months', per
+    // the exact approved migration mapping.
+    expect(loaded?.trainingHistory).toBe('more-than-18-months');
+    // Never fabricated — no legacy answer exists to translate.
+    expect(loaded?.currentStrengthTrainingFrequency).toBeUndefined();
+    // The old `experience` key doesn't survive into the migrated record.
+    expect((loaded as unknown as Record<string, unknown>).experience).toBeUndefined();
+
+    // Self-healed: the underlying storage now has trainingHistory too, so
+    // a second read doesn't need to migrate again.
+    const rawAfter = JSON.parse(storage.getItem('setup:preferences')!);
+    expect(rawAfter.trainingHistory).toBe('more-than-18-months');
+  });
+
+  it('leaves an unrecognizable preferences blob as no preferences at all', async () => {
+    const storage = new FakeStorage();
+    storage.setItem('setup:preferences', JSON.stringify({ name: 'Nothing usable here' }));
+    const repo = new LocalStorageRepository(storage);
+    expect(await repo.getPreferences()).toBeNull();
   });
 });
