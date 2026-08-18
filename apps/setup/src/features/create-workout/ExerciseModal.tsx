@@ -3,6 +3,7 @@ import { Dialog } from 'radix-ui';
 import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import type { WorkoutExercise } from '@/domain/workout';
 
 // Bottom-sheet form for adding/editing one exercise — Paper's
@@ -31,7 +32,10 @@ export function ExerciseModal({
 
   // Re-seed fields whenever a different exercise is opened (or the modal
   // opens fresh for a new one) — Radix keeps this component mounted, so
-  // state doesn't reset itself between opens.
+  // state doesn't reset itself between opens. seededFor resets to null on
+  // close so every subsequent "new exercise" open re-seeds to empty —
+  // without this, two consecutive "add" sessions share the same seed key
+  // ('new') and the second one silently kept the first one's saved values.
   const [seededFor, setSeededFor] = useState<string | null>(null);
   const seedKey = open ? (exercise?.id ?? 'new') : null;
   if (open && seedKey !== seededFor) {
@@ -40,6 +44,8 @@ export function ExerciseModal({
     setTargetReps(exercise?.targetReps ?? '');
     setRestSeconds(exercise ? String(exercise.restSeconds) : '');
     setSeededFor(seedKey);
+  } else if (!open && seededFor !== null) {
+    setSeededFor(null);
   }
 
   const setsNumber = Number(sets);
@@ -67,13 +73,14 @@ export function ExerciseModal({
           className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
         >
           <div className="flex items-center justify-between p-space-7">
-            <Dialog.Title className="text-body leading-body text-foreground-secondary">
-              {exercise ? 'Editar' : 'Nuevo'} · ejercicio
+            <Dialog.Title className="text-body leading-body">
+              <span className="text-foreground">{exercise ? 'Editar' : 'Nuevo'}</span>
+              <span className="text-foreground-secondary"> · ejercicio</span>
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button type="button" aria-label="Cerrar" className="text-foreground">
-                <X className="size-5 [stroke-width:1.5]" />
-              </button>
+              <IconButton aria-label="Cerrar" className="text-foreground">
+                <X />
+              </IconButton>
             </Dialog.Close>
           </div>
 

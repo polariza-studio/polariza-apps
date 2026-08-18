@@ -118,14 +118,23 @@ export function HomePage() {
                       {workout.exercises.length} ejercicios
                     </span>
                   </Link>
-                  <button
-                    type="button"
+                  {/* The real primary Button, not a hand-copied class
+                      string (that silently dropped the hover/active
+                      color — copying classes onto a plain <button> isn't
+                      equivalent to using the component). Its own h-12/
+                      padding classes are overridden via inline style,
+                      which always wins regardless of Tailwind class-merge
+                      ordering, to get the 32px icon-only circle Paper
+                      shows without touching button.tsx's box model. */}
+                  <Button
+                    variant="primary"
                     aria-label={`Empezar ${workout.name}`}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                    className="shrink-0 rounded-full"
+                    style={{ width: 32, height: 32, padding: 0 }}
                     onClick={() => navigate(`/workouts/${workout.id}/active`)}
                   >
                     <Play className="size-4 [stroke-width:1.5]" fill="currentColor" stroke="none" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>

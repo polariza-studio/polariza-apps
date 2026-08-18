@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import type { Workout, WorkoutExercise } from '@/domain/workout';
+import { useBottomShadow } from '@/lib/use-bottom-shadow';
 import { storageRepository } from '@/services/storage';
 import { getKnownExerciseNames } from './exercise-name-suggestions';
 import { ExerciseModal } from './ExerciseModal';
@@ -23,6 +25,7 @@ export function CreateWorkoutPage() {
   const [knownNames, setKnownNames] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<WorkoutExercise | null>(null);
+  const showActionsShadow = useBottomShadow(ready);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,12 +93,13 @@ export function CreateWorkoutPage() {
     <div className="bg-background flex min-h-svh flex-col">
       <div className="w-full p-space-7">
         <div className="mx-auto flex w-full max-w-[440px] items-center justify-between">
-          <span className="text-body leading-body text-foreground-secondary">
-            {workoutId ? 'Editar' : 'Nuevo'} · workout
+          <span className="text-body leading-body">
+            <span className="text-foreground">{workoutId ? 'Editar' : 'Nuevo'}</span>
+            <span className="text-foreground-secondary"> · workout</span>
           </span>
-          <button type="button" aria-label="Cerrar" className="text-foreground" onClick={() => navigate('/home')}>
-            <X className="size-5 [stroke-width:1.5]" />
-          </button>
+          <IconButton aria-label="Cerrar" className="text-foreground" onClick={() => navigate('/home')}>
+            <X />
+          </IconButton>
         </div>
       </div>
 
@@ -129,7 +133,9 @@ export function CreateWorkoutPage() {
         </div>
       </div>
 
-      <div className="px-space-7 py-[32px]">
+      <div
+        className={`bg-background sticky bottom-0 px-space-7 pt-space-7 pb-[32px] ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
+      >
         <div className="mx-auto w-full max-w-[440px]">
           <Button variant="primary" className="w-full" disabled={!canSave} onClick={() => void handleSave()}>
             Guardar Workout

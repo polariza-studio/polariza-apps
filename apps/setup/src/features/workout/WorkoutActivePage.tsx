@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
 
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { formatElapsed, lastWeightForExercise } from './active-workout';
 import { useActiveWorkout } from './use-active-workout';
+import { useBottomShadow } from '@/lib/use-bottom-shadow';
 import { storageRepository } from '@/services/storage';
 import type { Activity } from '@/domain/activity';
 
@@ -19,20 +20,7 @@ export function WorkoutActivePage() {
     void storageRepository.getActivities().then(setActivities);
   }, []);
 
-  // Bottom action bar only casts its "content still hidden below" shadow
-  // once there's content it's actually covering.
-  const [showActionsShadow, setShowActionsShadow] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setShowActionsShadow(!entry.isIntersecting), {
-      threshold: 1,
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [ready]);
+  const showActionsShadow = useBottomShadow(ready && Boolean(workout));
 
   if (!ready || !workout) return null;
 
@@ -126,7 +114,6 @@ export function WorkoutActivePage() {
               </div>
             ))}
           </div>
-          <div ref={sentinelRef} className="h-px w-full" />
         </div>
       </div>
 
