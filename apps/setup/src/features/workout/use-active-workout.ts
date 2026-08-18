@@ -1,59 +1,42 @@
-// Owns ActiveWorkout React state + persistence. Domain rules (building,
-// advancing) live in active-workout.ts; this hook is just wiring:
-// load-or-create on mount, tick the clock, persist every mutation so a
-// refresh/reopen/navigation-away always resumes exactly where the user
-// left off (spec §11).
+// Owns ActiveWorkout React state + persistence. Domain rules (building)
+// live in active-workout.ts; this hook is just wiring: load-or-create on
+// mount, tick the clock, persist every mutation so a refresh/reopen/
+// navigation-away always resumes exactly where the user left off.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import type { Activity } from '@/domain/activity';
-import type { TrainingDay, TrainingPlan } from '@/domain/plan';
-import type { ActiveExercise, ActiveWorkout, CompletedSet, WorkoutPhase } from '@/domain/workout';
+import type { Activity, ActivityExercise } from '@/domain/activity';
+import type { ActiveSet, ActiveWorkout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
-import { createActiveWorkout, nextPosition, phaseList, previousPosition } from './active-workout';
+import { createActiveWorkout } from './active-workout';
 
-export function useActiveWorkout(dayId: string) {
+export function useActiveWorkout(workoutId: string) {
   const navigate = useNavigate();
-  const [plan, setPlan] = useState<TrainingPlan | null>(null);
-  const [day, setDay] = useState<TrainingDay | null>(null);
   const [workout, setWorkout] = useState<ActiveWorkout | null>(null);
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [ready, setReady] = useState(false);
   const workoutRef = useRef<ActiveWorkout | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      storageRepository.getCurrentPlan(),
+      storageRepository.getWorkout(workoutId),
       storageRepository.getActiveWorkout(),
       storageRepository.getActivities(),
-    ]).then(async ([loadedPlan, existing, loadedActivities]) => {
+    ]).then(async ([source, existing, activities]) => {
       if (cancelled) return;
-      const foundDay = loadedPlan?.days.find((d) => d.id === dayId) ?? null;
-      if (!loadedPlan || !foundDay) {
+      if (!source) {
         navigate('/home', { replace: true });
         return;
       }
-      // Resume only an in-progress workout for THIS day OF THIS PLAN; a
-      // different day, an absent workout, or — critically — a workout
-      // left over from a plan the user has since regenerated (Adjust
-      // Plan, re-onboarding) all mean start fresh. Matching on
-      // trainingDayId alone was a real bug: every generated plan reuses
-      // the same "day-1"/"day-2" ids, so a stale in-progress workout from
-      // an OLD plan would silently get resumed under a NEW plan — same
-      // day-position label, but wrong exercises/prescriptions underneath
-      // (and built before that plan's own curated data, e.g. a
-      // startingLoad table populated after the stale workout was created).
-      let active = existing && existing.trainingDayId === dayId && existing.planId === loadedPlan.id ? existing : null;
+      // Resume only an in-progress session for THIS workout — a
+      // different workout, or none in progress, both mean start fresh.
+      let active = existing && existing.workoutId === workoutId ? existing : null;
       if (!active) {
-        active = createActiveWorkout(loadedPlan.id, foundDay, loadedActivities);
+        active = createActiveWorkout(source, activities);
         await storageRepository.saveActiveWorkout(active);
       }
       if (cancelled) return;
-      setPlan(loadedPlan);
-      setDay(foundDay);
-      setActivities(loadedActivities);
       setWorkout(active);
       workoutRef.current = active;
       setReady(true);
@@ -61,7 +44,7 @@ export function useActiveWorkout(dayId: string) {
     return () => {
       cancelled = true;
     };
-  }, [dayId, navigate]);
+  }, [workoutId, navigate]);
 
   const updateWorkout = useCallback((updater: (current: ActiveWorkout) => ActiveWorkout) => {
     setWorkout((current) => {
@@ -92,83 +75,66 @@ export function useActiveWorkout(dayId: string) {
   }, [updateWorkout]);
 
   const updateSet = useCallback(
-    (phase: WorkoutPhase, exerciseIndex: number, setIndex: number, patch: Partial<CompletedSet>) => {
-      updateWorkout((current) => {
-        const list = phaseList(current, phase).map((exercise, i): ActiveExercise => {
-          if (i !== exerciseIndex) return exercise;
-          return {
-            ...exercise,
-            sets: exercise.sets.map((set, j) => (j === setIndex ? ({ ...set, ...patch } as CompletedSet) : set)),
-          };
-        });
-        return { ...current, [phase === 'main' ? 'exercises' : phase]: list };
-      });
+    (exerciseIndex: number, setIndex: number, patch: Partial<ActiveSet>) => {
+      updateWorkout((current) => ({
+        ...current,
+        exercises: current.exercises.map((exercise, i) =>
+          i !== exerciseIndex
+            ? exercise
+            : { ...exercise, sets: exercise.sets.map((set, j) => (j === setIndex ? { ...set, ...patch } : set)) },
+        ),
+      }));
     },
     [updateWorkout],
   );
 
-  // Advances to the next exercise, or the next phase, or — if this was
-  // the workout's last exercise — navigates to Completion.
   const goToNext = useCallback(() => {
     const current = workoutRef.current;
     if (!current) return;
-    const next = nextPosition(current);
-    if (!next) {
+    if (current.currentExerciseIndex + 1 >= current.exercises.length) {
       updateWorkout((w) => (w.pausedAt ? w : { ...w, pausedAt: new Date().toISOString() }));
-      navigate(`/workout/${dayId}/complete`);
+      navigate(`/workouts/${workoutId}/complete`);
       return;
     }
-    updateWorkout((w) => ({ ...w, phase: next.phase, currentExerciseIndex: next.index }));
-  }, [dayId, navigate, updateWorkout]);
+    updateWorkout((w) => ({ ...w, currentExerciseIndex: w.currentExerciseIndex + 1 }));
+  }, [workoutId, navigate, updateWorkout]);
 
-  // Steps back to the previous exercise/phase. No-ops on the very first
-  // exercise of the whole workout (previousPosition returns null there) —
-  // the page swaps Back for Exit in that case instead of calling this,
-  // this null-guard is just belt-and-braces.
   const goToPrevious = useCallback(() => {
-    const current = workoutRef.current;
-    if (!current) return;
-    const prev = previousPosition(current);
-    if (!prev) return;
-    updateWorkout((w) => ({ ...w, phase: prev.phase, currentExerciseIndex: prev.index }));
+    updateWorkout((current) =>
+      current.currentExerciseIndex === 0 ? current : { ...current, currentExerciseIndex: current.currentExerciseIndex - 1 },
+    );
   }, [updateWorkout]);
 
-  // Freezes the clock — reusing the pause mechanism, since there's no
-  // "resume" affordance once the user reaches Completion — before
-  // navigating there, so the duration shown on the Complete screen is
-  // exactly the moment Finish was clicked, not still ticking while the
-  // user reads that screen (the Complete page mounts its own
-  // useActiveWorkout instance, whose ticking effect would otherwise keep
-  // incrementing elapsedSeconds).
+  // Freezes the clock before navigating to Completion, so the duration
+  // shown there is exactly the moment Finish was clicked.
   const finishWorkout = useCallback(() => {
     updateWorkout((current) => (current.pausedAt ? current : { ...current, pausedAt: new Date().toISOString() }));
-    navigate(`/workout/${dayId}/complete`);
-  }, [dayId, navigate, updateWorkout]);
+    navigate(`/workouts/${workoutId}/complete`);
+  }, [workoutId, navigate, updateWorkout]);
 
   const saveActivity = useCallback(async () => {
     const current = workoutRef.current;
     if (!current) return;
+    const exercises: ActivityExercise[] = current.exercises.map((exercise) => ({
+      exerciseName: exercise.name,
+      sets: exercise.sets.map((set) => ({ reps: set.reps, weight: set.weight })),
+    }));
     const activity: Activity = {
       id: crypto.randomUUID(),
-      planId: current.planId,
-      trainingDayId: current.trainingDayId,
-      startedAt: current.startedAt,
-      completedAt: new Date().toISOString(),
+      workoutId: current.workoutId,
+      workoutName: current.workoutName,
+      date: new Date().toISOString(),
       durationSeconds: current.elapsedSeconds,
-      warmup: current.warmup,
-      exercises: current.exercises,
-      cooldown: current.cooldown,
+      exercises,
     };
     await storageRepository.saveActivity(activity);
     await storageRepository.clearActiveWorkout();
     navigate('/home', { replace: true });
   }, [navigate]);
 
-  // Also doubles as "Exit" on the very first exercise of the whole
-  // workout (WorkoutActivePage — Back has nowhere to go there): exiting
-  // without finishing abandons the in-progress attempt entirely rather
-  // than leaving it resumable, so the next time this day is started it's
-  // a fresh 0:00, not wherever the user walked away from.
+  // Discards the in-progress attempt rather than leaving it resumable —
+  // exiting without finishing means the next time this workout is
+  // started it's a fresh 0:00.
   const discardActivity = useCallback(async () => {
     await storageRepository.clearActiveWorkout();
     navigate('/home', { replace: true });
@@ -176,10 +142,7 @@ export function useActiveWorkout(dayId: string) {
 
   return {
     ready,
-    plan,
-    day,
     workout,
-    activities,
     updateSet,
     togglePause,
     goToNext,

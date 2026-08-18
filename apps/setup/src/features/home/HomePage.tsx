@@ -1,107 +1,77 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { SlidersHorizontal } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Play, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import type { OnboardingAnswers } from '@/domain/onboarding';
-import type { TrainingDay, TrainingPlan } from '@/domain/plan';
+import type { Activity } from '@/domain/activity';
+import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
 import { InstallAppBanner } from './InstallAppBanner';
-import { ReorderableDayList } from './ReorderableDayList';
 import { getWeeklyActivitySummary, type WeekTone } from './weekly-activity';
 
-// Active is full-opacity moss; a day with no activity reads at 60% if
-// it's already happened (today included) or 20% if it's still upcoming
-// — exact values (#294000/99/33) per explicit direction.
 const WEEK_TONE_COLOR: Record<WeekTone, string> = {
   active: 'var(--foreground)',
   past: 'var(--foreground-secondary)',
   future: 'color-mix(in srgb, var(--moss) 20%, transparent)',
 };
 
+const RECENT_ACTIVITY_LIMIT = 3;
+
+function formatDateBadge(iso: string): { day: string; month: string } {
+  const date = new Date(iso);
+  return {
+    day: String(date.getDate()),
+    month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
+  };
+}
+
 export function HomePage() {
   const navigate = useNavigate();
-  const [preferences, setPreferences] = useState<OnboardingAnswers | null>(null);
-  const [plan, setPlan] = useState<TrainingPlan | null>(null);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [ready, setReady] = useState(false);
-  const [weekly, setWeekly] = useState(() => getWeeklyActivitySummary([], 45));
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      storageRepository.getPreferences(),
-      storageRepository.getCurrentPlan(),
-      storageRepository.getActivities(),
-    ]).then(([loadedPreferences, loadedPlan, activities]) => {
-      if (cancelled) return;
-      // No saved plan yet — e.g. preferences saved before plan generation
-      // was wired into onboarding. Generate one instead of a dead end.
-      if (!loadedPlan) {
-        navigate('/loading', { replace: true });
-        return;
-      }
-      setPreferences(loadedPreferences);
-      setPlan(loadedPlan);
-      // The graph's fixed height is scaled against this user's own usual
-      // session length (already collected in onboarding) rather than a
-      // one-size-fits-all constant or the week's own busiest day — the
-      // most meaningful "typical" duration available per user.
-      setWeekly(getWeeklyActivitySummary(activities, loadedPreferences?.sessionDuration ?? 45));
-      setReady(true);
-    });
+    Promise.all([storageRepository.getWorkouts(), storageRepository.getActivities()]).then(
+      ([loadedWorkouts, loadedActivities]) => {
+        if (cancelled) return;
+        setWorkouts(loadedWorkouts);
+        setActivities(loadedActivities);
+        setReady(true);
+      },
+    );
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, []);
 
-  if (!ready || !plan) return null;
+  if (!ready) return null;
 
-  async function handleReorder(days: TrainingDay[]) {
-    if (!plan) return;
-    const reordered = { ...plan, days };
-    setPlan(reordered);
-    await storageRepository.saveCurrentPlan(reordered);
-  }
+  const weekly = getWeeklyActivitySummary(activities);
+  const recentActivities = [...activities]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, RECENT_ACTIVITY_LIMIT);
 
-  // Only the greeting row is this screen's "top bar" (chrome, same role
-  // OnboardingHeader plays elsewhere) — it runs full width uncapped. The
-  // weekly-stats block below it is reading content, so it gets its own
-  // outer-padding/inner-cap split at max-w-[440px] like the sections
-  // further down, not a share of the greeting row's. Margins are matched
-  // to Paper's home artboard exactly (re-audited via paper-desktop MCP
-  // 2026-08-16), converting Paper's stock-Tailwind spacing numbers to
-  // this app's --space-* token by px value, not by index — the two
-  // scales don't share numbering.
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <div className="flex flex-col bg-[var(--lime-soft)]">
-        <div className="flex items-start justify-between gap-space-1 px-space-7 py-space-7">
-          <span className="text-body-emphasis leading-body-emphasis text-foreground">Hi {preferences?.name},</span>
-          <span className="text-body leading-body text-foreground-secondary">Your Weekly Workout</span>
+        <div className="flex items-center justify-between gap-space-1 px-space-7 py-space-7">
+          <span className="text-body-emphasis leading-body-emphasis text-foreground">SetUp</span>
+          <span className="text-body leading-body text-foreground-secondary">Workouts</span>
         </div>
 
         <div className="px-space-7 py-space-7">
           <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">
             <div className="flex flex-col gap-space-3">
-              <span className="text-body leading-body text-foreground-secondary">This week</span>
+              <span className="text-body leading-body text-foreground-secondary">Esta semana</span>
               <div className="flex items-baseline gap-space-3">
                 <span className="text-display-lg leading-display-lg text-foreground">{weekly.totalMinutes}</span>
                 <span className="text-body leading-body text-foreground">min</span>
               </div>
             </div>
 
-            {/* Matches Paper's own structure: bars and labels are each
-                their own justify-between row spanning the full width,
-                not 7 flex-1 columns — flex-1 centers each bar within its
-                own slice, which reads as extra margin before the first
-                bar and after the last one instead of the row actually
-                stretching edge to edge like "This week"'s number above
-                it does. justify-between puts day 1 flush left and day 7
-                flush right with the rest spread evenly between. */}
             <div className="flex flex-col gap-[2px] px-space-1">
-              {/* Fixed height so the graph's overall size never changes
-                  week to week — each bar (already capped at this same
-                  height) sits bottom-aligned inside it. */}
               <div className="flex h-[67px] items-end justify-between">
                 {weekly.days.map((day, index) => (
                   <div
@@ -129,20 +99,80 @@ export function HomePage() {
 
       <div className="flex flex-1 flex-col px-space-7 py-[32px]">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
-          <span className="text-heading leading-heading font-light text-foreground-secondary">Your Plan</span>
+          <span className="text-heading leading-heading font-light text-foreground-secondary">Tus workouts</span>
 
-          <ReorderableDayList days={plan.days} onReorder={handleReorder} />
-        </div>
-      </div>
+          {workouts.length === 0 ? (
+            <div className="border-border-subtle text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-3 rounded-lg border border-dashed px-space-6 py-[32px] text-center">
+              Todavía no has creado ningún workout
+            </div>
+          ) : (
+            <div className="flex flex-col gap-space-5">
+              {workouts.map((workout) => (
+                <div
+                  key={workout.id}
+                  className="border-border-subtle flex items-center gap-space-1 rounded-lg border px-space-6 py-space-5"
+                >
+                  <Link to={`/workouts/${workout.id}/edit`} className="flex flex-1 flex-col items-start gap-space-3">
+                    <span className="text-heading leading-heading font-light text-foreground">{workout.name}</span>
+                    <span className="text-caption leading-caption text-foreground-secondary">
+                      {workout.exercises.length} ejercicios
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    aria-label={`Empezar ${workout.name}`}
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                    onClick={() => navigate(`/workouts/${workout.id}/active`)}
+                  >
+                    <Play className="size-4 [stroke-width:1.5]" fill="currentColor" stroke="none" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-      <div className="px-space-7 py-[32px]">
-        <div className="mx-auto w-full max-w-[440px]">
-          <Button variant="ghost" className="w-full" onClick={() => navigate('/adjust-plan')}>
-            <SlidersHorizontal data-icon="inline-start" />
-            Settings
+          <Button variant="ghost" className="w-full" onClick={() => navigate('/workouts/new')}>
+            <Plus data-icon="inline-start" />
+            {workouts.length === 0 ? 'Crear workout' : 'Nuevo workout'}
           </Button>
         </div>
       </div>
+
+      {recentActivities.length > 0 && (
+        <div className="flex flex-col px-space-7 py-[32px]">
+          <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
+            <span className="text-heading leading-heading font-light text-foreground-secondary">Tu actividad</span>
+
+            <div className="flex flex-col gap-space-5">
+              {recentActivities.map((activity) => {
+                const { day, month } = formatDateBadge(activity.date);
+                return (
+                  <Link
+                    key={activity.id}
+                    to={`/history/${activity.id}`}
+                    className="flex items-center gap-space-5"
+                  >
+                    <div className="bg-interactive-subtle flex w-12 shrink-0 flex-col items-center justify-center gap-space-1 rounded-lg p-space-2">
+                      <span className="text-label-emphasis leading-label-emphasis text-foreground">{day}</span>
+                      <span className="text-label leading-label text-foreground-secondary">{month}</span>
+                    </div>
+                    <div className="border-border-subtle flex flex-1 flex-col items-start gap-space-3 rounded-lg border px-space-6 py-space-5">
+                      <span className="text-heading leading-heading font-light text-foreground">{activity.workoutName}</span>
+                      <span className="text-caption leading-caption text-foreground-secondary">
+                        {activity.exercises.length} ejercicios · {Math.round(activity.durationSeconds / 60)} min
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <Button variant="ghost" className="w-full" onClick={() => navigate('/history')}>
+              Ver historial
+            </Button>
+          </div>
+        </div>
+      )}
 
       <InstallAppBanner />
     </div>

@@ -1,6 +1,5 @@
-// UI-presentation aggregation over saved activity (spec §6.1), not
-// training-domain logic — kept local to the Home feature rather than
-// under src/training/.
+// UI-presentation aggregation over saved activity — kept local to the
+// Home feature.
 
 import type { Activity } from '@/domain/activity';
 
@@ -42,11 +41,16 @@ function startOfWeek(date: Date): Date {
   return result;
 }
 
+// Bar-height scale reference — no onboarding/preferences exist in V1 to
+// derive a "usual session length" from, so this is just a fixed,
+// reasonable typical-session constant instead.
+const DEFAULT_REFERENCE_MINUTES = 45;
+
 // Only saved activities reach this — discarded workouts are never
-// persisted (spec §6.1: "Discarded workouts must not appear").
+// persisted.
 export function getWeeklyActivitySummary(
   activities: Activity[],
-  referenceMinutes: number,
+  referenceMinutes: number = DEFAULT_REFERENCE_MINUTES,
   now: Date = new Date(),
 ): WeeklyActivitySummary {
   const start = startOfWeek(now);
@@ -54,7 +58,7 @@ export function getWeeklyActivitySummary(
   const minutesByDay = Array<number>(7).fill(0);
 
   for (const activity of activities) {
-    const dayIndex = Math.floor((new Date(activity.completedAt).getTime() - start.getTime()) / DAY_MS);
+    const dayIndex = Math.floor((new Date(activity.date).getTime() - start.getTime()) / DAY_MS);
     if (dayIndex < 0 || dayIndex > 6) continue;
     minutesByDay[dayIndex] += activity.durationSeconds / 60;
   }

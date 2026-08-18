@@ -4,16 +4,16 @@ import { Button } from '@/components/ui/button';
 import { formatElapsed } from './active-workout';
 import { useActiveWorkout } from './use-active-workout';
 
-// Same dark-gradient surface as WorkoutOverviewPage ("workout-page-ending"
-// in Paper) — foreground-inverse tokens, ghost-inverse for the
-// lower-emphasis action. Light-to-dark (not dark-to-light) and front-loaded
-// into the top quarter (26.17%), matching Paper's stops exactly rather than
-// spreading the transition across the full height.
+// Dark-gradient surface — Paper's "workout-page-ending" artboard —
+// foreground-inverse tokens, ghost-inverse for the lower-emphasis action.
+// Light-to-dark (not dark-to-light) and front-loaded into the top quarter
+// (26.17%), matching Paper's stops exactly rather than spreading the
+// transition across the full height.
 const GRADIENT = 'linear-gradient(in oklab 180deg, oklab(42.4% -0.056 0.070) 0%, oklab(33.9% -0.056 0.070) 26.17%)';
 
 export function WorkoutCompletePage() {
-  const { dayId = '' } = useParams<{ dayId: string }>();
-  const { ready, workout, saveActivity, discardActivity } = useActiveWorkout(dayId);
+  const { workoutId = '' } = useParams<{ workoutId: string }>();
+  const { ready, workout, saveActivity, discardActivity } = useActiveWorkout(workoutId);
 
   if (!ready || !workout) return null;
 
@@ -26,20 +26,20 @@ export function WorkoutCompletePage() {
 
       <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col items-center justify-center gap-space-8 px-space-7 text-center">
         <div className="flex flex-col items-center gap-space-3">
-          <span className="text-body leading-body text-foreground-inverse-secondary">Your time activity</span>
+          <span className="text-body leading-body text-foreground-inverse-secondary">Tiempo de entreno</span>
           <span className="text-display-lg leading-display-lg font-light text-foreground-inverse">
             {formatElapsed(workout.elapsedSeconds)}
           </span>
         </div>
-        <span className="text-display-md leading-display-md font-light text-success">Good Work!</span>
+        <span className="text-display-md leading-display-md font-light text-success">Bien hecho!</span>
       </div>
 
       <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-5 px-space-7 pt-8 pb-8">
         <Button variant="primary" className="w-full" onClick={() => void saveActivity()}>
-          Save Activity
+          Guardar mi actividad
         </Button>
         <Button variant="ghost-inverse" className="w-full" onClick={() => void discardActivity()}>
-          Discard Activity
+          Descartar
         </Button>
       </div>
     </div>
