@@ -1,70 +1,50 @@
-// Active workout domain types.
-// Spec: setup-functional-spec.md §8 (Workout Mode) and §11 (persistence —
-// ActiveWorkout must survive refresh/reopen/navigation-away).
+// Workout domain types — SetUp V1.
+// A workout is entirely user-authored: a name plus a free-text list of
+// exercises. No predefined exercise library, no generated plan — see
+// domain/activity.ts for what actually happened when the user trains it.
 
-// One member per TrackingMode literal (domain/exercise.ts), same
-// discriminated-union discipline as ExercisePrescription (domain/plan.ts)
-// — grouping literals on one member breaks narrowing on the others.
-// *-side modes are single-sided PER STEP, not per-row: a *-side
-// PlannedExercise becomes two separate ActiveExercise steps (left pass,
-// then right pass — see active-workout.ts's createActiveWorkout), each
-// with exactly `prescription.sets` rows, all sharing that step's side.
-// Rejected an earlier "double the rows within one step" design — a
-// 3-set unilateral exercise showing 6 rows under a single "3 sets"
-// header reads as a data bug, not a deliberate 3-per-side prescription.
-// `reps`/`weight`/`durationSeconds` stay
-// optional on the type — the workout may be saved before every field is
-// touched — but in practice `features/workout/active-workout.ts` prefills
-// `reps`/`durationSeconds` with the prescribed orientative value (spec
-// §8.3's own example shows populated rows; the range/duration is real
-// approved programming data, not a guess) and `weight` only when there's
-// real history or a curated suggestedLoad to offer (spec §8.2's explicit
-// "no history yet" exception — an empty weight field, not a fabricated
-// one, is correct when nothing is known).
-export type CompletedSet =
-  | { mode: 'reps'; setNumber: number; completed: boolean; reps?: number }
-  | { mode: 'reps-weight'; setNumber: number; completed: boolean; reps?: number; weight?: number }
-  | { mode: 'reps-side'; setNumber: number; side: 'left' | 'right'; completed: boolean; reps?: number }
-  | {
-      mode: 'reps-weight-side';
-      setNumber: number;
-      side: 'left' | 'right';
-      completed: boolean;
-      reps?: number;
-      weight?: number;
-    }
-  | { mode: 'duration'; setNumber: number; completed: boolean; durationSeconds?: number }
-  | {
-      mode: 'duration-weight';
-      setNumber: number;
-      completed: boolean;
-      durationSeconds?: number;
-      weight?: number;
-    }
-  | { mode: 'duration-side'; setNumber: number; side: 'left' | 'right'; completed: boolean; durationSeconds?: number };
-
-export type ActiveExercise = {
-  exerciseId: string;
-  // Set only for a *-side PlannedExercise's steps — which single-sided
-  // pass through the exercise this step is (see CompletedSet's comment).
-  // Absent for every other exercise.
-  side?: 'left' | 'right';
-  sets: CompletedSet[];
+export type WorkoutExercise = {
+  id: string;
+  name: string;
+  sets: number;
+  // Free text, not a strict numeric range — matches how the user actually
+  // writes reps ("8-10", "12", "AMRAP", ...). Only Activity's performed
+  // sets are ever real numbers.
+  targetReps: string;
+  restSeconds: number;
 };
 
-export type WorkoutPhase = 'warmup' | 'main' | 'cooldown';
+export type Workout = {
+  id: string;
+  name: string;
+  exercises: WorkoutExercise[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Runtime state for a workout in progress — persisted so a refresh/reopen
+// resumes exactly where the user left off. Built once from a Workout at
+// start time; editing the source Workout afterward doesn't affect an
+// already-started session.
+export type ActiveSet = {
+  reps?: number;
+  weight?: number;
+  completed: boolean;
+};
+
+export type ActiveExercise = {
+  name: string;
+  targetReps: string;
+  restSeconds: number;
+  sets: ActiveSet[];
+};
 
 export type ActiveWorkout = {
-  planId: string;
-  trainingDayId: string;
+  workoutId: string;
+  workoutName: string;
   startedAt: string;
   pausedAt?: string;
   elapsedSeconds: number;
-  phase: WorkoutPhase;
-  // Index within the current phase's own list (warmup/exercises/cooldown
-  // below) — not a global index across all three.
   currentExerciseIndex: number;
-  warmup: ActiveExercise[];
   exercises: ActiveExercise[];
-  cooldown: ActiveExercise[];
 };

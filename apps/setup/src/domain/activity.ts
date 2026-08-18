@@ -1,19 +1,23 @@
-// Saved activity domain types.
-// Spec: setup-functional-spec.md §10 (core domain models) and §9 (workout completion).
+// Saved activity domain types — SetUp V1.
+// An Activity is what actually happened when the user trained a workout:
+// the weights and reps they really did. This is the only "progress
+// tracking" the product has — the history list itself, nothing derived.
 
-import type { ActiveExercise } from './workout';
+export type ActivitySet = {
+  reps?: number;
+  weight?: number;
+};
+
+export type ActivityExercise = {
+  exerciseName: string;
+  sets: ActivitySet[];
+};
 
 export type Activity = {
   id: string;
-  planId: string;
-  trainingDayId: string;
-  startedAt: string;
-  completedAt: string;
+  workoutId: string;
+  workoutName: string;
+  date: string;
   durationSeconds: number;
-  // Same warmup/exercises/cooldown split as TrainingDay/ActiveWorkout —
-  // what was actually done, including warm-up and cool-down, not just
-  // the main lifts.
-  warmup: ActiveExercise[];
-  exercises: ActiveExercise[];
-  cooldown: ActiveExercise[];
+  exercises: ActivityExercise[];
 };

@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { LocalStorageRepository } from './local-storage-repository';
-import type { OnboardingAnswers } from '../../domain/onboarding';
-import type { TrainingPlan } from '../../domain/plan';
-import type { ActiveWorkout } from '../../domain/workout';
+import type { ActiveWorkout, Workout } from '../../domain/workout';
 import type { Activity } from '../../domain/activity';
 
 // In-memory Storage fake so this test doesn't need a DOM environment.
@@ -29,48 +27,29 @@ class FakeStorage implements Storage {
   }
 }
 
-const preferences: OnboardingAnswers = {
-  name: 'Test User',
-  goal: 'muscle',
-  trainingHistory: 'six-to-eighteen-months',
-  currentStrengthTrainingFrequency: 'one-to-two',
-  daysPerWeek: 3,
-  sessionDuration: 45,
-  trainingEnvironment: 'home',
-  equipment: ['dumbbells'],
-  focusAreas: [],
-  deprioritizedAreas: [],
-  context: [],
-};
-
-const plan: TrainingPlan = {
-  id: 'plan-1',
+const workout: Workout = {
+  id: 'workout-1',
+  name: 'Lower body',
+  exercises: [{ id: 'ex-1', name: 'Hip thrust', sets: 3, targetReps: '8-10', restSeconds: 60 }],
   createdAt: new Date().toISOString(),
-  preferences,
-  days: [],
+  updatedAt: new Date().toISOString(),
 };
 
 const activeWorkout: ActiveWorkout = {
-  planId: 'plan-1',
-  trainingDayId: 'day-1',
+  workoutId: 'workout-1',
+  workoutName: 'Lower body',
   startedAt: new Date().toISOString(),
   elapsedSeconds: 0,
-  phase: 'main',
   currentExerciseIndex: 0,
-  warmup: [],
   exercises: [],
-  cooldown: [],
 };
 
 const activity: Activity = {
   id: 'activity-1',
-  planId: 'plan-1',
-  trainingDayId: 'day-1',
-  startedAt: new Date().toISOString(),
-  completedAt: new Date().toISOString(),
+  workoutId: 'workout-1',
+  workoutName: 'Lower body',
+  date: new Date().toISOString(),
   durationSeconds: 600,
-  warmup: [],
-  cooldown: [],
   exercises: [],
 };
 
@@ -81,20 +60,27 @@ describe('LocalStorageRepository', () => {
     repository = new LocalStorageRepository(new FakeStorage());
   });
 
-  it('returns null for unset preferences/plan/active workout', async () => {
-    expect(await repository.getPreferences()).toBeNull();
-    expect(await repository.getCurrentPlan()).toBeNull();
+  it('returns empty/null for unset workouts/active workout', async () => {
+    expect(await repository.getWorkouts()).toEqual([]);
+    expect(await repository.getWorkout('missing')).toBeNull();
     expect(await repository.getActiveWorkout()).toBeNull();
   });
 
-  it('round-trips preferences', async () => {
-    await repository.savePreferences(preferences);
-    expect(await repository.getPreferences()).toEqual(preferences);
+  it('creates and updates a workout by id', async () => {
+    await repository.saveWorkout(workout);
+    expect(await repository.getWorkout('workout-1')).toEqual(workout);
+
+    const renamed = { ...workout, name: 'Lower body v2' };
+    await repository.saveWorkout(renamed);
+    const all = await repository.getWorkouts();
+    expect(all).toHaveLength(1);
+    expect(all[0].name).toBe('Lower body v2');
   });
 
-  it('round-trips the current plan', async () => {
-    await repository.saveCurrentPlan(plan);
-    expect(await repository.getCurrentPlan()).toEqual(plan);
+  it('deletes a workout', async () => {
+    await repository.saveWorkout(workout);
+    await repository.deleteWorkout('workout-1');
+    expect(await repository.getWorkouts()).toEqual([]);
   });
 
   it('round-trips and clears the active workout', async () => {
@@ -113,51 +99,9 @@ describe('LocalStorageRepository', () => {
     expect(activities.map((a) => a.id)).toEqual(['activity-1', 'activity-2']);
   });
 
-  // Existing users: the experience-to-trainingHistory migration
-  // (2026-08-19) reads a pre-migration blob (has legacy `experience`, no
-  // `trainingHistory`) and derives trainingHistory from the exact
-  // approved mapping — never fabricating currentStrengthTrainingFrequency,
-  // which stays genuinely absent. The migrated record is also
-  // self-healed (written back), so a second read sees the modern shape
-  // directly, without re-migrating.
-  it('migrates a legacy preferences blob (experience, no trainingHistory) on read and self-heals storage', async () => {
-    const storage = new FakeStorage();
-    const legacyBlob = {
-      name: 'Existing User',
-      goal: 'stronger',
-      experience: 'experienced',
-      daysPerWeek: 4,
-      sessionDuration: 60,
-      trainingEnvironment: 'gym',
-      equipment: [],
-      focusAreas: [],
-      deprioritizedAreas: [],
-      context: [],
-    };
-    storage.setItem('setup:preferences', JSON.stringify(legacyBlob));
-    const legacyRepository = new LocalStorageRepository(storage);
-
-    const loaded = await legacyRepository.getPreferences();
-    expect(loaded).not.toBeNull();
-    expect(loaded?.goal).toBe('stronger');
-    // legacy 'experienced' -> trainingHistory 'more-than-18-months', per
-    // the exact approved migration mapping.
-    expect(loaded?.trainingHistory).toBe('more-than-18-months');
-    // Never fabricated — no legacy answer exists to translate.
-    expect(loaded?.currentStrengthTrainingFrequency).toBeUndefined();
-    // The old `experience` key doesn't survive into the migrated record.
-    expect((loaded as unknown as Record<string, unknown>).experience).toBeUndefined();
-
-    // Self-healed: the underlying storage now has trainingHistory too, so
-    // a second read doesn't need to migrate again.
-    const rawAfter = JSON.parse(storage.getItem('setup:preferences')!);
-    expect(rawAfter.trainingHistory).toBe('more-than-18-months');
-  });
-
-  it('leaves an unrecognizable preferences blob as no preferences at all', async () => {
-    const storage = new FakeStorage();
-    storage.setItem('setup:preferences', JSON.stringify({ name: 'Nothing usable here' }));
-    const repo = new LocalStorageRepository(storage);
-    expect(await repo.getPreferences()).toBeNull();
+  it('looks up a single activity by id', async () => {
+    await repository.saveActivity(activity);
+    expect(await repository.getActivity('activity-1')).toEqual(activity);
+    expect(await repository.getActivity('missing')).toBeNull();
   });
 });
