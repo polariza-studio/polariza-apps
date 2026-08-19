@@ -7,29 +7,20 @@ import { useEffect, useState } from 'react';
 // "still within the viewport's raw geometry" unless the footer's own
 // height is reserved as scroll padding — without that, the observer
 // never reports non-intersecting and the shadow never shows.
-//
-// In the installed (standalone) PWA, .app-frame-canvas — not
-// document/body — is the actual scroll container (index.css: position
-// fixed + inset 0, overflow-y auto), so scroll events and scrollTop must
-// be read from it there instead of from the document.
 export function useBottomShadow(ready: boolean): boolean {
   const [hasMoreBelow, setHasMoreBelow] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
-    const standalone = window.matchMedia('(display-mode: standalone)').matches;
-    const canvas = standalone ? document.querySelector('.app-frame-canvas') : null;
-    const el = canvas ?? document.scrollingElement ?? document.documentElement;
-    const scrollTarget: EventTarget = canvas ?? window;
-
     function update() {
+      const el = document.scrollingElement ?? document.documentElement;
       setHasMoreBelow(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
     }
     update();
-    scrollTarget.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     return () => {
-      scrollTarget.removeEventListener('scroll', update);
+      window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
     };
   }, [ready]);

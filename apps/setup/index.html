@@ -2,28 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Round 6 confirmed removing viewport-fit=cover fixes the bottom
-         clipping bug (the standalone webview's rendering surface was
-         capped short of the true screen with cover on — round 5 proved
-         it wasn't CSS-fixable: canvas computed the right size but the
-         extra space was silently clipped). But cover is also the only
-         way page content can show through the status bar at all, which
-         is required for the moss-colored black-translucent look below —
-         re-added on request to test that combination specifically. If
-         the clipping bug reappears (check the diagnostic overlay:
-         canvas/content bottom should reach the true screen height, not
-         fall short), revert this and keep cover off. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Manifest's display:standalone covers Android/Chrome; iOS Safari
          needs these Apple-specific tags too for a reliably chrome-free
-         launch from the home-screen icon. -->
+         launch from the home-screen icon. No viewport-fit=cover / status
+         bar customization on purpose: the installed app must render
+         identically to the mobile browser tab, not extend content under
+         the status bar/home indicator with its own safe-area handling —
+         that whole layer of PWA-specific treatment (see git history
+         around "Revert mobile/PWA-specific UI changes") caused more
+         regressions (clipped sticky bars, broken scroll) than it was
+         worth. iOS just reserves the status bar natively here, same as
+         any other webpage. -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <!-- black-translucent: only iOS mode that lets page content show
-         through the status bar. Its icons are always white (no dark-icon
-         option exists), so the header gradient below is dark at the very
-         top for contrast. -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SetUp" />
     <title>SetUp</title>
   </head>

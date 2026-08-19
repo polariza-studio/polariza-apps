@@ -66,7 +66,7 @@ export function WorkoutActivePage() {
         </div>
       </div>
 
-      <div className="active-workout-scroll-clearance w-full flex-1 p-space-7">
+      <div className="w-full flex-1 p-space-7">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
           <div className="flex flex-col gap-space-3">
             <span className="text-display-md leading-display-md font-light text-foreground">{exercise.name}</span>
@@ -129,7 +129,7 @@ export function WorkoutActivePage() {
       </div>
 
       <div
-        className={`app-frame-bottom-actions bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8 ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
+        className={`bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8 ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
       >
         <div className="mx-auto flex w-full max-w-[440px] items-center gap-space-6">
           {paused ? (

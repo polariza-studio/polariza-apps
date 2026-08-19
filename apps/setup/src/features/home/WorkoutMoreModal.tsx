@@ -32,9 +32,8 @@ export function WorkoutMoreModal({
         <Dialog.Content
           aria-describedby={undefined}
           // isolate + will-change-transform: see the same comment on
-          // ExerciseModal's Dialog.Content — Dialog.Portal renders this
-          // outside .app-frame-content, so it needs its own compositing
-          // layer for the WebKit icon-doubling workaround to apply here.
+          // ExerciseModal's Dialog.Content — needs its own compositing
+          // layer to avoid Safari/WebKit doubling the icons in here.
           className="fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
         >
           <div className="flex items-center justify-between p-space-7">

@@ -114,7 +114,7 @@ export function CreateWorkoutPage() {
         </div>
       </div>
 
-      <div className="create-workout-scroll-clearance flex-1 px-space-7 pt-space-7 pb-[40px]">
+      <div className="flex-1 px-space-7 pt-space-7 pb-[40px]">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">
           <span className="text-heading leading-heading font-light text-foreground-secondary">Ejercicios</span>
 
@@ -134,7 +134,7 @@ export function CreateWorkoutPage() {
       </div>
 
       <div
-        className={`app-frame-bottom-actions bg-background sticky bottom-0 px-space-7 pt-space-7 pb-[32px] ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
+        className={`bg-background sticky bottom-0 px-space-7 pt-space-7 pb-[32px] ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
       >
         <div className="mx-auto w-full max-w-[440px]">
           <Button variant="primary" className="w-full" disabled={!canSave} onClick={() => void handleSave()}>

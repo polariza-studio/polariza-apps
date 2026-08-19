@@ -32,40 +32,25 @@ function RootRedirect() {
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      {/* Installed-app frame — only takes visual effect in standalone
-          display mode (index.css): the status bar there is
-          black-translucent, so page content shows through it and needs
-          something dark behind it. The canvas div is pinned to the real
-          viewport via position: fixed + inset (not a measured height —
-          dvh/innerHeight both proved unreliable on iOS here) and is the
-          scroll container, with a moss backdrop confined to a top strip
-          exactly as tall as the status bar (canvas::before) — not a
-          blanket background, so it can't leak into the bottom safe area
-          or an overscroll reveal. The gutter div reserves the
-          notch-height gap on top of that (revealing the moss strip
-          there); the content div rounds the page's top corners exactly
-          where light content starts, via clip-path (not overflow-hidden)
-          so it doesn't break the sticky footers some pages use (position:
-          sticky needs a real scrolling ancestor, not a clipped one — the
-          canvas div still is one). In a regular browser tab none of this
-          applies — the browser's own chrome already frames the page. */}
-      <div className="app-frame-canvas">
-        <div className="app-frame-gutter">
-          <div className="app-frame-content">
-            <Routes>
-              <Route path="/" element={<RootRedirect />} />
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/workouts/new" element={<CreateWorkoutPage />} />
-              <Route path="/workouts/:workoutId/edit" element={<CreateWorkoutPage />} />
-              <Route path="/workouts/:workoutId/active" element={<WorkoutActivePage />} />
-              <Route path="/workouts/:workoutId/complete" element={<WorkoutCompletePage />} />
-              <Route path="/history" element={<HistoryPage />} />
-              <Route path="/history/:activityId" element={<ActivityDetailPage />} />
-              <Route path="*" element={<Navigate to="/home" replace />} />
-            </Routes>
-          </div>
-        </div>
-      </div>
+      {/* No installed-app-specific frame here on purpose: the installed
+          PWA must render identically to the mobile browser tab (same
+          layout, spacing, sticky behavior, scrolling). An earlier
+          position: fixed "app frame" wrapper (pinning a canvas to the
+          viewport, a moss status-bar backdrop, safe-area padding on
+          sticky bars) diverged the two enough to cause real regressions
+          — clipped sticky action bars, pages that stopped scrolling —
+          and was reverted. Just the routes, same as any other page. */}
+      <Routes>
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/workouts/new" element={<CreateWorkoutPage />} />
+        <Route path="/workouts/:workoutId/edit" element={<CreateWorkoutPage />} />
+        <Route path="/workouts/:workoutId/active" element={<WorkoutActivePage />} />
+        <Route path="/workouts/:workoutId/complete" element={<WorkoutCompletePage />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/history/:activityId" element={<ActivityDetailPage />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
     </BrowserRouter>
   )
 }
