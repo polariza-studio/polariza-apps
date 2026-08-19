@@ -95,6 +95,7 @@ export function WorkoutActivePage() {
                       <input
                         type="number"
                         inputMode="decimal"
+                        step="any"
                         value={set.weight ?? ''}
                         onChange={(event) => {
                           const weight = event.target.value === '' ? undefined : Number(event.target.value);
