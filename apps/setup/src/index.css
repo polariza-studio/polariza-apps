@@ -426,8 +426,9 @@
   }
   .app-frame-gutter {
     padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
   .app-frame-content {
-    clip-path: inset(0 round 1rem 1rem 0 0);
+    clip-path: inset(0 round 1rem);
   }
 }
