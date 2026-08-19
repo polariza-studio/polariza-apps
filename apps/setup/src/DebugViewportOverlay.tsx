@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 
-// TEMPORARY DIAGNOSTIC, round 5 — round 4's own numbers explained the
-// gap: canvas measured top=0 bottom=793 (matching window.innerHeight),
-// but the true screen is 852pt (from the screenshot's physical pixel
-// height), a 59px shortfall equal to safe-area-inset-top, landing
-// entirely at the bottom since canvas's top edge did reach the true
-// top. .app-frame-canvas now extends bottom past that short edge by
-// env(safe-area-inset-top) to compensate. BUILD_MARKER proves the
-// device is running this build (vs. a stale cached shell) before that
-// result is trusted. Remove once the real cause is confirmed fixed.
-const BUILD_MARKER = 'diag-r5-bottom-compensated';
+// TEMPORARY DIAGNOSTIC, round 6 — round 5's CSS-side compensation made
+// canvas/content correctly *compute* to 852 (matching the true screen),
+// but the visible result was unchanged: the extra space was silently
+// clipped rather than painted, meaning the standalone webview's own
+// rendering surface is genuinely capped at innerHeight (793), not just
+// under-measured — no CSS can paint past a surface WebKit itself
+// allocated smaller. That surface size is controlled by viewport-fit
+// (see index.html) rather than anything in this page's CSS; this round
+// removes viewport-fit=cover to test whether the surface then matches
+// the full screen. BUILD_MARKER proves the device is running this
+// build. Remove once the real cause is confirmed fixed.
+const BUILD_MARKER = 'diag-r6-no-cover';
 
 type Rect = { top: number; bottom: number; height: number } | null;
 
