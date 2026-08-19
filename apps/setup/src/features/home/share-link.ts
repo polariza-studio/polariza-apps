@@ -15,10 +15,10 @@ export type SharedWorkout = {
 };
 
 // Positional array, not keyed JSON, and no exercise `id` — the recipient
-// always gets a fresh id (SharedWorkoutPage generates one per exercise,
-// crypto.randomUUID() for the workout itself), so the shared one is
-// never read back. Cuts the encoded link to roughly a third of the
-// keyed-object form.
+// always gets a fresh id (decodeSharedWorkout generates one per exercise
+// below, SharedWorkoutModal uses crypto.randomUUID() for the workout
+// itself), so the shared one is never read back. Cuts the encoded link
+// to roughly a third of the keyed-object form.
 type CompactExercise = [name: string, sets: number, targetReps: string, restSeconds: number];
 type CompactPayload = [name: string, exercises: CompactExercise[]];
 
@@ -59,12 +59,13 @@ export function decodeSharedWorkout(encoded: string): SharedWorkout | null {
   }
 }
 
-// Query param at the app root, not a /shared/:encoded path segment — this
-// is a static site on GitHub Pages with no server-side routing, so a
+// Query param at the app root, not a nested path segment — this is a
+// static site on GitHub Pages with no server-side routing, so a
 // fresh/cold hit to a nested path 404s (nothing exists there but
 // index.html at the root). ?shared= always resolves, since the root
-// always exists; App.tsx reads it on load and routes to /shared/:encoded
-// client-side from there.
+// always exists; App.tsx reads it on load and forwards it onto /home,
+// where it opens the shared-workout modal on top of the Home screen —
+// never a page of its own.
 export function buildShareUrl(workout: Pick<Workout, 'name' | 'exercises'>): string {
   const encoded = encodeSharedWorkout(workout);
   return `${window.location.origin}${import.meta.env.BASE_URL}?shared=${encoded}`;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
 import { InstallAppBanner } from './InstallAppBanner';
 import { shareWorkout } from './share-link';
+import { SharedWorkoutModal } from './SharedWorkoutModal';
 import { SwipeableWorkoutRow } from './SwipeableWorkoutRow';
 import { getWeeklyActivitySummary, type WeekTone } from './weekly-activity';
 import { WorkoutMoreModal } from './WorkoutMoreModal';
@@ -30,11 +31,24 @@ function formatDateBadge(iso: string): { day: string; month: string } {
 
 export function HomePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [ready, setReady] = useState(false);
   const [moreModalWorkout, setMoreModalWorkout] = useState<Workout | null>(null);
   const [openWorkoutId, setOpenWorkoutId] = useState<string | null>(null);
+  const sharedEncoded = searchParams.get('shared');
+
+  function closeSharedModal() {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete('shared');
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -187,6 +201,15 @@ export function HomePage() {
         onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
         onShare={(workout) => void shareWorkout(workout)}
         onDelete={(workout) => void handleDelete(workout)}
+      />
+
+      <SharedWorkoutModal
+        encoded={sharedEncoded}
+        onAdded={(workout) => {
+          setWorkouts((current) => [...current, workout]);
+          closeSharedModal();
+        }}
+        onClose={closeSharedModal}
       />
     </div>
   );

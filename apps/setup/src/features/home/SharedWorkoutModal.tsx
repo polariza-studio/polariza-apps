@@ -1,4 +1,3 @@
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -7,17 +6,24 @@ import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
 import { decodeSharedWorkout } from './share-link';
 
-// Paper: "workout-shared-modal" — the landing page for a shared workout
-// link (share-link.ts encodes the workout straight into the URL, no
-// backend). Not a Radix Dialog like the app's other modals: this has to
-// be a real route (its own URL, reachable by opening the link cold) —
-// styled to match the same bottom-sheet-over-a-dark-backdrop look anyway.
-export function SharedWorkoutPage() {
-  const { encoded = '' } = useParams<{ encoded: string }>();
-  const navigate = useNavigate();
-  const shared = decodeSharedWorkout(encoded);
+// Paper: "workout-shared-modal" — opening a shared link always lands on
+// Home with this modal on top of it (never a standalone page/route of
+// its own), so the user can see Home behind it and there's nothing to
+// navigate "back" from. `encoded` comes from HomePage's own ?shared=
+// query param; decoding here (not in the caller) means a bad/tampered
+// link just renders nothing instead of needing its own error state.
+export function SharedWorkoutModal({
+  encoded,
+  onAdded,
+  onClose,
+}: {
+  encoded: string | null;
+  onAdded: (workout: Workout) => void;
+  onClose: () => void;
+}) {
+  const shared = encoded ? decodeSharedWorkout(encoded) : null;
 
-  if (!shared) return <Navigate to="/home" replace />;
+  if (!shared) return null;
 
   async function handleAdd() {
     if (!shared) return;
@@ -29,7 +35,7 @@ export function SharedWorkoutPage() {
       updatedAt: new Date().toISOString(),
     };
     await storageRepository.saveWorkout(workout);
-    navigate('/home', { replace: true });
+    onAdded(workout);
   }
 
   return (
@@ -40,7 +46,7 @@ export function SharedWorkoutPage() {
             <span className="text-foreground">Workout</span>
             <span className="text-foreground-secondary"> · Compartido</span>
           </span>
-          <IconButton aria-label="Cerrar" className="text-foreground shrink-0" onClick={() => navigate('/home')}>
+          <IconButton aria-label="Cerrar" className="text-foreground shrink-0" onClick={onClose}>
             <X />
           </IconButton>
         </div>
@@ -63,7 +69,7 @@ export function SharedWorkoutPage() {
           <Button variant="primary" className="w-full" onClick={() => void handleAdd()}>
             Añadir a mis workouts
           </Button>
-          <Button variant="ghost" className="w-full" onClick={() => navigate('/home')}>
+          <Button variant="ghost" className="w-full" onClick={onClose}>
             Cancelar
           </Button>
         </div>
