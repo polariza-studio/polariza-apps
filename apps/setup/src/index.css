@@ -430,20 +430,18 @@
        can't rubber-band past its own start/end. */
     overscroll-behavior-y: none;
   }
-  /* On-device measurement (not a guess this time — a diagnostic overlay
-     read real numbers off an actual installed PWA): window.innerHeight
-     / 100dvh under-report the true screen height by exactly
-     safe-area-inset-top. Content still starts correctly at the true top
-     (black-translucent status bar, confirmed in the same screenshot) —
-     the shortfall shows up entirely as a gap at the bottom instead,
-     since dvh's own count is short by that amount everywhere it's used.
-     Compensate once, here, by adding the missing amount back: this is
-     the one spot in the tree with a definite (non-nested-percentage)
-     height, so it's the right place to correct the underlying unit
-     rather than patching the symptom further down. */
+  /* On-device measurement (two diagnostic rounds — a static +
+     safe-area-inset-top compensation was tried first, but the second
+     round caught window.innerHeight itself reporting a DIFFERENT value
+     across separate launches of the same app on the same device: CSS
+     dvh's resolution isn't reliably in sync with the live viewport here.
+     --app-frame-height (main.tsx) is window.innerHeight, re-queried and
+     kept in sync via resize/orientationchange/a delayed re-check — the
+     one thing confirmed correct once settled. 100dvh is only the
+     fallback for the instant before that JS runs. */
   .app-frame-canvas.min-h-svh {
     background-color: var(--background-inverse);
-    min-height: calc(100dvh + env(safe-area-inset-top));
+    min-height: var(--app-frame-height, 100dvh);
   }
   .app-frame-gutter {
     /* Top only — the status bar is the only thing that needs a dark
@@ -460,13 +458,13 @@
     isolation: isolate;
     transform: translateZ(0);
   }
-  /* Every page sets its own min-h-svh (a full viewport). The canvas
-     above already spent the "+ safe-area-inset-top" compensation on
-     itself; by the time we're down here, canvas-minus-gutter's-own-
-     padding-top nets back out to exactly 100dvh — no further add or
-     subtract needed at this level. */
+  /* Every page sets its own min-h-svh (a full viewport). The gutter above
+     already spends safe-area-inset-top of --app-frame-height on padding,
+     so without this a short page (e.g. Home) would be pushed past one
+     viewport and force scrolling that didn't exist before — shrink the
+     budget each page claims by exactly what the gutter took. */
   .app-frame-content .min-h-svh {
-    min-height: 100dvh;
+    min-height: calc(var(--app-frame-height, 100dvh) - env(safe-area-inset-top));
   }
 
   /* TEMPORARY DIAGNOSTIC — distinct outline per layer so a screenshot on

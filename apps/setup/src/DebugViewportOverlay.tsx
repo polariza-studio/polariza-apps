@@ -1,27 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-// TEMPORARY DIAGNOSTIC — not a fix. Three prior attempts at the bottom
-// moss-gap bug were reasoned from CSS alone and verified only in Chrome,
-// which can't reproduce the real iOS/WebKit standalone rendering path —
-// that's why they kept not landing. This reads the actual numbers off
-// the real device instead of guessing again. Remove once the bug is
-// actually diagnosed and fixed.
+// TEMPORARY DIAGNOSTIC — not a fix. Round 1 (static + safe-area-inset-top
+// compensation) was contradicted by round 2's own data: window.innerHeight
+// itself read a DIFFERENT value (793, then 852 — the true screen height)
+// across separate launches of the same app on the same device, meaning a
+// fixed formula can't be right either way. main.tsx now drives
+// --app-frame-height from window.innerHeight directly, re-synced on
+// resize/orientationchange/a delayed re-check, instead of leaving sizing
+// to CSS dvh's own (apparently not always in sync) resolution. This round
+// confirms whether that actually lands, and also tracks whether
+// innerHeight itself changes *within* one session (not just across
+// launches) so a "settles a moment later" theory can be told apart from a
+// "different every launch" one. Remove once the bug is actually fixed.
 type Measurements = {
   windowInnerHeight: number;
   visualViewportHeight: number | null;
-  htmlHeight: number;
-  bodyHeight: number;
-  rootHeight: number;
   canvasHeight: number;
   canvasBottom: number;
+  appFrameHeightVar: string;
   safeAreaBottom: string;
   safeAreaTop: string;
 };
 
 function measure(): Measurements {
-  const html = document.documentElement;
-  const body = document.body;
-  const root = document.getElementById('root');
   const canvas = document.querySelector('.app-frame-canvas');
 
   const probe = document.createElement('div');
@@ -40,11 +41,9 @@ function measure(): Measurements {
   return {
     windowInnerHeight: window.innerHeight,
     visualViewportHeight: window.visualViewport?.height ?? null,
-    htmlHeight: html.getBoundingClientRect().height,
-    bodyHeight: body.getBoundingClientRect().height,
-    rootHeight: root?.getBoundingClientRect().height ?? -1,
     canvasHeight: canvasRect?.height ?? -1,
     canvasBottom: canvasRect?.bottom ?? -1,
+    appFrameHeightVar: getComputedStyle(document.documentElement).getPropertyValue('--app-frame-height').trim(),
     safeAreaBottom,
     safeAreaTop,
   };
@@ -53,12 +52,17 @@ function measure(): Measurements {
 export function DebugViewportOverlay() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [m, setM] = useState<Measurements | null>(null);
+  const firstInnerHeight = useRef<number | null>(null);
 
   useEffect(() => {
     setIsStandalone(window.matchMedia('(display-mode: standalone)').matches);
     function update() {
       // Next frame, so layout has settled after any resize/orientation event.
-      requestAnimationFrame(() => setM(measure()));
+      requestAnimationFrame(() => {
+        const next = measure();
+        if (firstInnerHeight.current === null) firstInnerHeight.current = next.windowInnerHeight;
+        setM(next);
+      });
     }
     update();
     window.addEventListener('resize', update);
@@ -74,6 +78,7 @@ export function DebugViewportOverlay() {
   if (!isStandalone || !m) return null;
 
   const row = (label: string, value: string | number) => `${label}: ${value}`;
+  const changedSinceFirst = firstInnerHeight.current !== null && firstInnerHeight.current !== m.windowInnerHeight;
 
   return (
     <div
@@ -95,22 +100,14 @@ export function DebugViewportOverlay() {
     >
       {[
         row('window.innerHeight', m.windowInnerHeight),
+        row('  changed since first read this session?', changedSinceFirst ? `YES (was ${firstInnerHeight.current})` : 'no'),
         row('visualViewport.height', m.visualViewportHeight ?? 'n/a'),
-        row('html height', m.htmlHeight),
-        row('body height', m.bodyHeight),
-        row('#root height', m.rootHeight),
+        row('--app-frame-height (computed)', m.appFrameHeightVar || 'unset'),
         row('.app-frame-canvas height', m.canvasHeight),
         row('.app-frame-canvas bottom (viewport px)', m.canvasBottom),
+        row('canvas bottom == innerHeight?', Math.abs(m.canvasBottom - m.windowInnerHeight) < 1 ? 'YES' : 'NO'),
         row('safe-area-inset-top (computed)', m.safeAreaTop),
         row('safe-area-inset-bottom (computed)', m.safeAreaBottom),
-        row(
-          'expected canvas height (innerHeight + insetTop)',
-          m.windowInnerHeight + parseFloat(m.safeAreaTop || '0'),
-        ),
-        row(
-          'canvas height matches expected?',
-          Math.abs(m.canvasHeight - (m.windowInnerHeight + parseFloat(m.safeAreaTop || '0'))) < 1 ? 'YES' : 'NO',
-        ),
       ].join('\n')}
     </div>
   );
