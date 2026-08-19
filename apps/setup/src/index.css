@@ -429,6 +429,17 @@
        genuinely exceeds the viewport still scrolls normally, it just
        can't rubber-band past its own start/end. */
     overscroll-behavior-y: none;
+    /* Without an explicit height, html/body are sized by their own
+       content (.app-frame-canvas) — normally identical to canvas's own
+       100dvh, but not guaranteed to be pixel-exact on every engine, and
+       any shortfall in canvas leaves this dark background exposed below
+       it. Anchoring html/body to the same literal 100dvh directly
+       removes that gap at the source rather than chasing it further
+       down the tree. `height`, not `min-height`: a page whose actual
+       content needs more still overflows and scrolls normally — this
+       only stops html/body from being taller than necessary, it doesn't
+       clip anything shorter than it. */
+    height: 100dvh;
   }
   .app-frame-canvas.min-h-svh {
     background-color: var(--background-inverse);
