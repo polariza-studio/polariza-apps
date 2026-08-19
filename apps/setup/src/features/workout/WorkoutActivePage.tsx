@@ -20,6 +20,14 @@ export function WorkoutActivePage() {
     void storageRepository.getActivities().then(setActivities);
   }, []);
 
+  // Weight is stored as a number, so re-deriving the input's value from it
+  // on every render drops whatever the user is mid-typing (a trailing "."
+  // or a partial decimal). Track the raw text separately while editing.
+  const [weightDrafts, setWeightDrafts] = useState<Record<number, string>>({});
+  useEffect(() => {
+    setWeightDrafts({});
+  }, [workout?.currentExerciseIndex]);
+
   const showActionsShadow = useBottomShadow(ready && Boolean(workout));
 
   if (!ready || !workout) return null;
@@ -95,10 +103,11 @@ export function WorkoutActivePage() {
                       <input
                         type="text"
                         inputMode="decimal"
-                        value={set.weight ?? ''}
+                        value={weightDrafts[setIndex] ?? (set.weight ?? '')}
                         onChange={(event) => {
                           const raw = event.target.value.replace(',', '.');
                           if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                          setWeightDrafts((prev) => ({ ...prev, [setIndex]: raw }));
                           const weight = raw === '' ? undefined : Number(raw);
                           updateSet(workout.currentExerciseIndex, setIndex, { weight });
                         }}
