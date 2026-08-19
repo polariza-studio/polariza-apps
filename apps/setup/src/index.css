@@ -515,4 +515,21 @@
   .app-frame-content .app-frame-bottom-actions {
     padding-bottom: calc(2rem + env(safe-area-inset-bottom));
   }
+  /* Scrollable content that sits above a sticky .app-frame-bottom-actions
+     bar (CreateWorkoutPage's exercise list, WorkoutActivePage's set list):
+     the bar is opaque, so its last item needs to be able to scroll clear
+     of the bar's full rendered height, not just its normal (non-safe-area)
+     height — otherwise the safe-area padding added above makes the bar
+     taller without the list's own reserved clearance growing to match,
+     and the last item ends up scrolled UNDER the bar instead of above it.
+     Each rule adds exactly the same env(safe-area-inset-bottom) the
+     corresponding bar gained, on top of that page's own original
+     clearance value (kept in sync with the component's own pb-[40px] /
+     p-space-7 — the base numbers here must match). */
+  .app-frame-content .create-workout-scroll-clearance {
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  }
+  .app-frame-content .active-workout-scroll-clearance {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
 }

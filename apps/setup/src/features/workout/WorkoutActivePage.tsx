@@ -66,7 +66,7 @@ export function WorkoutActivePage() {
         </div>
       </div>
 
-      <div className="w-full flex-1 p-space-7">
+      <div className="active-workout-scroll-clearance w-full flex-1 p-space-7">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
           <div className="flex flex-col gap-space-3">
             <span className="text-display-md leading-display-md font-light text-foreground">{exercise.name}</span>

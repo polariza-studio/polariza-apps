@@ -114,7 +114,7 @@ export function CreateWorkoutPage() {
         </div>
       </div>
 
-      <div className="flex-1 px-space-7 pt-space-7 pb-[40px]">
+      <div className="create-workout-scroll-clearance flex-1 px-space-7 pt-space-7 pb-[40px]">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">
           <span className="text-heading leading-heading font-light text-foreground-secondary">Ejercicios</span>
 
