@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 
+import { DebugViewportOverlay } from '@/DebugViewportOverlay'
 import { HomePage } from '@/features/home/HomePage'
 import { SharedWorkoutPage } from '@/features/home/SharedWorkoutPage'
 import { CreateWorkoutPage } from '@/features/create-workout/CreateWorkoutPage'
@@ -42,9 +43,10 @@ function App() {
           pages use (position: sticky needs the real document scroll,
           not a clipped ancestor). In a regular browser tab none of this
           applies — the browser's own chrome already frames the page. */}
-      <div className="app-frame-canvas min-h-svh">
-        <div className="app-frame-gutter">
-          <div className="app-frame-content">
+      <DebugViewportOverlay />
+      <div className="app-frame-canvas min-h-svh" data-debug-layer="canvas">
+        <div className="app-frame-gutter" data-debug-layer="gutter">
+          <div className="app-frame-content" data-debug-layer="content">
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/home" element={<HomePage />} />
