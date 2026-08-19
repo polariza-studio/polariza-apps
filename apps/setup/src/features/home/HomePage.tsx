@@ -9,7 +9,6 @@ import { storageRepository } from '@/services/storage';
 import { InstallAppBanner } from './InstallAppBanner';
 import { SwipeableWorkoutRow } from './SwipeableWorkoutRow';
 import { getWeeklyActivitySummary, type WeekTone } from './weekly-activity';
-import { WorkoutMoreModal } from './WorkoutMoreModal';
 
 const WEEK_TONE_COLOR: Record<WeekTone, string> = {
   active: 'var(--foreground)',
@@ -32,7 +31,6 @@ export function HomePage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [ready, setReady] = useState(false);
-  const [moreModalWorkout, setMoreModalWorkout] = useState<Workout | null>(null);
   const [openWorkoutId, setOpenWorkoutId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,7 +51,6 @@ export function HomePage() {
   if (!ready) return null;
 
   async function handleDelete(workout: Workout) {
-    setMoreModalWorkout(null);
     setOpenWorkoutId((current) => (current === workout.id ? null : current));
     await storageRepository.deleteWorkout(workout.id);
     setWorkouts((current) => current.filter((existing) => existing.id !== workout.id));
@@ -125,7 +122,8 @@ export function HomePage() {
                   isOpen={openWorkoutId === workout.id}
                   onOpenChange={(willOpen) => setOpenWorkoutId(willOpen ? workout.id : null)}
                   onStart={(started) => navigate(`/workouts/${started.id}/active`)}
-                  onMore={setMoreModalWorkout}
+                  onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
+                  onDelete={(workout) => void handleDelete(workout)}
                 />
               ))}
             </div>
@@ -175,16 +173,6 @@ export function HomePage() {
       )}
 
       <InstallAppBanner />
-
-      <WorkoutMoreModal
-        open={moreModalWorkout !== null}
-        onOpenChange={(open) => {
-          if (!open) setMoreModalWorkout(null);
-        }}
-        workout={moreModalWorkout}
-        onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
-        onDelete={(workout) => void handleDelete(workout)}
-      />
     </div>
   );
 }

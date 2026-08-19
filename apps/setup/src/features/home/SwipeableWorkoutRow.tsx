@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { MoreHorizontal, Play } from 'lucide-react';
+import { Pencil, Play, Trash } from 'lucide-react';
 
 import type { Workout } from '@/domain/workout';
 
-// Paper: "home-edit-mode". Swiping a workout card left reveals a single
-// quick action (More) sitting underneath it, with a 20px gap (Paper's
-// gap-5) between the card's trailing edge and the action once open — the
-// card doesn't slide flush against it. Both directions resolve to a
+// Paper: "home-edit-mode". Swiping a workout card left reveals two quick
+// actions (Editar, Eliminar) sitting underneath it, with a 20px gap
+// (Paper's gap-5) between the card's trailing edge and the actions once
+// open — the card doesn't slide flush against them. Both directions
+// resolve to a
 // full snap (open or closed) the moment a short, clearly-horizontal
 // gesture is detected — the user never has to drag the card all the way
 // by hand, just express intent; INTENT_PX is how far that takes.
@@ -49,12 +50,13 @@ import type { Workout } from '@/domain/workout';
 // branch, it's structurally impossible for a mid-swipe or just-closed
 // gesture to also start the workout.
 //
-// The action sits absolutely-positioned under the card rather than as a
+// The actions sit absolutely-positioned under the card rather than as a
 // flex sibling the card slides past — a flex sibling would need the card
 // at width:100%, and percentage widths on a flex item whose container has
 // no definite width of its own resolve unpredictably.
 const ACTION_SIZE = 48;
-const ACTIONS_WIDTH = ACTION_SIZE;
+const ACTION_GAP = 12;
+const ACTIONS_WIDTH = ACTION_SIZE * 2 + ACTION_GAP;
 const CARD_TO_ACTIONS_GAP = 20;
 const OPEN_OFFSET = ACTIONS_WIDTH + CARD_TO_ACTIONS_GAP;
 const DIRECTION_THRESHOLD_PX = 6;
@@ -65,13 +67,15 @@ export function SwipeableWorkoutRow({
   isOpen,
   onOpenChange,
   onStart,
-  onMore,
+  onEdit,
+  onDelete,
 }: {
   workout: Workout;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onStart: (workout: Workout) => void;
-  onMore: (workout: Workout) => void;
+  onEdit: (workout: Workout) => void;
+  onDelete: (workout: Workout) => void;
 }) {
   const [offset, setOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -223,12 +227,21 @@ export function SwipeableWorkoutRow({
       >
         <button
           type="button"
-          aria-label={`Más opciones de ${workout.name}`}
-          onClick={() => onMore(workout)}
-          className="bg-interactive-subtle flex shrink-0 items-center justify-center rounded-full"
+          aria-label={`Editar ${workout.name}`}
+          onClick={() => onEdit(workout)}
+          className="bg-background-inverse flex shrink-0 items-center justify-center rounded-full"
           style={{ width: ACTION_SIZE, height: ACTION_SIZE }}
         >
-          <MoreHorizontal className="text-foreground size-5 [stroke-width:1.5]" />
+          <Pencil className="text-foreground-inverse size-5 [stroke-width:1.5]" />
+        </button>
+        <button
+          type="button"
+          aria-label={`Eliminar ${workout.name}`}
+          onClick={() => onDelete(workout)}
+          className="flex shrink-0 items-center justify-center rounded-full bg-[#C52D01]"
+          style={{ width: ACTION_SIZE, height: ACTION_SIZE }}
+        >
+          <Trash className="text-foreground-inverse size-5 [stroke-width:1.5]" />
         </button>
       </div>
 
@@ -256,8 +269,8 @@ export function SwipeableWorkoutRow({
             card is already a button and can't contain interactive
             descendants. Hidden while swiped open: tapping the card no
             longer starts anything then (it just closes), and the
-            revealed More action is the focus instead — the play
-            affordance would be misleading there. */}
+            revealed Editar/Eliminar actions are the focus instead — the
+            play affordance would be misleading there. */}
         {!isOpen && (
           <span className="bg-primary flex size-8 shrink-0 items-center justify-center rounded-full">
             <Play className="text-primary-foreground size-4 [stroke-width:1.5]" fill="currentColor" stroke="none" />
