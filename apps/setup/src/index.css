@@ -420,6 +420,15 @@
   body,
   html {
     background-color: var(--background-inverse);
+    /* iOS's native rubber-band bounce lets the whole page slide a few px
+       past either edge and spring back, on ANY page — including one
+       whose content exactly fills the viewport, with nothing to
+       "legitimately" scroll. That's the small, gesture-unrelated
+       vertical wobble users notice as accidental scroll. This kills the
+       bounce without touching real scrolling: a page whose content
+       genuinely exceeds the viewport still scrolls normally, it just
+       can't rubber-band past its own start/end. */
+    overscroll-behavior-y: none;
   }
   .app-frame-canvas.min-h-svh {
     background-color: var(--background-inverse);

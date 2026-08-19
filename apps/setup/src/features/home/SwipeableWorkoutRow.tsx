@@ -17,9 +17,13 @@ import type { Workout } from '@/domain/workout';
 // it calls onOpenChange(true), which HomePage uses to flip every other
 // row's isOpen to false — closing whichever one was open, mid-drag if
 // necessary, the moment the user shows clear intent on this one instead
-// of waiting for their gesture to finish. The effect below is what
-// actually animates *this* row shut when isOpen goes false for a reason
-// that wasn't its own gesture (i.e. a sibling stole exclusivity).
+// of waiting for their gesture to finish. An open row also closes on
+// swipe-right, on tapping the card itself, or on any tap outside this
+// row's own DOM (the document-level pointerdown effect below) — the
+// "outside" case covers everything that isn't another card's own swipe
+// (that's the exclusivity claim), e.g. tapping "Nuevo workout" or empty
+// page space. The other effect is what actually animates *this* row
+// shut when isOpen goes false for a reason that wasn't its own gesture.
 //
 // Gesture tracking lives on `window`, not on setPointerCapture — capture
 // reliably throws NotFoundError under CDP-driven mouse drags (confirmed
@@ -54,8 +58,8 @@ const ACTION_GAP = 12;
 const ACTIONS_WIDTH = ACTION_SIZE * 2 + ACTION_GAP;
 const CARD_TO_ACTIONS_GAP = 20;
 const OPEN_OFFSET = ACTIONS_WIDTH + CARD_TO_ACTIONS_GAP;
-const DIRECTION_THRESHOLD_PX = 8;
-const INTENT_PX = 24;
+const DIRECTION_THRESHOLD_PX = 6;
+const INTENT_PX = 16;
 
 export function SwipeableWorkoutRow({
   workout,
@@ -82,6 +86,7 @@ export function SwipeableWorkoutRow({
     direction: 'horizontal' | 'vertical' | null;
   } | null>(null);
   const justResolvedByPointer = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // A sibling row claimed exclusivity (or the parent closed us some other
   // way) — animate shut. Skipped when we're the one still mid-drag:
@@ -90,6 +95,22 @@ export function SwipeableWorkoutRow({
   useEffect(() => {
     if (!isOpen && !gesture.current) setOffset(0);
   }, [isOpen]);
+
+  // Tap/click anywhere outside this row while it's open closes it — not
+  // just another card (that's the exclusivity claim above), anywhere:
+  // the "Nuevo workout" button, the header, empty page space. Only
+  // listens while actually open, and only for a pointerdown that isn't
+  // itself the start of a gesture on this row (that path is handled by
+  // the row's own handlers, which also close-and-suppress correctly).
+  useEffect(() => {
+    if (!isOpen) return;
+    function onOutsidePointerDown(event: PointerEvent) {
+      if (containerRef.current?.contains(event.target as Node)) return;
+      onOpenChange(false);
+    }
+    document.addEventListener('pointerdown', onOutsidePointerDown);
+    return () => document.removeEventListener('pointerdown', onOutsidePointerDown);
+  }, [isOpen, onOpenChange]);
 
   function teardown() {
     window.removeEventListener('pointermove', onWindowMove);
@@ -107,8 +128,11 @@ export function SwipeableWorkoutRow({
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
       if (absDx < DIRECTION_THRESHOLD_PX && absDy < DIRECTION_THRESHOLD_PX) return;
-      if (absDy >= absDx) {
-        // Vertical (or a tie) — stop tracking and let the page scroll.
+      if (absDy > absDx) {
+        // Clearly vertical — stop tracking and let the page scroll. Ties
+        // bias horizontal on purpose: this row exists specifically for
+        // horizontal gestures, so a borderline-diagonal swipe (thumb
+        // imprecision) should still register as intent to swipe here.
         gesture.current = null;
         teardown();
         return;
@@ -195,7 +219,7 @@ export function SwipeableWorkoutRow({
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg">
+    <div ref={containerRef} className="relative w-full overflow-hidden rounded-lg">
       <div
         className="absolute inset-y-0 right-0 flex items-center gap-space-5"
         style={{ width: ACTIONS_WIDTH }}
