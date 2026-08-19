@@ -501,4 +501,18 @@
   .app-frame-content .min-h-svh {
     min-height: 100%;
   }
+  /* Bottom sticky action bars (Create/Edit Workout, Active Workout): their
+     own box must still reach the true bottom edge (position: sticky;
+     bottom: 0, background full-bleed to the physical edge, matching every
+     other full-bleed surface here) — but their BUTTONS shouldn't render
+     under the home indicator. Padding the bar's own content by
+     env(safe-area-inset-bottom), on top of its normal 2rem bottom padding
+     (pb-8 / pb-[32px] in the component — keep in sync if that changes),
+     keeps the background flush with the edge while lifting only what's
+     inside it clear of the gesture area. Not `bottom:
+     env(safe-area-inset-bottom)` — that would move the whole bar up and
+     leave a bare strip of canvas below it. */
+  .app-frame-content .app-frame-bottom-actions {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
 }

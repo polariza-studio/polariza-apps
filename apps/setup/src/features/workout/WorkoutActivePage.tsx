@@ -129,7 +129,7 @@ export function WorkoutActivePage() {
       </div>
 
       <div
-        className={`bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8 ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
+        className={`app-frame-bottom-actions bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8 ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
       >
         <div className="mx-auto flex w-full max-w-[440px] items-center gap-space-6">
           {paused ? (
