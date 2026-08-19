@@ -429,27 +429,21 @@
        genuinely exceeds the viewport still scrolls normally, it just
        can't rubber-band past its own start/end. */
     overscroll-behavior-y: none;
-    /* Without an explicit height, html/body are sized by their own
-       content (.app-frame-canvas) — normally identical to canvas's own
-       100dvh, but not guaranteed to be pixel-exact on every engine, and
-       any shortfall in canvas leaves this dark background exposed below
-       it. Anchoring html/body to the same literal 100dvh directly
-       removes that gap at the source rather than chasing it further
-       down the tree. `height`, not `min-height`: a page whose actual
-       content needs more still overflows and scrolls normally — this
-       only stops html/body from being taller than necessary, it doesn't
-       clip anything shorter than it. */
-    height: 100dvh;
   }
+  /* On-device measurement (not a guess this time — a diagnostic overlay
+     read real numbers off an actual installed PWA): window.innerHeight
+     / 100dvh under-report the true screen height by exactly
+     safe-area-inset-top. Content still starts correctly at the true top
+     (black-translucent status bar, confirmed in the same screenshot) —
+     the shortfall shows up entirely as a gap at the bottom instead,
+     since dvh's own count is short by that amount everywhere it's used.
+     Compensate once, here, by adding the missing amount back: this is
+     the one spot in the tree with a definite (non-nested-percentage)
+     height, so it's the right place to correct the underlying unit
+     rather than patching the symptom further down. */
   .app-frame-canvas.min-h-svh {
     background-color: var(--background-inverse);
-    /* iOS treats svh as excluding the home-indicator area even in
-       standalone mode, so plain min-h-svh falls short of the true
-       screen bottom and lets this dark canvas peek through underneath
-       otherwise-full-height content. dvh tracks the actual rendered
-       viewport instead. (Compound selector — same specificity trick as
-       below — to reliably beat Tailwind's own .min-h-svh utility.) */
-    min-height: 100dvh;
+    min-height: calc(100dvh + env(safe-area-inset-top));
   }
   .app-frame-gutter {
     /* Top only — the status bar is the only thing that needs a dark
@@ -466,14 +460,13 @@
     isolation: isolate;
     transform: translateZ(0);
   }
-  /* Every page sets its own min-h-svh (a full viewport). The gutter above
-     already spends safe-area-inset-top of that viewport on padding, so
-     without this a short page (e.g. Home) would be pushed past one
-     viewport and force scrolling that didn't exist before — shrink the
-     budget each page claims by exactly what the gutter took. dvh (not
-     svh) to match .app-frame-canvas above. */
+  /* Every page sets its own min-h-svh (a full viewport). The canvas
+     above already spent the "+ safe-area-inset-top" compensation on
+     itself; by the time we're down here, canvas-minus-gutter's-own-
+     padding-top nets back out to exactly 100dvh — no further add or
+     subtract needed at this level. */
   .app-frame-content .min-h-svh {
-    min-height: calc(100dvh - env(safe-area-inset-top));
+    min-height: 100dvh;
   }
 
   /* TEMPORARY DIAGNOSTIC — distinct outline per layer so a screenshot on

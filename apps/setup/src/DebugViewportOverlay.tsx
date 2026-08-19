@@ -103,6 +103,14 @@ export function DebugViewportOverlay() {
         row('.app-frame-canvas bottom (viewport px)', m.canvasBottom),
         row('safe-area-inset-top (computed)', m.safeAreaTop),
         row('safe-area-inset-bottom (computed)', m.safeAreaBottom),
+        row(
+          'expected canvas height (innerHeight + insetTop)',
+          m.windowInnerHeight + parseFloat(m.safeAreaTop || '0'),
+        ),
+        row(
+          'canvas height matches expected?',
+          Math.abs(m.canvasHeight - (m.windowInnerHeight + parseFloat(m.safeAreaTop || '0'))) < 1 ? 'YES' : 'NO',
+        ),
       ].join('\n')}
     </div>
   );
