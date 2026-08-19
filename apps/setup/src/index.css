@@ -421,8 +421,15 @@
   html {
     background-color: var(--background-inverse);
   }
-  .app-frame-canvas {
+  .app-frame-canvas.min-h-svh {
     background-color: var(--background-inverse);
+    /* iOS treats svh as excluding the home-indicator area even in
+       standalone mode, so plain min-h-svh falls short of the true
+       screen bottom and lets this dark canvas peek through underneath
+       otherwise-full-height content. dvh tracks the actual rendered
+       viewport instead. (Compound selector — same specificity trick as
+       below — to reliably beat Tailwind's own .min-h-svh utility.) */
+    min-height: 100dvh;
   }
   .app-frame-gutter {
     /* Top only — the status bar is the only thing that needs a dark
@@ -441,10 +448,11 @@
   }
   /* Every page sets its own min-h-svh (a full viewport). The gutter above
      already spends safe-area-inset-top of that viewport on padding, so
-     without this a short page (e.g. Home) would be pushed past 100svh and
-     force scrolling that didn't exist before — shrink the budget each
-     page claims by exactly what the gutter took. */
+     without this a short page (e.g. Home) would be pushed past one
+     viewport and force scrolling that didn't exist before — shrink the
+     budget each page claims by exactly what the gutter took. dvh (not
+     svh) to match .app-frame-canvas above. */
   .app-frame-content .min-h-svh {
-    min-height: calc(100svh - env(safe-area-inset-top));
+    min-height: calc(100dvh - env(safe-area-inset-top));
   }
 }
