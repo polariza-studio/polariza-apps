@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 
-import { DebugViewportOverlay } from '@/DebugViewportOverlay'
 import { HomePage } from '@/features/home/HomePage'
 import { SharedWorkoutPage } from '@/features/home/SharedWorkoutPage'
 import { CreateWorkoutPage } from '@/features/create-workout/CreateWorkoutPage'
@@ -34,22 +33,24 @@ function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       {/* Installed-app frame — only takes visual effect in standalone
           display mode (index.css): the status bar there is
-          black-translucent (index.html), and its icons are always white,
-          so the page needs something dark behind them. The canvas div is
-          pinned to the real viewport via position: fixed + inset: 0 (not
-          a measured height — dvh/innerHeight both proved unreliable on
-          iOS here) and is the scroll container; the gutter div reserves
-          the notch-height gap on top of it (revealing the dark canvas
+          black-translucent, so page content shows through it and needs
+          something dark behind it. The canvas div is pinned to the real
+          viewport via position: fixed + inset (not a measured height —
+          dvh/innerHeight both proved unreliable on iOS here) and is the
+          scroll container, with a moss backdrop confined to a top strip
+          exactly as tall as the status bar (canvas::before) — not a
+          blanket background, so it can't leak into the bottom safe area
+          or an overscroll reveal. The gutter div reserves the
+          notch-height gap on top of that (revealing the moss strip
           there); the content div rounds the page's top corners exactly
           where light content starts, via clip-path (not overflow-hidden)
           so it doesn't break the sticky footers some pages use (position:
           sticky needs a real scrolling ancestor, not a clipped one — the
           canvas div still is one). In a regular browser tab none of this
           applies — the browser's own chrome already frames the page. */}
-      <DebugViewportOverlay />
-      <div className="app-frame-canvas" data-debug-layer="canvas">
-        <div className="app-frame-gutter" data-debug-layer="gutter">
-          <div className="app-frame-content" data-debug-layer="content">
+      <div className="app-frame-canvas">
+        <div className="app-frame-gutter">
+          <div className="app-frame-content">
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/home" element={<HomePage />} />
