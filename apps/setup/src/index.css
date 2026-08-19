@@ -418,8 +418,17 @@
    there and stays off (body/html keep the normal light background). */
 @media (display-mode: standalone) {
   body,
+  #root,
   html {
-    background-color: var(--background-inverse);
+    /* Real screen background, not moss — moss is only a decorative
+       backdrop for the status bar (canvas::before below), not the root
+       background of the app. A blanket moss background here or on
+       canvas was the actual bug: canvas is position: fixed (covers the
+       full viewport) and is the scroll container, so ITS background is
+       whatever shows through the bottom safe area (34px, never reserved
+       by any padding — nothing needs to be) and any momentary overscroll
+       reveal, not just the status-bar gutter at the top. */
+    background-color: var(--background);
     /* iOS's native rubber-band bounce lets the whole page slide a few px
        past either edge and spring back, on ANY page — including one
        whose content exactly fills the viewport, with nothing to
@@ -430,24 +439,6 @@
        can't rubber-band past its own start/end. */
     overscroll-behavior-y: none;
   }
-  /* CSS dvh and JS window.innerHeight both proved unreliable for sizing
-     this frame, and position: fixed + inset: 0 (which should be immune,
-     since it's not a measured size at all — the compositor pinning this
-     box directly to the visual viewport) turned out to inherit the same
-     problem: on-device diagnostics (round 4) showed window.innerHeight/
-     visualViewport.height themselves reporting 793 while the true screen
-     is 852 (derived from the screenshot's physical pixel height) — a
-     793 vs 852 gap that exactly equals safe-area-inset-top, and it
-     showed up entirely as a gap at the BOTTOM (canvas's own top edge
-     did reach the true top). Whatever "viewport" WebKit resolves fixed
-     positioning against here is itself short by that amount, so `inset:
-     0`'s bottom edge inherits the shortfall. Extending bottom past that
-     (short) edge by env(safe-area-inset-top) recovers it — and since
-     canvas is fixed (out of flow), overshooting is harmless on a device
-     where the measurement is ever correct: the extra sliver just renders
-     off-screen, unlike the min-height-based compensation tried earlier
-     (round 2) which risked adding real, visible scroll to a normal-flow
-     element. */
   .app-frame-canvas {
     position: fixed;
     top: 0;
@@ -456,14 +447,32 @@
     bottom: calc(-1 * env(safe-area-inset-top));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    background-color: var(--background-inverse);
+    background-color: var(--background);
     overscroll-behavior-y: none;
+  }
+  /* Moss exists only here: a thin fixed strip capped at exactly
+     env(safe-area-inset-top), painted before (behind) canvas's other
+     children in stacking order. .app-frame-gutter's own padding-top is
+     transparent, so this shows through it — but because this layer's
+     own box can never be taller than the status bar, moss can't leak
+     into the bottom safe area or an overscroll reveal the way a
+     blanket background on an ancestor could. */
+  .app-frame-canvas::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: env(safe-area-inset-top);
+    background-color: var(--background-inverse);
+    pointer-events: none;
   }
   .app-frame-gutter {
     height: 100%;
     /* Top only — the status bar is the only thing that needs a dark
-       canvas behind it. The bottom should reach the true edge of the
-       screen, no moss margin, no home-indicator gutter. */
+       backdrop (canvas::before) behind it. The bottom reaches the true
+       edge of the screen showing the real background, no moss margin,
+       no home-indicator gutter. */
     padding-top: env(safe-area-inset-top);
     box-sizing: border-box;
   }

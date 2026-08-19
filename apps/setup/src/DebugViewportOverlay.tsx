@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 
-// TEMPORARY DIAGNOSTIC, round 7 — round 6 confirmed removing
-// viewport-fit=cover fixes the clipping bug (canvas/content correctly
-// reached the true screen height, safe-area-inset-* read 0). But cover
-// is also required for content to show through the status bar at all
-// (the moss-colored black-translucent look), so index.html re-adds it
-// on request to test that combination specifically — this is expected
-// to likely reproduce the clipping bug (round 5 already showed cover
-// silently clips regardless of CSS), being tested anyway since the
-// visual look is worth confirming either way. Check whether canvas/
-// content bottom reaches the true screen height (852) or falls back to
-// the short 793. BUILD_MARKER proves the device is running this build.
-const BUILD_MARKER = 'diag-r7-cover-retry';
+// TEMPORARY DIAGNOSTIC, round 8 — the real bug wasn't a WebKit sizing
+// clip after all: canvas (position: fixed, covers the full viewport,
+// and is the scroll container) had a blanket moss background, so ANY
+// gap — the never-reserved 34px bottom safe area, a momentary overscroll
+// reveal — showed moss instead of the real screen background. Moss is
+// now confined to a canvas::before strip capped at exactly
+// env(safe-area-inset-top); canvas/body/#root/html use var(--background)
+// (the real screen color) everywhere else. `canvas bg` below should read
+// the real background's rgb, not moss's rgb(41, 64, 0). BUILD_MARKER
+// proves the device is running this build.
+const BUILD_MARKER = 'diag-r8-moss-status-bar-only';
 
 type Rect = { top: number; bottom: number; height: number } | null;
 
