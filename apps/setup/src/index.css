@@ -430,26 +430,38 @@
        can't rubber-band past its own start/end. */
     overscroll-behavior-y: none;
   }
-  /* On-device measurement (two diagnostic rounds — a static +
-     safe-area-inset-top compensation was tried first, but the second
-     round caught window.innerHeight itself reporting a DIFFERENT value
-     across separate launches of the same app on the same device: CSS
-     dvh's resolution isn't reliably in sync with the live viewport here.
-     --app-frame-height (main.tsx) is window.innerHeight, re-queried and
-     kept in sync via resize/orientationchange/a delayed re-check — the
-     one thing confirmed correct once settled. 100dvh is only the
-     fallback for the instant before that JS runs. */
-  .app-frame-canvas.min-h-svh {
+  /* CSS dvh and JS window.innerHeight both proved unreliable for sizing
+     this frame — on-device measurement (three rounds) caught
+     window.innerHeight itself reporting DIFFERENT values (793, then 852,
+     the true screen height, then 793 again) across separate launches of
+     the same app on the same device, so no value either of them ever
+     reports can be trusted as "the true viewport" to measure against.
+     position: fixed + inset: 0 sidesteps that entirely — it's not a
+     measured/computed size at all, it's the compositor pinning this
+     box's edges directly to the real visual viewport, the same primitive
+     full-screen overlays rely on for this exact reason on iOS. That
+     makes .app-frame-canvas the scroll container (overflow-y here,
+     nothing scrolls on html/body underneath it anymore); height then
+     cascades down as a plain 100% chain to gutter/content, both now
+     definitely-sized instead of auto. */
+  .app-frame-canvas {
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background-color: var(--background-inverse);
-    min-height: var(--app-frame-height, 100dvh);
+    overscroll-behavior-y: none;
   }
   .app-frame-gutter {
+    height: 100%;
     /* Top only — the status bar is the only thing that needs a dark
        canvas behind it. The bottom should reach the true edge of the
        screen, no moss margin, no home-indicator gutter. */
     padding-top: env(safe-area-inset-top);
+    box-sizing: border-box;
   }
   .app-frame-content {
+    height: 100%;
     clip-path: inset(0 round 1rem 1rem 0 0);
     /* Safari/WebKit has known clip-path-on-ancestor artifacts where
        descendant SVGs (icons) sub-pixel-misalign and appear doubled —
@@ -458,41 +470,12 @@
     isolation: isolate;
     transform: translateZ(0);
   }
-  /* Every page sets its own min-h-svh (a full viewport). The gutter above
-     already spends safe-area-inset-top of --app-frame-height on padding,
-     so without this a short page (e.g. Home) would be pushed past one
-     viewport and force scrolling that didn't exist before — shrink the
-     budget each page claims by exactly what the gutter took. */
+  /* Every page sets its own min-h-svh (a full viewport). .app-frame-content
+     is now definitely 100%-sized (cascaded from the fixed canvas above),
+     so this resolves against a real value instead of an auto one: short
+     pages (e.g. Home) fill exactly the available space with no gap below,
+     while taller pages grow past it and the canvas above scrolls. */
   .app-frame-content .min-h-svh {
-    min-height: calc(var(--app-frame-height, 100dvh) - env(safe-area-inset-top));
-  }
-
-  /* TEMPORARY DIAGNOSTIC — distinct outline per layer so a screenshot on
-     the real device shows exactly which box's edge stops short and lets
-     the dark one behind it show through. Remove with
-     DebugViewportOverlay once the real cause is found. */
-  html {
-    outline: 3px solid red;
-    outline-offset: -3px;
-  }
-  body {
-    outline: 3px solid orange;
-    outline-offset: -6px;
-  }
-  #root {
-    outline: 3px solid yellow;
-    outline-offset: -9px;
-  }
-  [data-debug-layer='canvas'] {
-    outline: 3px solid lime;
-    outline-offset: -12px;
-  }
-  [data-debug-layer='gutter'] {
-    outline: 3px solid cyan;
-    outline-offset: -15px;
-  }
-  [data-debug-layer='content'] {
-    outline: 3px solid blue;
-    outline-offset: -18px;
+    min-height: 100%;
   }
 }

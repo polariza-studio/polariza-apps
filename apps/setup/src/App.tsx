@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 
-import { DebugViewportOverlay } from '@/DebugViewportOverlay'
 import { HomePage } from '@/features/home/HomePage'
 import { SharedWorkoutPage } from '@/features/home/SharedWorkoutPage'
 import { CreateWorkoutPage } from '@/features/create-workout/CreateWorkoutPage'
@@ -35,18 +34,20 @@ function App() {
       {/* Installed-app frame — only takes visual effect in standalone
           display mode (index.css): the status bar there is
           black-translucent (index.html), and its icons are always white,
-          so the page needs something dark behind them. The gutter div
-          reserves the notch-height gap (revealing the dark canvas
+          so the page needs something dark behind them. The canvas div is
+          pinned to the real viewport via position: fixed + inset: 0 (not
+          a measured height — dvh/innerHeight both proved unreliable on
+          iOS here) and is the scroll container; the gutter div reserves
+          the notch-height gap on top of it (revealing the dark canvas
           there); the content div rounds the page's top corners exactly
-          where light content starts, via clip-path (not
-          overflow-hidden) so it doesn't break the sticky footers some
-          pages use (position: sticky needs the real document scroll,
-          not a clipped ancestor). In a regular browser tab none of this
+          where light content starts, via clip-path (not overflow-hidden)
+          so it doesn't break the sticky footers some pages use (position:
+          sticky needs a real scrolling ancestor, not a clipped one — the
+          canvas div still is one). In a regular browser tab none of this
           applies — the browser's own chrome already frames the page. */}
-      <DebugViewportOverlay />
-      <div className="app-frame-canvas min-h-svh" data-debug-layer="canvas">
-        <div className="app-frame-gutter" data-debug-layer="gutter">
-          <div className="app-frame-content" data-debug-layer="content">
+      <div className="app-frame-canvas">
+        <div className="app-frame-gutter">
+          <div className="app-frame-content">
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/home" element={<HomePage />} />
