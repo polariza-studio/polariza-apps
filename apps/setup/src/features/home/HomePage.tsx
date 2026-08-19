@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import type { Activity } from '@/domain/activity';
 import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
 import { InstallAppBanner } from './InstallAppBanner';
+import { shareWorkout } from './share-link';
+import { SwipeableWorkoutRow } from './SwipeableWorkoutRow';
 import { getWeeklyActivitySummary, type WeekTone } from './weekly-activity';
+import { WorkoutMoreModal } from './WorkoutMoreModal';
 
 const WEEK_TONE_COLOR: Record<WeekTone, string> = {
   active: 'var(--foreground)',
@@ -30,6 +33,8 @@ export function HomePage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [ready, setReady] = useState(false);
+  const [moreModalWorkout, setMoreModalWorkout] = useState<Workout | null>(null);
+  const [openWorkoutId, setOpenWorkoutId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +52,13 @@ export function HomePage() {
   }, []);
 
   if (!ready) return null;
+
+  async function handleDelete(workout: Workout) {
+    setMoreModalWorkout(null);
+    setOpenWorkoutId((current) => (current === workout.id ? null : current));
+    await storageRepository.deleteWorkout(workout.id);
+    setWorkouts((current) => current.filter((existing) => existing.id !== workout.id));
+  }
 
   const weekly = getWeeklyActivitySummary(activities);
   const recentActivities = [...activities]
@@ -108,34 +120,15 @@ export function HomePage() {
           ) : (
             <div className="flex flex-col gap-space-5">
               {workouts.map((workout) => (
-                <div
+                <SwipeableWorkoutRow
                   key={workout.id}
-                  className="border-border-subtle flex items-center gap-space-1 rounded-lg border px-space-6 py-space-5"
-                >
-                  <Link to={`/workouts/${workout.id}/edit`} className="flex flex-1 flex-col items-start gap-space-3">
-                    <span className="text-heading leading-heading font-light text-foreground">{workout.name}</span>
-                    <span className="text-caption leading-caption text-foreground-secondary">
-                      {workout.exercises.length} ejercicios
-                    </span>
-                  </Link>
-                  {/* The real primary Button, not a hand-copied class
-                      string (that silently dropped the hover/active
-                      color — copying classes onto a plain <button> isn't
-                      equivalent to using the component). Its own h-12/
-                      padding classes are overridden via inline style,
-                      which always wins regardless of Tailwind class-merge
-                      ordering, to get the 32px icon-only circle Paper
-                      shows without touching button.tsx's box model. */}
-                  <Button
-                    variant="primary"
-                    aria-label={`Empezar ${workout.name}`}
-                    className="shrink-0 rounded-full"
-                    style={{ width: 32, height: 32, padding: 0 }}
-                    onClick={() => navigate(`/workouts/${workout.id}/active`)}
-                  >
-                    <Play className="size-4 [stroke-width:1.5]" fill="currentColor" stroke="none" />
-                  </Button>
-                </div>
+                  workout={workout}
+                  isOpen={openWorkoutId === workout.id}
+                  onOpenChange={(willOpen) => setOpenWorkoutId(willOpen ? workout.id : null)}
+                  onStart={(started) => navigate(`/workouts/${started.id}/active`)}
+                  onShare={(shared) => void shareWorkout(shared)}
+                  onMore={setMoreModalWorkout}
+                />
               ))}
             </div>
           )}
@@ -184,6 +177,17 @@ export function HomePage() {
       )}
 
       <InstallAppBanner />
+
+      <WorkoutMoreModal
+        open={moreModalWorkout !== null}
+        onOpenChange={(open) => {
+          if (!open) setMoreModalWorkout(null);
+        }}
+        workout={moreModalWorkout}
+        onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
+        onShare={(workout) => void shareWorkout(workout)}
+        onDelete={(workout) => void handleDelete(workout)}
+      />
     </div>
   );
 }

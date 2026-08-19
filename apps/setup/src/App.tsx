@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { HomePage } from '@/features/home/HomePage'
+import { SharedWorkoutPage } from '@/features/home/SharedWorkoutPage'
 import { CreateWorkoutPage } from '@/features/create-workout/CreateWorkoutPage'
 import { WorkoutActivePage } from '@/features/workout/WorkoutActivePage'
 import { WorkoutCompletePage } from '@/features/workout/WorkoutCompletePage'
@@ -36,6 +37,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />
+              <Route path="/shared/:encoded" element={<SharedWorkoutPage />} />
               <Route path="/workouts/new" element={<CreateWorkoutPage />} />
               <Route path="/workouts/:workoutId/edit" element={<CreateWorkoutPage />} />
               <Route path="/workouts/:workoutId/active" element={<WorkoutActivePage />} />
