@@ -177,6 +177,10 @@ export function ReorderableExerciseList({
   );
 }
 
+// Reference equality, not just matching ids: editing an exercise keeps its
+// id and position but produces a new object (handleSaveExercise), and that
+// edit needs to resync into `order` immediately rather than waiting for a
+// remount — an id-only comparison would treat it as "no change".
 function sameOrder(a: WorkoutExercise[], b: WorkoutExercise[]): boolean {
-  return a.length === b.length && a.every((exercise, index) => exercise.id === b[index].id);
+  return a.length === b.length && a.every((exercise, index) => exercise === b[index]);
 }
