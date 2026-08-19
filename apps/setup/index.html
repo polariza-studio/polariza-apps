@@ -2,18 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- viewport-fit=cover removed as a test (round 6): on-device
-         diagnostics showed the standalone webview's own rendering
-         surface capped at innerHeight/visualViewport.height (793) well
-         short of the true screen (852) — a gap that survived deleting
-         and reinstalling the home-screen icon, so it isn't cached
-         webclip config either. cover is what hands iOS's status-bar/
-         home-indicator safe areas over to the page in the first place;
-         without it, env(safe-area-inset-*) should read 0 and iOS
-         reserves that space natively instead. If that closes the gap,
-         the black-translucent status-bar look (below) needs revisiting
-         separately, since it depends on cover to have any effect. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Round 6 confirmed removing viewport-fit=cover fixes the bottom
+         clipping bug (the standalone webview's rendering surface was
+         capped short of the true screen with cover on — round 5 proved
+         it wasn't CSS-fixable: canvas computed the right size but the
+         extra space was silently clipped). But cover is also the only
+         way page content can show through the status bar at all, which
+         is required for the moss-colored black-translucent look below —
+         re-added on request to test that combination specifically. If
+         the clipping bug reappears (check the diagnostic overlay:
+         canvas/content bottom should reach the true screen height, not
+         fall short), revert this and keep cover off. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- Manifest's display:standalone covers Android/Chrome; iOS Safari
          needs these Apple-specific tags too for a reliably chrome-free
          launch from the home-screen icon. -->

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 
-// TEMPORARY DIAGNOSTIC, round 6 — round 5's CSS-side compensation made
-// canvas/content correctly *compute* to 852 (matching the true screen),
-// but the visible result was unchanged: the extra space was silently
-// clipped rather than painted, meaning the standalone webview's own
-// rendering surface is genuinely capped at innerHeight (793), not just
-// under-measured — no CSS can paint past a surface WebKit itself
-// allocated smaller. That surface size is controlled by viewport-fit
-// (see index.html) rather than anything in this page's CSS; this round
-// removes viewport-fit=cover to test whether the surface then matches
-// the full screen. BUILD_MARKER proves the device is running this
-// build. Remove once the real cause is confirmed fixed.
-const BUILD_MARKER = 'diag-r6-no-cover';
+// TEMPORARY DIAGNOSTIC, round 7 — round 6 confirmed removing
+// viewport-fit=cover fixes the clipping bug (canvas/content correctly
+// reached the true screen height, safe-area-inset-* read 0). But cover
+// is also required for content to show through the status bar at all
+// (the moss-colored black-translucent look), so index.html re-adds it
+// on request to test that combination specifically — this is expected
+// to likely reproduce the clipping bug (round 5 already showed cover
+// silently clips regardless of CSS), being tested anyway since the
+// visual look is worth confirming either way. Check whether canvas/
+// content bottom reaches the true screen height (852) or falls back to
+// the short 793. BUILD_MARKER proves the device is running this build.
+const BUILD_MARKER = 'diag-r7-cover-retry';
 
 type Rect = { top: number; bottom: number; height: number } | null;
 
