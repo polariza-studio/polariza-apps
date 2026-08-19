@@ -450,20 +450,27 @@
     background-color: var(--background);
     overscroll-behavior-y: none;
   }
-  /* Moss exists only here: a thin fixed strip capped at exactly
-     env(safe-area-inset-top), painted before (behind) canvas's other
-     children in stacking order. .app-frame-gutter's own padding-top is
-     transparent, so this shows through it — but because this layer's
-     own box can never be taller than the status bar, moss can't leak
-     into the bottom safe area or an overscroll reveal the way a
-     blanket background on an ancestor could. */
+  /* Moss exists only here: a thin fixed strip, painted before (behind)
+     canvas's other children in stacking order. .app-frame-gutter's own
+     padding-top is transparent, so this shows through it — but because
+     this layer's own box is capped at a small, fixed height, moss can't
+     leak into the bottom safe area or an overscroll reveal the way a
+     blanket background on an ancestor could.
+
+     Height is safe-area-inset-top *plus* content's own top corner
+     radius (1rem, matching .app-frame-content's clip-path below), not
+     just the status bar height: content's rounded corners start exactly
+     at its own top edge (env(safe-area-inset-top)), so the curved
+     sliver clip-path cuts away needs moss to extend that same 1rem
+     further to have anything but more of the same light background
+     behind it — otherwise the rounding is there but invisible. */
   .app-frame-canvas::before {
     content: '';
     position: fixed;
     top: 0;
     right: 0;
     left: 0;
-    height: env(safe-area-inset-top);
+    height: calc(env(safe-area-inset-top) + 1rem);
     background-color: var(--background-inverse);
     pointer-events: none;
   }
