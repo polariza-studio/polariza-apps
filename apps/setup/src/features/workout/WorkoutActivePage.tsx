@@ -93,12 +93,13 @@ export function WorkoutActivePage() {
                     <div className="flex flex-1 flex-col items-start gap-space-1">
                       <span className="text-label leading-label text-foreground-secondary">Peso (kg)</span>
                       <input
-                        type="number"
+                        type="text"
                         inputMode="decimal"
-                        step="any"
                         value={set.weight ?? ''}
                         onChange={(event) => {
-                          const weight = event.target.value === '' ? undefined : Number(event.target.value);
+                          const raw = event.target.value.replace(',', '.');
+                          if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                          const weight = raw === '' ? undefined : Number(raw);
                           updateSet(workout.currentExerciseIndex, setIndex, { weight });
                         }}
                         placeholder="—"
