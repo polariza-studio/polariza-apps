@@ -1,26 +1,23 @@
 import { Dialog } from 'radix-ui';
-import { Pencil, Share, Trash, X } from 'lucide-react';
+import { Pencil, Trash, X } from 'lucide-react';
 
 import { IconButton } from '@/components/ui/icon-button';
 import type { Workout } from '@/domain/workout';
 
 // Paper: "edit-more-modal". Bottom-sheet reached via a workout card's
 // swipe-left "..." action (HomePage) — secondary actions that don't need
-// their own quick-swipe slot: Edit, Share (same action as the card's own
-// Share quick-action), Delete.
+// their own quick-swipe slot: Edit, Delete.
 export function WorkoutMoreModal({
   open,
   onOpenChange,
   workout,
   onEdit,
-  onShare,
   onDelete,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workout: Workout | null;
   onEdit: (workout: Workout) => void;
-  onShare: (workout: Workout) => void;
   onDelete: (workout: Workout) => void;
 }) {
   if (!workout) return null;
@@ -53,18 +50,10 @@ export function WorkoutMoreModal({
               <button
                 type="button"
                 onClick={() => onEdit(workout)}
-                className="border-border-subtle bg-interactive-subtle flex h-12 w-full items-center gap-space-5 border-b px-space-6"
+                className="bg-interactive-subtle flex h-12 w-full items-center gap-space-5 px-space-6"
               >
                 <Pencil className="text-foreground size-5 [stroke-width:1.5]" />
                 <span className="text-action leading-action text-foreground">Editar</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onShare(workout)}
-                className="bg-interactive-subtle flex h-12 w-full items-center gap-space-5 px-space-6"
-              >
-                <Share className="text-foreground size-5 [stroke-width:1.5]" />
-                <span className="text-action leading-action text-foreground">Compartir</span>
               </button>
             </div>
           </div>

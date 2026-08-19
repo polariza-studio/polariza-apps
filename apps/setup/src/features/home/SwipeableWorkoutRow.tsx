@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { MoreHorizontal, Play, Share } from 'lucide-react';
+import { MoreHorizontal, Play } from 'lucide-react';
 
 import type { Workout } from '@/domain/workout';
 
-// Paper: "home-edit-mode". Swiping a workout card left reveals two quick
-// actions (Share, More) sitting underneath it, with a 20px gap (Paper's
-// gap-5) between the card's trailing edge and the actions once open — the
-// card doesn't slide flush against them. Both directions resolve to a
+// Paper: "home-edit-mode". Swiping a workout card left reveals a single
+// quick action (More) sitting underneath it, with a 20px gap (Paper's
+// gap-5) between the card's trailing edge and the action once open — the
+// card doesn't slide flush against it. Both directions resolve to a
 // full snap (open or closed) the moment a short, clearly-horizontal
 // gesture is detected — the user never has to drag the card all the way
 // by hand, just express intent; INTENT_PX is how far that takes.
@@ -49,13 +49,12 @@ import type { Workout } from '@/domain/workout';
 // branch, it's structurally impossible for a mid-swipe or just-closed
 // gesture to also start the workout.
 //
-// The actions sit absolutely-positioned under the card rather than as a
+// The action sits absolutely-positioned under the card rather than as a
 // flex sibling the card slides past — a flex sibling would need the card
 // at width:100%, and percentage widths on a flex item whose container has
 // no definite width of its own resolve unpredictably.
 const ACTION_SIZE = 48;
-const ACTION_GAP = 12;
-const ACTIONS_WIDTH = ACTION_SIZE * 2 + ACTION_GAP;
+const ACTIONS_WIDTH = ACTION_SIZE;
 const CARD_TO_ACTIONS_GAP = 20;
 const OPEN_OFFSET = ACTIONS_WIDTH + CARD_TO_ACTIONS_GAP;
 const DIRECTION_THRESHOLD_PX = 6;
@@ -66,14 +65,12 @@ export function SwipeableWorkoutRow({
   isOpen,
   onOpenChange,
   onStart,
-  onShare,
   onMore,
 }: {
   workout: Workout;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onStart: (workout: Workout) => void;
-  onShare: (workout: Workout) => void;
   onMore: (workout: Workout) => void;
 }) {
   const [offset, setOffset] = useState(0);
@@ -233,15 +230,6 @@ export function SwipeableWorkoutRow({
         >
           <MoreHorizontal className="text-foreground size-5 [stroke-width:1.5]" />
         </button>
-        <button
-          type="button"
-          aria-label={`Compartir ${workout.name}`}
-          onClick={() => onShare(workout)}
-          className="bg-background-inverse flex shrink-0 items-center justify-center rounded-full"
-          style={{ width: ACTION_SIZE, height: ACTION_SIZE }}
-        >
-          <Share className="text-foreground-inverse size-5 [stroke-width:1.5]" />
-        </button>
       </div>
 
       <button
@@ -268,7 +256,7 @@ export function SwipeableWorkoutRow({
             card is already a button and can't contain interactive
             descendants. Hidden while swiped open: tapping the card no
             longer starts anything then (it just closes), and the
-            revealed Share/More actions are the focus instead — the play
+            revealed More action is the focus instead — the play
             affordance would be misleading there. */}
         {!isOpen && (
           <span className="bg-primary flex size-8 shrink-0 items-center justify-center rounded-full">
