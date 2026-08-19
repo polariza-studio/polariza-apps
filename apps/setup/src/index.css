@@ -478,4 +478,32 @@
   .app-frame-content .min-h-svh {
     min-height: 100%;
   }
+
+  /* TEMPORARY DIAGNOSTIC, round 4 — distinct outline per layer so a
+     screenshot on the real device shows exactly which box's edge stops
+     short. Remove with DebugViewportOverlay once the real cause is found. */
+  html {
+    outline: 3px solid red;
+    outline-offset: -3px;
+  }
+  body {
+    outline: 3px solid orange;
+    outline-offset: -6px;
+  }
+  #root {
+    outline: 3px solid yellow;
+    outline-offset: -9px;
+  }
+  [data-debug-layer='canvas'] {
+    outline: 3px solid lime;
+    outline-offset: -12px;
+  }
+  [data-debug-layer='gutter'] {
+    outline: 3px solid cyan;
+    outline-offset: -15px;
+  }
+  [data-debug-layer='content'] {
+    outline: 3px solid blue;
+    outline-offset: -18px;
+  }
 }
