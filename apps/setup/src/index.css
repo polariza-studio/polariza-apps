@@ -409,3 +409,25 @@
     @apply font-sans bg-background;
     }
 }
+
+/* Installed-app frame (App.tsx): the status bar is black-translucent
+   (index.html) — its icons are always white — so the page needs
+   something dark behind them. Only in standalone display mode: a
+   regular browser tab has its own chrome around the page, so this
+   dark canvas + rounded-corner "card" look would be out of place
+   there and stays off (body/html keep the normal light background). */
+@media (display-mode: standalone) {
+  body,
+  html {
+    background-color: var(--background-inverse);
+  }
+  .app-frame-canvas {
+    background-color: var(--background-inverse);
+  }
+  .app-frame-gutter {
+    padding-top: env(safe-area-inset-top);
+  }
+  .app-frame-content {
+    clip-path: inset(0 round 1rem 1rem 0 0);
+  }
+}

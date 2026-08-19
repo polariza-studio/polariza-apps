@@ -19,17 +19,34 @@ import { ActivityDetailPage } from '@/features/history/ActivityDetailPage'
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/workouts/new" element={<CreateWorkoutPage />} />
-        <Route path="/workouts/:workoutId/edit" element={<CreateWorkoutPage />} />
-        <Route path="/workouts/:workoutId/active" element={<WorkoutActivePage />} />
-        <Route path="/workouts/:workoutId/complete" element={<WorkoutCompletePage />} />
-        <Route path="/history" element={<HistoryPage />} />
-        <Route path="/history/:activityId" element={<ActivityDetailPage />} />
-        <Route path="*" element={<Navigate to="/home" replace />} />
-      </Routes>
+      {/* Installed-app frame — only takes visual effect in standalone
+          display mode (index.css): the status bar there is
+          black-translucent (index.html), and its icons are always white,
+          so the page needs something dark behind them. The gutter div
+          reserves the notch-height gap (revealing the dark canvas
+          there); the content div rounds the page's top corners exactly
+          where light content starts, via clip-path (not
+          overflow-hidden) so it doesn't break the sticky footers some
+          pages use (position: sticky needs the real document scroll,
+          not a clipped ancestor). In a regular browser tab none of this
+          applies — the browser's own chrome already frames the page. */}
+      <div className="app-frame-canvas min-h-svh">
+        <div className="app-frame-gutter">
+          <div className="app-frame-content">
+            <Routes>
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/workouts/new" element={<CreateWorkoutPage />} />
+              <Route path="/workouts/:workoutId/edit" element={<CreateWorkoutPage />} />
+              <Route path="/workouts/:workoutId/active" element={<WorkoutActivePage />} />
+              <Route path="/workouts/:workoutId/complete" element={<WorkoutCompletePage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/history/:activityId" element={<ActivityDetailPage />} />
+              <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
+          </div>
+        </div>
+      </div>
     </BrowserRouter>
   )
 }
