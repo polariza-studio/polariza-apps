@@ -16,6 +16,13 @@ const GRIP_COLOR = 'color-mix(in srgb, var(--moss) 30%, transparent)';
 const DRAG_SHADOW = '0 2px 19px var(--border-subtle)';
 const DRAG_ROTATION_DEG = 4;
 const FLIP_DURATION_MS = 200;
+// Dragging used to engage the instant a finger touched the grip, so a
+// scroll gesture that merely started on/near it would hijack the whole
+// list. Require a brief hold before it arms: a quick touch (scrolling)
+// releases or moves past the threshold first and is left alone; only a
+// genuine press-and-hold engages the drag.
+const HOLD_MS = 180;
+const MOVE_CANCEL_THRESHOLD_PX = 8;
 
 function exerciseSummary(exercise: WorkoutExercise): string {
   return `${exercise.sets} × ${exercise.targetReps} · ${exercise.restSeconds} s`;
@@ -39,10 +46,20 @@ export function ReorderableExerciseList({
   const rowStep = useRef(0);
   const cardRefs = useRef(new Map<string, HTMLElement>());
   const prevRects = useRef(new Map<string, DOMRect>());
+  const pending = useRef<{
+    id: string;
+    target: HTMLElement;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    timer: number;
+  } | null>(null);
 
   if (!draggedId && order !== exercises && !sameOrder(order, exercises)) {
     setOrder(exercises);
   }
+
+  useLayoutEffect(() => () => clearPending(), []);
 
   useLayoutEffect(() => {
     for (const exercise of order) {
@@ -67,23 +84,75 @@ export function ReorderableExerciseList({
     }
   }, [order]);
 
-  function handlePointerDown(id: string, event: React.PointerEvent) {
+  function clearPending() {
+    if (!pending.current) return;
+    window.clearTimeout(pending.current.timer);
+    window.removeEventListener('pointermove', onPendingMove);
+    window.removeEventListener('pointerup', onPendingRelease);
+    window.removeEventListener('pointercancel', onPendingRelease);
+    pending.current = null;
+  }
+
+  function onPendingMove(event: PointerEvent) {
+    const current = pending.current;
+    if (!current || event.pointerId !== current.pointerId) return;
+    const dx = event.clientX - current.startX;
+    const dy = event.clientY - current.startY;
+    if (Math.hypot(dx, dy) > MOVE_CANCEL_THRESHOLD_PX) clearPending();
+  }
+
+  function onPendingRelease(event: PointerEvent) {
+    if (pending.current?.pointerId === event.pointerId) clearPending();
+  }
+
+  function engageDrag(id: string, target: HTMLElement, pointerId: number, clientY: number) {
     const cardEl = cardRefs.current.get(id);
     if (!cardEl) return;
+    try {
+      target.setPointerCapture(pointerId);
+    } catch {
+      // Pointer already gone (e.g. released/cancelled right as the hold
+      // timer fired) — nothing to drag.
+      return;
+    }
     const rect = cardEl.getBoundingClientRect();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragStartY.current = event.clientY;
+    dragStartY.current = clientY;
     dragStartIndex.current = order.findIndex((exercise) => exercise.id === id);
     const first = cardRefs.current.get(order[0]?.id ?? '')?.getBoundingClientRect();
     const second = cardRefs.current.get(order[1]?.id ?? '')?.getBoundingClientRect();
     rowStep.current = first && second ? second.top - first.top : rect.height + 12;
-    setPointerY(event.clientY);
+    setPointerY(clientY);
     setDragOrigin({ left: rect.left, top: rect.top, width: rect.width });
     setDraggedId(id);
   }
 
+  function handlePointerDown(id: string, event: React.PointerEvent<HTMLButtonElement>) {
+    clearPending();
+    const target = event.currentTarget;
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    pending.current = {
+      id,
+      target,
+      pointerId,
+      startX,
+      startY,
+      timer: window.setTimeout(() => {
+        clearPending();
+        engageDrag(id, target, pointerId, startY);
+      }, HOLD_MS),
+    };
+    window.addEventListener('pointermove', onPendingMove);
+    window.addEventListener('pointerup', onPendingRelease);
+    window.addEventListener('pointercancel', onPendingRelease);
+  }
+
   function handlePointerMove(event: React.PointerEvent) {
     if (!draggedId || !rowStep.current) return;
+    // Dragging is engaged — stop the browser from also scrolling the
+    // page underneath the gesture.
+    event.preventDefault();
     setPointerY(event.clientY);
     const deltaSteps = Math.round((event.clientY - dragStartY.current) / rowStep.current);
     setOrder((current) => {
@@ -142,7 +211,7 @@ export function ReorderableExerciseList({
             <button
               type="button"
               aria-label={`Reordenar ${exercise.name}`}
-              className="flex shrink-0 touch-none items-center justify-center p-space-2"
+              className="flex shrink-0 items-center justify-center p-space-2"
               style={{ color: GRIP_COLOR, opacity: isDragged ? 0 : 1 }}
               onPointerDown={(event) => handlePointerDown(exercise.id, event)}
               onPointerMove={handlePointerMove}

@@ -70,7 +70,14 @@ export function ExerciseModal({
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
+          // isolate + will-change-transform: Dialog.Portal renders this
+          // outside .app-frame-content (App.tsx), so the same WebKit
+          // clip-path-on-ancestor icon-doubling workaround applied there
+          // doesn't reach here — needs its own compositing layer. Not
+          // translate-z-0 like that one: this element already has a real
+          // transform (md:-translate-y-1/2 for centering) that a literal
+          // `transform` override would clobber.
+          className="fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
         >
           <div className="flex items-center justify-between p-space-7">
             <Dialog.Title className="text-body leading-body">
