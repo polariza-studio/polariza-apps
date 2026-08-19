@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 
 import { HomePage } from '@/features/home/HomePage'
 import { SharedWorkoutPage } from '@/features/home/SharedWorkoutPage'
@@ -7,6 +7,17 @@ import { WorkoutActivePage } from '@/features/workout/WorkoutActivePage'
 import { WorkoutCompletePage } from '@/features/workout/WorkoutCompletePage'
 import { HistoryPage } from '@/features/history/HistoryPage'
 import { ActivityDetailPage } from '@/features/history/ActivityDetailPage'
+
+// GitHub Pages is a static host with no server-side routing — a fresh
+// hit to /shared/:encoded 404s (nothing exists there but index.html at
+// the root). share-link.ts's buildShareUrl points shared links at the
+// root with ?shared= instead, which always resolves; this reads it back
+// off and hands off to the real client-side route.
+function RootRedirect() {
+  const [searchParams] = useSearchParams()
+  const shared = searchParams.get('shared')
+  return <Navigate to={shared ? `/shared/${shared}` : '/home'} replace />
+}
 
 // basename matches vite.config.ts's `base` (production: /polariza-apps/setup/,
 // dev: /) so deep links resolve correctly under the GitHub Pages subpath.
@@ -35,7 +46,7 @@ function App() {
         <div className="app-frame-gutter">
           <div className="app-frame-content">
             <Routes>
-              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/shared/:encoded" element={<SharedWorkoutPage />} />
               <Route path="/workouts/new" element={<CreateWorkoutPage />} />

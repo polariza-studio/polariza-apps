@@ -2,14 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { decodeSharedWorkout, encodeSharedWorkout } from './share-link';
 
 describe('encodeSharedWorkout / decodeSharedWorkout', () => {
-  it('round-trips name and exercises', () => {
+  it('round-trips name and exercise fields (ids are not preserved — the recipient always gets fresh ones)', () => {
     const workout = {
       name: 'Tren inferior + Core',
       exercises: [{ id: 'ex-1', name: 'Sentadilla búlgara', sets: 3, targetReps: '8-10', restSeconds: 90 }],
     };
 
     const encoded = encodeSharedWorkout(workout);
-    expect(decodeSharedWorkout(encoded)).toEqual(workout);
+    const decoded = decodeSharedWorkout(encoded);
+    expect(decoded?.name).toBe(workout.name);
+    expect(decoded?.exercises).toEqual([
+      { id: expect.any(String), name: 'Sentadilla búlgara', sets: 3, targetReps: '8-10', restSeconds: 90 },
+    ]);
   });
 
   it('is URL-safe (no +, /, or = characters)', () => {
