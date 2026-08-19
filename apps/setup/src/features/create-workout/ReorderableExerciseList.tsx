@@ -211,7 +211,7 @@ export function ReorderableExerciseList({
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
             >
-              <GripVertical className="size-5 [stroke-width:1.5]" draggable={false} />
+              <GripVertical className="size-5 [stroke-width:1.5]" />
             </button>
           </span>
         );
@@ -232,7 +232,7 @@ export function ReorderableExerciseList({
             <span className="text-heading leading-heading font-light text-foreground">{draggedExercise.name}</span>
             <span className="text-caption leading-caption text-foreground-secondary">{exerciseSummary(draggedExercise)}</span>
           </span>
-          <GripVertical className="size-5 shrink-0 [stroke-width:1.5]" style={{ color: GRIP_COLOR }} draggable={false} />
+          <GripVertical className="size-5 shrink-0 [stroke-width:1.5]" style={{ color: GRIP_COLOR }} />
         </div>
       )}
     </div>
