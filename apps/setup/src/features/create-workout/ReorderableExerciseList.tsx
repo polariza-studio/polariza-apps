@@ -16,13 +16,21 @@ const GRIP_COLOR = 'color-mix(in srgb, var(--moss) 30%, transparent)';
 const DRAG_SHADOW = '0 2px 19px var(--border-subtle)';
 const DRAG_ROTATION_DEG = 4;
 const FLIP_DURATION_MS = 200;
-// Dragging used to engage the instant a finger touched the grip, so a
-// scroll gesture that merely started on/near it would hijack the whole
-// list. Require a brief hold before it arms: a quick touch (scrolling)
-// releases or moves past the threshold first and is left alone; only a
-// genuine press-and-hold engages the drag.
-const HOLD_MS = 180;
-const MOVE_CANCEL_THRESHOLD_PX = 8;
+// A drag must reliably win against native scroll/selection from the very
+// first touch, not out-wait it: the grip captures the pointer immediately
+// on pointerdown (so every later event for that pointer is guaranteed to
+// reach it, no matter where the finger travels) and `touch-action: none`
+// on the grip (className below) tells the browser upfront this touch
+// isn't for scrolling — there's nothing left to race. A previous version
+// used a 180ms hold-then-engage timer instead, on plain (uncaptured)
+// window listeners with no touch-action set; the browser was free to
+// claim the touch for scrolling before that timer ever fired, and once
+// it did, capture/preventDefault calls afterward were too late to get it
+// back. DRAG_ENGAGE_THRESHOLD_PX only distinguishes an intentional drag
+// from a stray tremor on an otherwise-stationary press — a movement
+// check, not a time delay, so there's no perceptible lag before the drag
+// starts.
+const DRAG_ENGAGE_THRESHOLD_PX = 4;
 
 function exerciseSummary(exercise: WorkoutExercise): string {
   return `${exercise.sets} × ${exercise.targetReps} · ${exercise.restSeconds} s`;
@@ -46,20 +54,16 @@ export function ReorderableExerciseList({
   const rowStep = useRef(0);
   const cardRefs = useRef(new Map<string, HTMLElement>());
   const prevRects = useRef(new Map<string, DOMRect>());
-  const pending = useRef<{
-    id: string;
-    target: HTMLElement;
-    pointerId: number;
-    startX: number;
-    startY: number;
-    timer: number;
-  } | null>(null);
+  // Captured the instant the grip is pressed — `engaged` flips true once
+  // movement crosses DRAG_ENGAGE_THRESHOLD_PX, at which point engageDrag
+  // runs and draggedId takes over as the source of truth for the rest of
+  // the gesture. A plain tap (pointerup before threshold) leaves this
+  // null again with no side effect, same as before.
+  const gesture = useRef<{ id: string; pointerId: number; startY: number; engaged: boolean } | null>(null);
 
   if (!draggedId && order !== exercises && !sameOrder(order, exercises)) {
     setOrder(exercises);
   }
-
-  useLayoutEffect(() => () => clearPending(), []);
 
   useLayoutEffect(() => {
     for (const exercise of order) {
@@ -84,37 +88,9 @@ export function ReorderableExerciseList({
     }
   }, [order]);
 
-  function clearPending() {
-    if (!pending.current) return;
-    window.clearTimeout(pending.current.timer);
-    window.removeEventListener('pointermove', onPendingMove);
-    window.removeEventListener('pointerup', onPendingRelease);
-    window.removeEventListener('pointercancel', onPendingRelease);
-    pending.current = null;
-  }
-
-  function onPendingMove(event: PointerEvent) {
-    const current = pending.current;
-    if (!current || event.pointerId !== current.pointerId) return;
-    const dx = event.clientX - current.startX;
-    const dy = event.clientY - current.startY;
-    if (Math.hypot(dx, dy) > MOVE_CANCEL_THRESHOLD_PX) clearPending();
-  }
-
-  function onPendingRelease(event: PointerEvent) {
-    if (pending.current?.pointerId === event.pointerId) clearPending();
-  }
-
-  function engageDrag(id: string, target: HTMLElement, pointerId: number, clientY: number) {
+  function engageDrag(id: string, clientY: number) {
     const cardEl = cardRefs.current.get(id);
     if (!cardEl) return;
-    try {
-      target.setPointerCapture(pointerId);
-    } catch {
-      // Pointer already gone (e.g. released/cancelled right as the hold
-      // timer fired) — nothing to drag.
-      return;
-    }
     const rect = cardEl.getBoundingClientRect();
     dragStartY.current = clientY;
     dragStartIndex.current = order.findIndex((exercise) => exercise.id === id);
@@ -127,37 +103,47 @@ export function ReorderableExerciseList({
   }
 
   function handlePointerDown(id: string, event: React.PointerEvent<HTMLButtonElement>) {
-    clearPending();
-    const target = event.currentTarget;
-    const pointerId = event.pointerId;
-    const startX = event.clientX;
-    const startY = event.clientY;
-    pending.current = {
-      id,
-      target,
-      pointerId,
-      startX,
-      startY,
-      timer: window.setTimeout(() => {
-        clearPending();
-        engageDrag(id, target, pointerId, startY);
-      }, HOLD_MS),
-    };
-    window.addEventListener('pointermove', onPendingMove);
-    window.addEventListener('pointerup', onPendingRelease);
-    window.addEventListener('pointercancel', onPendingRelease);
+    // Captured immediately, not once a drag is confirmed — this is what
+    // guarantees every later pointermove/up for this pointer reaches the
+    // grip regardless of where the finger physically travels, instead of
+    // racing the browser's own gesture recognizer for it.
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      return;
+    }
+    gesture.current = { id, pointerId: event.pointerId, startY: event.clientY, engaged: false };
   }
 
   function handlePointerMove(event: React.PointerEvent) {
-    if (!draggedId || !rowStep.current) return;
+    const state = gesture.current;
+    if (!state || event.pointerId !== state.pointerId) return;
+    if (!state.engaged) {
+      if (Math.abs(event.clientY - state.startY) < DRAG_ENGAGE_THRESHOLD_PX) return;
+      state.engaged = true;
+      engageDrag(state.id, state.startY);
+    }
+    // rowStep.current (a ref) is set synchronously inside engageDrag, but
+    // draggedId (state) isn't visible in this closure until the next
+    // render — checking rowStep.current instead of draggedId here means
+    // the very event that just engaged the drag still applies its own
+    // movement immediately, rather than waiting one more pointermove to
+    // "catch up".
+    if (!rowStep.current) return;
     // Dragging is engaged — stop the browser from also scrolling the
-    // page underneath the gesture.
+    // page underneath the gesture (belt-and-suspenders: touch-action:
+    // none on the grip, in the JSX below, already keeps the browser from
+    // ever starting that scroll in the first place).
     event.preventDefault();
     setPointerY(event.clientY);
     const deltaSteps = Math.round((event.clientY - dragStartY.current) / rowStep.current);
     setOrder((current) => {
       const targetIndex = Math.max(0, Math.min(current.length - 1, dragStartIndex.current + deltaSteps));
-      const currentIndex = current.findIndex((exercise) => exercise.id === draggedId);
+      // state.id, not the draggedId closure variable — same reasoning as
+      // the rowStep.current check above: on the engaging event itself,
+      // draggedId's state update from engageDrag hasn't re-rendered this
+      // closure yet, but state.id (the ref) is already correct.
+      const currentIndex = current.findIndex((exercise) => exercise.id === state.id);
       if (currentIndex === -1 || currentIndex === targetIndex) return current;
       const next = [...current];
       const [item] = next.splice(currentIndex, 1);
@@ -167,6 +153,7 @@ export function ReorderableExerciseList({
   }
 
   function handlePointerUp() {
+    gesture.current = null;
     if (!draggedId) return;
     setDraggedId(null);
     setDragOrigin(null);
@@ -198,7 +185,7 @@ export function ReorderableExerciseList({
               else cardRefs.current.delete(exercise.id);
             }}
             style={{ gridRow: index + 1, gridColumn: 2 }}
-            className={`flex items-center gap-space-1 rounded-lg py-space-5 px-space-6 outline outline-1 outline-border-subtle ${isDragged ? 'bg-[#F4F5F4]' : ''}`}
+            className={`flex items-center gap-space-1 rounded-lg py-space-5 px-space-6 outline outline-1 outline-border-subtle select-none ${isDragged ? 'bg-[#F4F5F4]' : ''}`}
           >
             <button
               type="button"
@@ -211,14 +198,20 @@ export function ReorderableExerciseList({
             <button
               type="button"
               aria-label={`Reordenar ${exercise.name}`}
-              className="flex shrink-0 items-center justify-center p-space-2"
+              // touch-none: the browser must never claim this touch for
+              // scrolling — see the DRAG_ENGAGE_THRESHOLD_PX comment
+              // above. select-none + -webkit-touch-callout none: a
+              // stationary press here shouldn't trigger text selection or
+              // iOS's copy/look-up callout while a drag is deciding
+              // whether to engage.
+              className="flex shrink-0 touch-none cursor-grab items-center justify-center p-space-2 select-none active:cursor-grabbing [-webkit-touch-callout:none] [-webkit-user-drag:none]"
               style={{ color: GRIP_COLOR, opacity: isDragged ? 0 : 1 }}
               onPointerDown={(event) => handlePointerDown(exercise.id, event)}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
             >
-              <GripVertical className="size-5 [stroke-width:1.5]" />
+              <GripVertical className="size-5 [stroke-width:1.5]" draggable={false} />
             </button>
           </span>
         );
@@ -239,7 +232,7 @@ export function ReorderableExerciseList({
             <span className="text-heading leading-heading font-light text-foreground">{draggedExercise.name}</span>
             <span className="text-caption leading-caption text-foreground-secondary">{exerciseSummary(draggedExercise)}</span>
           </span>
-          <GripVertical className="size-5 shrink-0 [stroke-width:1.5]" style={{ color: GRIP_COLOR }} />
+          <GripVertical className="size-5 shrink-0 [stroke-width:1.5]" style={{ color: GRIP_COLOR }} draggable={false} />
         </div>
       )}
     </div>
