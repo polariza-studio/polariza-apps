@@ -431,22 +431,29 @@
     overscroll-behavior-y: none;
   }
   /* CSS dvh and JS window.innerHeight both proved unreliable for sizing
-     this frame — on-device measurement (three rounds) caught
-     window.innerHeight itself reporting DIFFERENT values (793, then 852,
-     the true screen height, then 793 again) across separate launches of
-     the same app on the same device, so no value either of them ever
-     reports can be trusted as "the true viewport" to measure against.
-     position: fixed + inset: 0 sidesteps that entirely — it's not a
-     measured/computed size at all, it's the compositor pinning this
-     box's edges directly to the real visual viewport, the same primitive
-     full-screen overlays rely on for this exact reason on iOS. That
-     makes .app-frame-canvas the scroll container (overflow-y here,
-     nothing scrolls on html/body underneath it anymore); height then
-     cascades down as a plain 100% chain to gutter/content, both now
-     definitely-sized instead of auto. */
+     this frame, and position: fixed + inset: 0 (which should be immune,
+     since it's not a measured size at all — the compositor pinning this
+     box directly to the visual viewport) turned out to inherit the same
+     problem: on-device diagnostics (round 4) showed window.innerHeight/
+     visualViewport.height themselves reporting 793 while the true screen
+     is 852 (derived from the screenshot's physical pixel height) — a
+     793 vs 852 gap that exactly equals safe-area-inset-top, and it
+     showed up entirely as a gap at the BOTTOM (canvas's own top edge
+     did reach the true top). Whatever "viewport" WebKit resolves fixed
+     positioning against here is itself short by that amount, so `inset:
+     0`'s bottom edge inherits the shortfall. Extending bottom past that
+     (short) edge by env(safe-area-inset-top) recovers it — and since
+     canvas is fixed (out of flow), overshooting is harmless on a device
+     where the measurement is ever correct: the extra sliver just renders
+     off-screen, unlike the min-height-based compensation tried earlier
+     (round 2) which risked adding real, visible scroll to a normal-flow
+     element. */
   .app-frame-canvas {
     position: fixed;
-    inset: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: calc(-1 * env(safe-area-inset-top));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background-color: var(--background-inverse);

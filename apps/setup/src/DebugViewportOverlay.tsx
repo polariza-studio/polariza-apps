@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 
-// TEMPORARY DIAGNOSTIC, round 4 — the previous fix (position: fixed +
-// inset: 0 on .app-frame-canvas, replacing every dvh/innerHeight-based
-// approach) should be immune to viewport-measurement unreliability by
-// construction, yet the user still saw the bottom moss gap after it
-// shipped. BUILD_MARKER below proves whether the device is actually
-// running this build (vs. a stale cached shell) before that result is
-// trusted. If the marker matches and the gap is still visible, the gap
-// isn't a measurement problem at all — something else is short. Remove
-// once the real cause is found.
-const BUILD_MARKER = 'diag-r4-fixed-inset';
+// TEMPORARY DIAGNOSTIC, round 5 — round 4's own numbers explained the
+// gap: canvas measured top=0 bottom=793 (matching window.innerHeight),
+// but the true screen is 852pt (from the screenshot's physical pixel
+// height), a 59px shortfall equal to safe-area-inset-top, landing
+// entirely at the bottom since canvas's top edge did reach the true
+// top. .app-frame-canvas now extends bottom past that short edge by
+// env(safe-area-inset-top) to compensate. BUILD_MARKER proves the
+// device is running this build (vs. a stale cached shell) before that
+// result is trusted. Remove once the real cause is confirmed fixed.
+const BUILD_MARKER = 'diag-r5-bottom-compensated';
 
 type Rect = { top: number; bottom: number; height: number } | null;
 
