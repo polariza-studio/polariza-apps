@@ -34,7 +34,7 @@ export function WorkoutCompletePage() {
         <span className="text-display-md leading-display-md font-light text-success">Bien hecho!</span>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-5 px-space-7 pt-8 pb-8">
+      <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8 px-space-7 pt-8 pb-8">
         <Button variant="primary" className="w-full" onClick={() => void saveActivity()}>
           Guardar mi actividad
         </Button>

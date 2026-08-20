@@ -14,9 +14,7 @@ function formatDateBadge(iso: string): { day: string; month: string } {
   };
 }
 
-// No Paper artboard exists for this screen yet — kept minimal and
-// consistent with Home's own recent-activity row styling rather than
-// inventing new visual language.
+// Paper: "historial".
 export function HistoryPage() {
   const navigate = useNavigate();
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -41,15 +39,24 @@ export function HistoryPage() {
   return (
     <div className="bg-background flex min-h-svh flex-col">
       <div className="w-full px-space-7 pt-space-7">
-        <div className="mx-auto flex w-full max-w-[440px] items-center gap-space-3">
+        <div className="mx-auto flex w-full max-w-[440px]">
           <IconButton aria-label="Volver" onClick={() => navigate('/home')} className="text-foreground">
             <ArrowLeft />
           </IconButton>
-          <span className="text-heading leading-heading font-light text-foreground">Historial</span>
         </div>
       </div>
 
-      <div className="flex-1 px-space-7 py-space-7">
+      <div className="w-full px-space-7 pt-space-9 pb-space-5">
+        <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-9">
+          <span className="text-display-md leading-display-md font-light text-foreground">Historial</span>
+          <span className="text-body leading-body">
+            <span className="text-foreground">{sorted.length}</span>
+            <span className="text-foreground-secondary"> · Workouts realizados</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="flex-1 px-space-7 pt-space-5 pb-space-9">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-5">
           {sorted.length === 0 ? (
             <div className="border-border-subtle text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-3 rounded-lg border border-dashed p-space-8 text-center">
