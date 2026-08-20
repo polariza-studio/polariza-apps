@@ -48,24 +48,25 @@ export function ExerciseModal({
     setSeededFor(null);
   }
 
-  // Autofocus for a new exercise, done as a ref callback (not the plain
-  // autoFocus attribute) so we can pass preventScroll: true — that's the
-  // actual fix for the modal-jump bug: the browser's own "scroll the
-  // focused element into view" runs against the input's still-animating
-  // (slide-in-from-bottom) position and ends up hiding it once the
-  // keyboard opens, something a manual tap never triggers because a
-  // person can only tap once the sheet has visibly settled. Suppressing
-  // that automatic scroll — not touching layout/scroll/viewport
-  // ourselves — leaves the input exactly where it already is, which is
-  // enough since it sits at the top of the sheet.
+  // Autofocus for a new exercise, done as a ref callback so it fires
+  // synchronously in React's commit — same task as the click that opened
+  // the modal, which mobile browsers require to open the keyboard at
+  // all. Plain focus(), no preventScroll: the entrance animation is
+  // skipped below (via `exercise ? '...animate-in...' : ''` on
+  // Dialog.Content) specifically so this can be a genuinely native,
+  // unmodified focus() call — with no animation running, the sheet is
+  // already at its final geometry the instant this fires, so the
+  // browser's own scroll-to-reveal reflow (the same one a manual tap
+  // relies on) computes against the real position and produces the same
+  // native nudge, not the wrong one.
   //
-  // This still fires synchronously in React's commit (same as the plain
-  // autoFocus attribute did), inside the same gesture as the click that
-  // opened the modal — required for mobile browsers to open the keyboard
-  // at all. An earlier version deferred this focus() behind
-  // getAnimations()/.finished to dodge the same bug, but awaiting that
-  // promise moved the call outside the click's synchronous execution and
-  // silently broke the keyboard on real devices.
+  // Two earlier attempts both traded one requirement for the other:
+  // preventScroll:true kept the keyboard opening but suppressed that
+  // native nudge entirely; awaiting getAnimations()/.finished before
+  // calling focus() got the nudge right but moved the call outside the
+  // click's synchronous execution and silently stopped the keyboard from
+  // opening on real devices. Dropping the entrance animation for this
+  // one flow removes the conflict instead of trading between its halves.
   //
   // Memoized on seedKey (not a bare inline callback): an unmemoized ref
   // callback re-fires on every re-render — typing a Set/Rep/Rest value
@@ -76,7 +77,7 @@ export function ExerciseModal({
   const focusNameOnMount = useCallback(
     (node: HTMLInputElement | null) => {
       if (node && seedKey === 'new') {
-        node.focus({ preventScroll: true });
+        node.focus();
       }
     },
     [seedKey],
@@ -110,7 +111,13 @@ export function ExerciseModal({
           // element already has a real transform (md:-translate-y-1/2
           // for centering) that a literal `transform` override would
           // clobber.
-          className="fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
+          //
+          // Entrance animation (data-[state=open]:animate-in slide-in-
+          // from-bottom) is skipped only when opening for a new exercise
+          // — see focusNameOnMount above for why. Editing keeps it: no
+          // exercise, worked the same as always. Exit animation is
+          // untouched either way.
+          className={`fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none ${exercise ? 'data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom' : ''} data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl`}
         >
           <div className="flex items-center justify-between p-space-7">
             <Dialog.Title className="text-body leading-body">
