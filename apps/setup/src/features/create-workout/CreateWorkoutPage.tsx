@@ -114,19 +114,21 @@ export function CreateWorkoutPage() {
         </div>
       </div>
 
-      <div className="flex-1 px-space-7 pt-space-7 pb-[40px]">
-        <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">
+      <div className="flex flex-1 flex-col px-space-7 pt-space-7 pb-[40px]">
+        <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col gap-space-7">
           <span className="text-body leading-body text-foreground-secondary">Ejercicios</span>
 
           {exercises.length === 0 ? (
-            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
+            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-1 flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
               <span className="bg-interactive-subtle flex size-12 shrink-0 items-center justify-center rounded-full">
                 <GalleryVerticalEnd
                   className="size-5 [stroke-width:1.5]"
                   style={{ color: 'color-mix(in srgb, var(--moss) 50%, transparent)' }}
                 />
               </span>
-              Todavía no has añadido ningún ejercicio
+              Añade tus ejercicios para
+              <br />
+              crear el workout.
               {/* Primary only here — it's the screen's one action while
                   empty. Once an exercise exists, adding another is no
                   longer the primary action, so the equivalent button

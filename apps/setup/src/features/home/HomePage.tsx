@@ -106,18 +106,18 @@ export function HomePage() {
       </div>
 
       <div className="flex flex-1 flex-col px-space-7 py-[32px]">
-        <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
+        <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col gap-space-8">
           <span className="text-body leading-body text-foreground-secondary">Tus workouts</span>
 
           {workouts.length === 0 ? (
-            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
+            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-1 flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
               <span className="bg-interactive-subtle flex size-12 shrink-0 items-center justify-center rounded-full">
                 <SportShoe
                   className="size-5 [stroke-width:1.5]"
                   style={{ color: 'color-mix(in srgb, var(--moss) 50%, transparent)' }}
                 />
               </span>
-              Todavía no has creado ningún workout
+              No hay workouts creados.
               {/* Primary only here — it's the screen's one action while
                   empty. Once a workout exists, adding another is no
                   longer the primary action, so the equivalent button
