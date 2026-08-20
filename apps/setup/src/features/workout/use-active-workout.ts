@@ -88,16 +88,36 @@ export function useActiveWorkout(workoutId: string) {
     [updateWorkout],
   );
 
+  // Freezes the clock and persists it directly — not via updateWorkout's
+  // setState-updater side effect — because the caller navigates away
+  // (to Completion) in the very same synchronous handler right after
+  // this runs. With router navigation now synchronous (App.tsx's
+  // useTransitions={false}), that route change and this component's
+  // pending state update land in the same React commit, and the
+  // component unmounting as part of that commit means React never gets
+  // around to invoking the queued updater — so the pausedAt write inside
+  // it silently never happened, and the Completion screen's timer kept
+  // ticking. Writing straight to storage (and workoutRef/setWorkout)
+  // here doesn't depend on this component surviving to its next render.
+  const pauseAndPersist = useCallback((current: ActiveWorkout): ActiveWorkout => {
+    if (current.pausedAt) return current;
+    const paused = { ...current, pausedAt: new Date().toISOString() };
+    workoutRef.current = paused;
+    void storageRepository.saveActiveWorkout(paused);
+    setWorkout(paused);
+    return paused;
+  }, []);
+
   const goToNext = useCallback(() => {
     const current = workoutRef.current;
     if (!current) return;
     if (current.currentExerciseIndex + 1 >= current.exercises.length) {
-      updateWorkout((w) => (w.pausedAt ? w : { ...w, pausedAt: new Date().toISOString() }));
+      pauseAndPersist(current);
       navigate(`/workouts/${workoutId}/complete`);
       return;
     }
     updateWorkout((w) => ({ ...w, currentExerciseIndex: w.currentExerciseIndex + 1 }));
-  }, [workoutId, navigate, updateWorkout]);
+  }, [workoutId, navigate, updateWorkout, pauseAndPersist]);
 
   const goToPrevious = useCallback(() => {
     updateWorkout((current) =>
@@ -108,9 +128,10 @@ export function useActiveWorkout(workoutId: string) {
   // Freezes the clock before navigating to Completion, so the duration
   // shown there is exactly the moment Finish was clicked.
   const finishWorkout = useCallback(() => {
-    updateWorkout((current) => (current.pausedAt ? current : { ...current, pausedAt: new Date().toISOString() }));
+    const current = workoutRef.current;
+    if (current) pauseAndPersist(current);
     navigate(`/workouts/${workoutId}/complete`);
-  }, [workoutId, navigate, updateWorkout]);
+  }, [workoutId, navigate, pauseAndPersist]);
 
   const saveActivity = useCallback(async () => {
     const current = workoutRef.current;
