@@ -100,6 +100,16 @@ export function ExerciseModal({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Nombre del ejercicio"
+              // Native autoFocus fires synchronously in React's commit
+              // phase, ahead of Radix's own mount-autofocus (a passive
+              // useEffect in FocusScope, which — like the router-transition
+              // gap fixed for the workout name field — falls outside the
+              // click's synchronous gesture chain that mobile browsers
+              // require to open the keyboard). Being focused first also
+              // makes Radix skip its default first-focusable-element
+              // autofocus (the close button) since it only acts when
+              // nothing inside the dialog is focused yet.
+              autoFocus={!exercise}
               className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
             <datalist id="exercise-name-suggestions">
