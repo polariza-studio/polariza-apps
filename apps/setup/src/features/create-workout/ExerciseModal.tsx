@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Dialog } from 'radix-ui';
 import { X } from 'lucide-react';
 
@@ -29,7 +29,6 @@ export function ExerciseModal({
   const [sets, setSets] = useState('');
   const [targetReps, setTargetReps] = useState('');
   const [restSeconds, setRestSeconds] = useState('');
-  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Re-seed fields whenever a different exercise is opened (or the modal
   // opens fresh for a new one) — Radix keeps this component mounted, so
@@ -48,6 +47,40 @@ export function ExerciseModal({
   } else if (!open && seededFor !== null) {
     setSeededFor(null);
   }
+
+  // Autofocus for a new exercise, done as a ref callback (not the plain
+  // autoFocus attribute) so we can pass preventScroll: true — that's the
+  // actual fix for the modal-jump bug: the browser's own "scroll the
+  // focused element into view" runs against the input's still-animating
+  // (slide-in-from-bottom) position and ends up hiding it once the
+  // keyboard opens, something a manual tap never triggers because a
+  // person can only tap once the sheet has visibly settled. Suppressing
+  // that automatic scroll — not touching layout/scroll/viewport
+  // ourselves — leaves the input exactly where it already is, which is
+  // enough since it sits at the top of the sheet.
+  //
+  // This still fires synchronously in React's commit (same as the plain
+  // autoFocus attribute did), inside the same gesture as the click that
+  // opened the modal — required for mobile browsers to open the keyboard
+  // at all. An earlier version deferred this focus() behind
+  // getAnimations()/.finished to dodge the same bug, but awaiting that
+  // promise moved the call outside the click's synchronous execution and
+  // silently broke the keyboard on real devices.
+  //
+  // Memoized on seedKey (not a bare inline callback): an unmemoized ref
+  // callback re-fires on every re-render — typing a Set/Rep/Rest value
+  // would re-trigger it and yank focus back to the name field mid-entry.
+  // Keying on seedKey means it only re-fires when a genuinely new dialog
+  // instance mounts (same "once per open" semantics as the re-seed logic
+  // above), never on a same-session re-render.
+  const focusNameOnMount = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node && seedKey === 'new') {
+        node.focus({ preventScroll: true });
+      }
+    },
+    [seedKey],
+  );
 
   const setsNumber = Number(sets);
   const restNumber = Number(restSeconds);
@@ -78,39 +111,6 @@ export function ExerciseModal({
           // for centering) that a literal `transform` override would
           // clobber.
           className="fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
-          onOpenAutoFocus={(event) => {
-            // Editing keeps Radix's own default (focuses the close button)
-            // untouched. For a new exercise, focusing the name input the
-            // instant the dialog mounts — before its slide-in-from-bottom
-            // animation has run — means the browser calculates its
-            // keyboard-avoidance scroll against the input's still-
-            // animating (off-position) geometry, so the input ends up
-            // hidden once the keyboard opens and the animation settles. A
-            // manual tap never has this problem because a person can only
-            // tap once the sheet has visibly finished sliding in — so we
-            // wait for that same animation to actually finish before
-            // calling .focus(), still a plain native focus call, just at
-            // the moment a real tap would happen.
-            //
-            // Not an 'animationend' listener: this handler itself only
-            // runs from FocusScope's own mount effect, which — being a
-            // passive effect — can fire after the (short, 150ms) CSS
-            // animation has already completed, so a listener attached
-            // here can miss an event that already happened. Reading the
-            // live Animation objects instead handles both cases: already
-            // finished (resolves immediately) or still running (resolves
-            // when it ends).
-            if (exercise) return;
-            event.preventDefault();
-            const container = event.currentTarget as HTMLElement;
-            const focusName = () => nameInputRef.current?.focus();
-            const animations = container.getAnimations();
-            if (animations.length === 0) {
-              focusName();
-            } else {
-              Promise.all(animations.map((animation) => animation.finished)).then(focusName, focusName);
-            }
-          }}
         >
           <div className="flex items-center justify-between p-space-7">
             <Dialog.Title className="text-body leading-body">
@@ -130,7 +130,7 @@ export function ExerciseModal({
             </label>
             <input
               id="exercise-name"
-              ref={nameInputRef}
+              ref={focusNameOnMount}
               list="exercise-name-suggestions"
               value={name}
               onChange={(event) => setName(event.target.value)}
