@@ -17,7 +17,12 @@ import { ReorderableExerciseList } from './ReorderableExerciseList';
 export function CreateWorkoutPage() {
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
-  const [ready, setReady] = useState(false);
+  // New workouts have no existing data to await, so render (and autofocus
+  // the name input) immediately, in the same tick as the "Crear workout"
+  // click — mobile browsers only open the virtual keyboard for a .focus()
+  // that stays within that synchronous user-gesture chain, and gating the
+  // whole page behind the async load below would push the mount past it.
+  const [ready, setReady] = useState(() => !workoutId);
   const [id] = useState(() => workoutId ?? crypto.randomUUID());
   const [createdAt, setCreatedAt] = useState(() => new Date().toISOString());
   const [name, setName] = useState('');
