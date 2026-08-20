@@ -1,98 +1,111 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-// Documentation only — each field below renders the exact <input>
-// markup (className copied verbatim, character for character) from its
-// real call site, so this page is a mirror of what's actually shipped,
-// not a redesign or a shared component. WorkoutActivePage's two fields
-// were previously missing `font-light` — confirmed against Paper's
-// "workout-started" artboard (both Reps and Peso are font-light there)
-// and fixed directly in WorkoutActivePage.tsx, so all seven fields now
-// carry the same class consistently.
+import { TextField } from './text-field';
+
 const meta = {
   title: 'UI/TextField',
+  component: TextField,
   tags: ['autodocs'],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta;
+  argTypes: {
+    type: {
+      control: 'select',
+      options: ['text', 'number'],
+    },
+  },
+} satisfies Meta<typeof TextField>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-caption leading-caption text-foreground-secondary">{label}</span>
-      {children}
+export const Default: Story = {
+  args: {
+    placeholder: 'Nombre del workout',
+  },
+  render: (args) => (
+    <div className="w-[320px]">
+      <TextField {...args} />
     </div>
-  );
-}
+  ),
+};
 
-export const AllUsages: Story = {
-  render: () => (
-    <div className="flex w-[320px] flex-col gap-8">
-      <Field label="CreateWorkoutPage — workout name">
-        {/* className copied verbatim from CreateWorkoutPage.tsx */}
-        <input
-          placeholder="Nombre del workout"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
+export const Filled: Story = {
+  args: {
+    defaultValue: 'Squat',
+  },
+  render: (args) => (
+    <div className="w-[320px]">
+      <TextField {...args} />
+    </div>
+  ),
+};
 
-      <Field label="ExerciseModal — exercise name">
-        {/* className copied verbatim from ExerciseModal.tsx */}
-        <input
-          list="story-exercise-name-suggestions"
-          placeholder="Nombre del ejercicio"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
+// type="number" + inputMode="numeric" — ExerciseModal's Sets/Descanso, and
+// the active workout's Reps field.
+export const Numeric: Story = {
+  args: {
+    type: 'number',
+    inputMode: 'numeric',
+    placeholder: '3',
+  },
+  render: (args) => (
+    <div className="w-[160px]">
+      <TextField {...args} />
+    </div>
+  ),
+};
 
-      <Field label="ExerciseModal — sets">
-        <input
-          type="number"
-          inputMode="numeric"
-          min={1}
-          placeholder="3"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
+// The real usage pattern everywhere in the app: a `text-label` caption
+// stacked above the field (Nombre del workout/ejercicio, Sets, Reps,
+// Descanso, and the active workout's Reps/Peso) — TextField itself has no
+// label prop, this composition is the call site's responsibility.
+export const WithLabel: Story = {
+  args: {
+    id: 'story-exercise-name',
+    placeholder: 'Nombre del ejercicio',
+  },
+  render: (args) => (
+    <div className="flex w-[320px] flex-col gap-space-3">
+      <label htmlFor={args.id} className="text-label leading-label text-foreground-secondary">
+        Nombre del ejercicio
+      </label>
+      <TextField {...args} />
+    </div>
+  ),
+};
 
-      <Field label="ExerciseModal — reps">
-        <input
-          placeholder="8-10"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
+// Native <input disabled> — a real capability passed straight through
+// (TextField applies no custom disabled styling of its own), not
+// currently used at any of the 7 real call sites.
+export const Disabled: Story = {
+  args: {
+    defaultValue: 'Squat',
+    disabled: true,
+  },
+  render: (args) => (
+    <div className="w-[320px]">
+      <TextField {...args} />
+    </div>
+  ),
+};
 
-      <Field label="ExerciseModal — rest (s)">
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          placeholder="60"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
-
-      <Field label="WorkoutActivePage — set reps">
-        {/* className copied verbatim from WorkoutActivePage.tsx */}
-        <input
-          type="number"
-          inputMode="numeric"
-          placeholder="10"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
-
-      <Field label="WorkoutActivePage — set weight">
-        <input
-          type="text"
-          inputMode="decimal"
-          placeholder="—"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
-        />
-      </Field>
+// Every real call site sets `outline-none` and TextField has no custom
+// focus/hover treatment of its own (unlike Button/IconButton's Foundations
+// v1 ladder) — so there is currently no visible :focus indicator on any
+// TextField in the product. Documented as a gap, not fixed here: fixing it
+// is a design decision, not something to infer while writing stories.
+export const FocusVisibility: Story = {
+  args: {
+    defaultValue: 'Squat',
+  },
+  render: (args) => (
+    <div className="flex w-[320px] flex-col gap-space-3">
+      <span className="text-caption leading-caption text-foreground-secondary">
+        Focused (tab to it or click in) — no visible ring, by current implementation
+      </span>
+      <TextField {...args} autoFocus />
     </div>
   ),
 };
