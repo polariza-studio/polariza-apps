@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Dialog } from 'radix-ui';
 import { X } from 'lucide-react';
 
@@ -29,6 +29,7 @@ export function ExerciseModal({
   const [sets, setSets] = useState('');
   const [targetReps, setTargetReps] = useState('');
   const [restSeconds, setRestSeconds] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Re-seed fields whenever a different exercise is opened (or the modal
   // opens fresh for a new one) — Radix keeps this component mounted, so
@@ -77,6 +78,39 @@ export function ExerciseModal({
           // for centering) that a literal `transform` override would
           // clobber.
           className="fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl"
+          onOpenAutoFocus={(event) => {
+            // Editing keeps Radix's own default (focuses the close button)
+            // untouched. For a new exercise, focusing the name input the
+            // instant the dialog mounts — before its slide-in-from-bottom
+            // animation has run — means the browser calculates its
+            // keyboard-avoidance scroll against the input's still-
+            // animating (off-position) geometry, so the input ends up
+            // hidden once the keyboard opens and the animation settles. A
+            // manual tap never has this problem because a person can only
+            // tap once the sheet has visibly finished sliding in — so we
+            // wait for that same animation to actually finish before
+            // calling .focus(), still a plain native focus call, just at
+            // the moment a real tap would happen.
+            //
+            // Not an 'animationend' listener: this handler itself only
+            // runs from FocusScope's own mount effect, which — being a
+            // passive effect — can fire after the (short, 150ms) CSS
+            // animation has already completed, so a listener attached
+            // here can miss an event that already happened. Reading the
+            // live Animation objects instead handles both cases: already
+            // finished (resolves immediately) or still running (resolves
+            // when it ends).
+            if (exercise) return;
+            event.preventDefault();
+            const container = event.currentTarget as HTMLElement;
+            const focusName = () => nameInputRef.current?.focus();
+            const animations = container.getAnimations();
+            if (animations.length === 0) {
+              focusName();
+            } else {
+              Promise.all(animations.map((animation) => animation.finished)).then(focusName, focusName);
+            }
+          }}
         >
           <div className="flex items-center justify-between p-space-7">
             <Dialog.Title className="text-body leading-body">
@@ -96,20 +130,11 @@ export function ExerciseModal({
             </label>
             <input
               id="exercise-name"
+              ref={nameInputRef}
               list="exercise-name-suggestions"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Nombre del ejercicio"
-              // Native autoFocus fires synchronously in React's commit
-              // phase, ahead of Radix's own mount-autofocus (a passive
-              // useEffect in FocusScope, which — like the router-transition
-              // gap fixed for the workout name field — falls outside the
-              // click's synchronous gesture chain that mobile browsers
-              // require to open the keyboard). Being focused first also
-              // makes Radix skip its default first-focusable-element
-              // autofocus (the close button) since it only acts when
-              // nothing inside the dialog is focused yet.
-              autoFocus={!exercise}
               className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
             <datalist id="exercise-name-suggestions">
