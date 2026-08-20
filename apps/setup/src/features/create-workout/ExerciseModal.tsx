@@ -133,7 +133,7 @@ export function ExerciseModal({
           </div>
 
           <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-name" className="text-label leading-label text-foreground-secondary">
+            <label htmlFor="exercise-name" className="text-caption leading-caption text-foreground-secondary">
               Nombre del ejercicio
             </label>
             <TextField
@@ -152,7 +152,7 @@ export function ExerciseModal({
           </div>
 
           <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-sets" className="text-label leading-label text-foreground-secondary">
+            <label htmlFor="exercise-sets" className="text-caption leading-caption text-foreground-secondary">
               Sets
             </label>
             <TextField
@@ -167,7 +167,7 @@ export function ExerciseModal({
           </div>
 
           <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-reps" className="text-label leading-label text-foreground-secondary">
+            <label htmlFor="exercise-reps" className="text-caption leading-caption text-foreground-secondary">
               Reps
             </label>
             <TextField
@@ -179,7 +179,7 @@ export function ExerciseModal({
           </div>
 
           <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-rest" className="text-label leading-label text-foreground-secondary">
+            <label htmlFor="exercise-rest" className="text-caption leading-caption text-foreground-secondary">
               Descanso (s)
             </label>
             <TextField
