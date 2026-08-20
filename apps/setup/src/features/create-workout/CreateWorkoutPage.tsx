@@ -109,6 +109,7 @@ export function CreateWorkoutPage() {
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Nombre del workout"
+            autoFocus={!workoutId}
             className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
           />
         </div>
