@@ -4,7 +4,6 @@ import { GalleryVerticalEnd, Plus, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { TextField } from '@/components/ui/text-field';
 import type { Workout, WorkoutExercise } from '@/domain/workout';
 import { useBottomShadow } from '@/lib/use-bottom-shadow';
 import { storageRepository } from '@/services/storage';
@@ -111,11 +110,12 @@ export function CreateWorkoutPage() {
 
       <div className="w-full p-space-7">
         <div className="mx-auto w-full max-w-[440px]">
-          <TextField
+          <input
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Nombre del workout"
             autoFocus={!workoutId}
+            className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
           />
         </div>
       </div>

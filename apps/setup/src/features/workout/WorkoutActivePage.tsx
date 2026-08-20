@@ -4,7 +4,6 @@ import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { TextField } from '@/components/ui/text-field';
 import { formatElapsed, lastWeightForExercise } from './active-workout';
 import { useActiveWorkout } from './use-active-workout';
 import { useBottomShadow } from '@/lib/use-bottom-shadow';
@@ -86,7 +85,7 @@ export function WorkoutActivePage() {
                   <div className="border-border-subtle flex flex-1 items-center gap-space-5 rounded-lg border p-space-5">
                     <div className="flex flex-1 flex-col items-start gap-space-1">
                       <span className="text-label leading-label text-foreground-secondary">Reps</span>
-                      <TextField
+                      <input
                         type="number"
                         inputMode="numeric"
                         value={set.reps ?? ''}
@@ -95,12 +94,13 @@ export function WorkoutActivePage() {
                           updateSet(workout.currentExerciseIndex, setIndex, { reps, completed: reps !== undefined });
                         }}
                         placeholder={exercise.targetReps}
+                        className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent outline-none"
                       />
                     </div>
                     <div className="bg-border-subtle w-px self-stretch" />
                     <div className="flex flex-1 flex-col items-start gap-space-1">
                       <span className="text-label leading-label text-foreground-secondary">Peso (kg)</span>
-                      <TextField
+                      <input
                         type="text"
                         inputMode="decimal"
                         value={weightDrafts[setIndex] ?? (set.weight ?? '')}
@@ -112,6 +112,7 @@ export function WorkoutActivePage() {
                           updateSet(workout.currentExerciseIndex, setIndex, { weight });
                         }}
                         placeholder="—"
+                        className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent outline-none"
                       />
                     </div>
                   </div>

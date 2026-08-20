@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { TextField } from '@/components/ui/text-field';
 import type { WorkoutExercise } from '@/domain/workout';
 
 // Bottom-sheet form for adding/editing one exercise — Paper's
@@ -136,13 +135,14 @@ export function ExerciseModal({
             <label htmlFor="exercise-name" className="text-label leading-label text-foreground-secondary">
               Nombre del ejercicio
             </label>
-            <TextField
+            <input
               id="exercise-name"
               ref={focusNameOnMount}
               list="exercise-name-suggestions"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Nombre del ejercicio"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
             <datalist id="exercise-name-suggestions">
               {knownNames.map((knownName) => (
@@ -155,7 +155,7 @@ export function ExerciseModal({
             <label htmlFor="exercise-sets" className="text-label leading-label text-foreground-secondary">
               Sets
             </label>
-            <TextField
+            <input
               id="exercise-sets"
               type="number"
               inputMode="numeric"
@@ -163,6 +163,7 @@ export function ExerciseModal({
               value={sets}
               onChange={(event) => setSets(event.target.value)}
               placeholder="3"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
           </div>
 
@@ -170,11 +171,12 @@ export function ExerciseModal({
             <label htmlFor="exercise-reps" className="text-label leading-label text-foreground-secondary">
               Reps
             </label>
-            <TextField
+            <input
               id="exercise-reps"
               value={targetReps}
               onChange={(event) => setTargetReps(event.target.value)}
               placeholder="8-10"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
           </div>
 
@@ -182,7 +184,7 @@ export function ExerciseModal({
             <label htmlFor="exercise-rest" className="text-label leading-label text-foreground-secondary">
               Descanso (s)
             </label>
-            <TextField
+            <input
               id="exercise-rest"
               type="number"
               inputMode="numeric"
@@ -190,6 +192,7 @@ export function ExerciseModal({
               value={restSeconds}
               onChange={(event) => setRestSeconds(event.target.value)}
               placeholder="60"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
           </div>
 
