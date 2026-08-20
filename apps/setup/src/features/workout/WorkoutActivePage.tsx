@@ -85,7 +85,7 @@ export function WorkoutActivePage() {
                   </div>
                   <div className="border-border-subtle flex flex-1 items-center gap-space-5 rounded-lg border p-space-5">
                     <div className="flex flex-1 flex-col items-start gap-space-1">
-                      <span className="text-label leading-label text-foreground-secondary">Reps</span>
+                      <span className="text-caption leading-caption text-foreground-secondary">Reps</span>
                       <TextField
                         type="number"
                         inputMode="numeric"
@@ -99,7 +99,7 @@ export function WorkoutActivePage() {
                     </div>
                     <div className="bg-border-subtle w-px self-stretch" />
                     <div className="flex flex-1 flex-col items-start gap-space-1">
-                      <span className="text-label leading-label text-foreground-secondary">Peso (kg)</span>
+                      <span className="text-caption leading-caption text-foreground-secondary">Peso (kg)</span>
                       <TextField
                         type="text"
                         inputMode="decimal"
