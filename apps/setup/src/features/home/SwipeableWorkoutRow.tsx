@@ -225,20 +225,33 @@ export function SwipeableWorkoutRow({
         className="absolute inset-y-0 right-0 flex items-center gap-space-5"
         style={{ width: ACTIONS_WIDTH }}
       >
+        {/* Hover/pressed/focus mirror Button v1's secondary variant
+            exactly (Foundations v1, index.css --button-secondary-hover/
+            -pressed: moss mixed 92%/84% with white) — same state ladder
+            as Finalizar (WorkoutActivePage), on request, even though
+            this isn't literally <Button> yet (unification to come
+            later in Storybook). No shadow: secondary's shadow-button is
+            a variant detail, not part of the state ladder, and
+            explicitly not wanted here. */}
         <button
           type="button"
           aria-label={`Editar ${workout.name}`}
           onClick={() => onEdit(workout)}
-          className="bg-background-inverse flex shrink-0 items-center justify-center rounded-full"
+          className="bg-background-inverse flex shrink-0 items-center justify-center rounded-full outline-none transition-colors hover:bg-[color-mix(in_srgb,var(--moss)_92%,var(--neutral-0)_8%)] active:bg-[color-mix(in_srgb,var(--moss)_84%,var(--neutral-0)_16%)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
           style={{ width: ACTION_SIZE, height: ACTION_SIZE }}
         >
           <Pencil className="text-foreground-inverse size-5 [stroke-width:1.5]" />
         </button>
+        {/* Same 92%/8%, 84%/16% white-mix ratio as secondary's own
+            hover/pressed, applied to this destructive red instead of
+            moss — #C52D01 has no Foundations token yet (see where it
+            was introduced), so the formula is inlined rather than
+            referencing one. */}
         <button
           type="button"
           aria-label={`Eliminar ${workout.name}`}
           onClick={() => onDelete(workout)}
-          className="flex shrink-0 items-center justify-center rounded-full bg-[#C52D01]"
+          className="flex shrink-0 items-center justify-center rounded-full bg-[#C52D01] outline-none transition-colors hover:bg-[color-mix(in_srgb,#C52D01_92%,var(--neutral-0)_8%)] active:bg-[color-mix(in_srgb,#C52D01_84%,var(--neutral-0)_16%)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
           style={{ width: ACTION_SIZE, height: ACTION_SIZE }}
         >
           <Trash className="text-foreground-inverse size-5 [stroke-width:1.5]" />
