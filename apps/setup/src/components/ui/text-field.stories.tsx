@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-// Documentation only — no product code was touched to build this. Each
-// field below renders the exact <input> markup (className copied
-// verbatim, character for character) from its real call site, so this
-// page is a mirror of what's actually shipped, not a redesign or a
-// shared component. There IS a real inconsistency between the two
-// groups below — CreateWorkoutPage/ExerciseModal's five inputs carry an
-// explicit `font-light`, WorkoutActivePage's two don't — left as-is on
-// purpose: documenting what's built means recording that discrepancy,
-// not silently resolving it.
+// Documentation only — each field below renders the exact <input>
+// markup (className copied verbatim, character for character) from its
+// real call site, so this page is a mirror of what's actually shipped,
+// not a redesign or a shared component. WorkoutActivePage's two fields
+// were previously missing `font-light` — confirmed against Paper's
+// "workout-started" artboard (both Reps and Peso are font-light there)
+// and fixed directly in WorkoutActivePage.tsx, so all seven fields now
+// carry the same class consistently.
 const meta = {
   title: 'UI/TextField',
   tags: ['autodocs'],
@@ -76,23 +75,22 @@ export const AllUsages: Story = {
         />
       </Field>
 
-      <Field label="WorkoutActivePage — set reps (no font-light, as shipped)">
-        {/* className copied verbatim from WorkoutActivePage.tsx — note the
-            missing font-light, unlike the five fields above. */}
+      <Field label="WorkoutActivePage — set reps">
+        {/* className copied verbatim from WorkoutActivePage.tsx */}
         <input
           type="number"
           inputMode="numeric"
           placeholder="10"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent outline-none"
+          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
         />
       </Field>
 
-      <Field label="WorkoutActivePage — set weight (no font-light, as shipped)">
+      <Field label="WorkoutActivePage — set weight">
         <input
           type="text"
           inputMode="decimal"
           placeholder="—"
-          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent outline-none"
+          className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
         />
       </Field>
     </div>
