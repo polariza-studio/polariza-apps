@@ -245,13 +245,24 @@ export function SwipeableWorkoutRow({
         </button>
       </div>
 
+      {/* Hover/pressed/focus follow Button v1's ghost ladder (Foundations
+          v1, index.css): 4% → 10% moss tint, one rung below ghost's own
+          since this card rests at 0% tint instead of ghost's 4%. Skipped
+          while isOpen — that state already owns interactive-subtle as its
+          own visual (safe there: the card has slid away from the actions
+          it would otherwise reveal). Mixed against --background, not
+          --interactive-subtle/--border-subtle directly: those tokens are
+          color-mix(..., transparent) — swapping the card's opaque
+          bg-background for one of them on hover would make the card
+          partially see-through, revealing the swipe actions positioned
+          underneath it at rest. */}
       <button
         type="button"
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         aria-label={`Empezar ${workout.name}`}
         aria-disabled={isOpen}
-        className={`border-border-subtle relative flex w-full items-center gap-space-1 rounded-lg border px-space-6 py-space-5 text-left ${isOpen ? 'bg-interactive-subtle' : 'bg-background'}`}
+        className={`border-border-subtle relative flex w-full items-center gap-space-1 rounded-lg border px-space-6 py-space-5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 ${isOpen ? 'bg-interactive-subtle' : 'bg-background hover:bg-[color-mix(in_srgb,var(--moss)_4%,var(--background))] active:bg-[color-mix(in_srgb,var(--moss)_10%,var(--background))]'}`}
         style={{
           transform: `translateX(${offset}px)`,
           transition: dragging ? 'none' : 'transform 200ms ease',

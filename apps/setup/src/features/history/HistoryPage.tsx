@@ -59,12 +59,19 @@ export function HistoryPage() {
             sorted.map((activity) => {
               const { day, month } = formatDateBadge(activity.date);
               return (
-                <Link key={activity.id} to={`/history/${activity.id}`} className="flex items-center gap-space-5">
+                // Same card interaction pattern as HomePage's recent-
+                // activity preview (Button v1 ghost ladder, Foundations
+                // v1) — keep the two in sync.
+                <Link
+                  key={activity.id}
+                  to={`/history/${activity.id}`}
+                  className="group flex items-center gap-space-5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
+                >
                   <div className="bg-interactive-subtle flex w-12 shrink-0 flex-col items-center justify-center gap-space-1 rounded-lg p-space-2">
                     <span className="text-label-emphasis leading-label-emphasis text-foreground">{day}</span>
                     <span className="text-label leading-label text-foreground-secondary">{month}</span>
                   </div>
-                  <div className="border-border-subtle flex flex-1 flex-col items-start gap-space-3 rounded-lg border px-space-6 py-space-5">
+                  <div className="border-border-subtle flex flex-1 flex-col items-start gap-space-3 rounded-lg border px-space-6 py-space-5 transition-colors group-hover:bg-interactive-subtle group-active:bg-border-subtle">
                     <span className="text-heading leading-heading font-light text-foreground">{activity.workoutName}</span>
                     <span className="text-caption leading-caption text-foreground-secondary">
                       {activity.exercises.length} ejercicios · {Math.round(activity.durationSeconds / 60)} min

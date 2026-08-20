@@ -187,10 +187,12 @@ export function ReorderableExerciseList({
             style={{ gridRow: index + 1, gridColumn: 2 }}
             className={`flex items-center gap-space-1 rounded-lg py-space-5 px-space-6 outline outline-1 outline-border-subtle select-none ${isDragged ? 'bg-[#F4F5F4]' : ''}`}
           >
+            {/* Hover/pressed/focus: same Button v1 ghost ladder as the
+                workout/activity cards (Foundations v1, index.css). */}
             <button
               type="button"
               onClick={() => onSelect(exercise)}
-              className={`flex flex-1 flex-col items-start gap-space-3 text-left ${isDragged ? 'opacity-0' : ''}`}
+              className={`flex flex-1 flex-col items-start gap-space-3 rounded-lg text-left outline-none transition-colors hover:bg-interactive-subtle active:bg-border-subtle focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 ${isDragged ? 'opacity-0' : ''}`}
             >
               <span className="text-heading leading-heading font-light text-foreground">{exercise.name}</span>
               <span className="text-caption leading-caption text-foreground-secondary">{exerciseSummary(exercise)}</span>
