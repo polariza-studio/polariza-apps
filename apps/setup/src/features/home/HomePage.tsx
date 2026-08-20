@@ -118,7 +118,11 @@ export function HomePage() {
                 />
               </span>
               Todavía no has creado ningún workout
-              <Button variant="ghost" onClick={() => navigate('/workouts/new')}>
+              {/* Primary only here — it's the screen's one action while
+                  empty. Once a workout exists, adding another is no
+                  longer the primary action, so the equivalent button
+                  below (once the list isn't empty) stays ghost. */}
+              <Button variant="primary" onClick={() => navigate('/workouts/new')}>
                 <Plus data-icon="inline-start" />
                 Crear workout
               </Button>

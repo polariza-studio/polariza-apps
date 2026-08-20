@@ -127,7 +127,11 @@ export function CreateWorkoutPage() {
                 />
               </span>
               Todavía no has añadido ningún ejercicio
-              <Button variant="ghost" onClick={openNewExerciseModal}>
+              {/* Primary only here — it's the screen's one action while
+                  empty. Once an exercise exists, adding another is no
+                  longer the primary action, so the equivalent button
+                  below (once the list isn't empty) stays ghost. */}
+              <Button variant="primary" onClick={openNewExerciseModal}>
                 <Plus data-icon="inline-start" />
                 Añadir ejercicios
               </Button>
