@@ -185,14 +185,25 @@ export function ReorderableExerciseList({
               else cardRefs.current.delete(exercise.id);
             }}
             style={{ gridRow: index + 1, gridColumn: 2 }}
-            className={`flex items-center gap-space-1 rounded-lg py-space-5 px-space-6 outline outline-1 outline-border-subtle select-none ${isDragged ? 'bg-[#F4F5F4]' : ''}`}
+            // Hover/pressed/focus (Button v1 ghost ladder, Foundations
+            // v1) live on the ROW, not the select button, and react to
+            // the select button via has-[>button:first-child:*] — so the
+            // tint covers the row's full surface, drag handle included,
+            // even though only the select button (first child) can
+            // trigger it. The grip (second child) is deliberately
+            // excluded from the selector: it's a separate control with
+            // its own gesture priority, and must never have its hover/
+            // press state read as "tint the row" or have anything
+            // layered over it that could intercept its pointer events —
+            // this is a pure CSS reaction on the row itself, not an
+            // overlay, so the grip's own listeners/hit-area are
+            // untouched.
+            className={`flex items-center gap-space-1 rounded-lg py-space-5 px-space-6 outline outline-1 outline-border-subtle select-none transition-colors has-[>button:first-child:hover]:bg-interactive-subtle has-[>button:first-child:active]:bg-border-subtle has-[>button:first-child:focus-visible]:ring-2 has-[>button:first-child:focus-visible]:ring-foreground has-[>button:first-child:focus-visible]:ring-offset-2 ${isDragged ? 'bg-[#F4F5F4]' : ''}`}
           >
-            {/* Hover/pressed/focus: same Button v1 ghost ladder as the
-                workout/activity cards (Foundations v1, index.css). */}
             <button
               type="button"
               onClick={() => onSelect(exercise)}
-              className={`flex flex-1 flex-col items-start gap-space-3 rounded-lg text-left outline-none transition-colors hover:bg-interactive-subtle active:bg-border-subtle focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 ${isDragged ? 'opacity-0' : ''}`}
+              className={`flex flex-1 flex-col items-start gap-space-3 text-left outline-none ${isDragged ? 'opacity-0' : ''}`}
             >
               <span className="text-heading leading-heading font-light text-foreground">{exercise.name}</span>
               <span className="text-caption leading-caption text-foreground-secondary">{exerciseSummary(exercise)}</span>
