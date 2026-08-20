@@ -94,7 +94,7 @@ export function WorkoutActivePage() {
                           updateSet(workout.currentExerciseIndex, setIndex, { reps, completed: reps !== undefined });
                         }}
                         placeholder={exercise.targetReps}
-                        className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent outline-none"
+                        className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent outline-none"
                       />
                     </div>
                     <div className="bg-border-subtle w-px self-stretch" />
@@ -112,7 +112,7 @@ export function WorkoutActivePage() {
                           updateSet(workout.currentExerciseIndex, setIndex, { weight });
                         }}
                         placeholder="—"
-                        className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent outline-none"
+                        className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent outline-none"
                       />
                     </div>
                   </div>

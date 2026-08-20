@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, SportShoe } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import type { Activity } from '@/domain/activity';
@@ -107,39 +107,51 @@ export function HomePage() {
 
       <div className="flex flex-1 flex-col px-space-7 py-[32px]">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
-          <span className="text-heading leading-heading font-light text-foreground-secondary">Tus workouts</span>
+          <span className="text-body leading-body text-foreground-secondary">Tus workouts</span>
 
           {workouts.length === 0 ? (
-            <div className="border-border-subtle text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-3 rounded-lg border border-dashed px-space-6 py-[32px] text-center">
+            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
+              <span className="bg-interactive-subtle flex size-12 shrink-0 items-center justify-center rounded-full">
+                <SportShoe
+                  className="size-5 [stroke-width:1.5]"
+                  style={{ color: 'color-mix(in srgb, var(--moss) 50%, transparent)' }}
+                />
+              </span>
               Todavía no has creado ningún workout
+              <Button variant="ghost" onClick={() => navigate('/workouts/new')}>
+                <Plus data-icon="inline-start" />
+                Crear workout
+              </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-space-5">
-              {workouts.map((workout) => (
-                <SwipeableWorkoutRow
-                  key={workout.id}
-                  workout={workout}
-                  isOpen={openWorkoutId === workout.id}
-                  onOpenChange={(willOpen) => setOpenWorkoutId(willOpen ? workout.id : null)}
-                  onStart={(started) => navigate(`/workouts/${started.id}/active`)}
-                  onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
-                  onDelete={(workout) => void handleDelete(workout)}
-                />
-              ))}
-            </div>
-          )}
+            <>
+              <div className="flex flex-col gap-space-5">
+                {workouts.map((workout) => (
+                  <SwipeableWorkoutRow
+                    key={workout.id}
+                    workout={workout}
+                    isOpen={openWorkoutId === workout.id}
+                    onOpenChange={(willOpen) => setOpenWorkoutId(willOpen ? workout.id : null)}
+                    onStart={(started) => navigate(`/workouts/${started.id}/active`)}
+                    onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
+                    onDelete={(workout) => void handleDelete(workout)}
+                  />
+                ))}
+              </div>
 
-          <Button variant="ghost" className="w-full" onClick={() => navigate('/workouts/new')}>
-            <Plus data-icon="inline-start" />
-            {workouts.length === 0 ? 'Crear workout' : 'Nuevo workout'}
-          </Button>
+              <Button variant="ghost" className="w-full" onClick={() => navigate('/workouts/new')}>
+                <Plus data-icon="inline-start" />
+                Nuevo workout
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       {recentActivities.length > 0 && (
         <div className="flex flex-col px-space-7 py-[32px]">
           <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-8">
-            <span className="text-heading leading-heading font-light text-foreground-secondary">Tu actividad</span>
+            <span className="text-body leading-body text-foreground-secondary">Tu actividad</span>
 
             <div className="flex flex-col gap-space-5">
               {recentActivities.map((activity) => {

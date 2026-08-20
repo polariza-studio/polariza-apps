@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, X } from 'lucide-react';
+import { GalleryVerticalEnd, Plus, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -109,27 +109,38 @@ export function CreateWorkoutPage() {
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Nombre del workout"
-            className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent font-light outline-none"
+            className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
           />
         </div>
       </div>
 
       <div className="flex-1 px-space-7 pt-space-7 pb-[40px]">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">
-          <span className="text-heading leading-heading font-light text-foreground-secondary">Ejercicios</span>
+          <span className="text-body leading-body text-foreground-secondary">Ejercicios</span>
 
           {exercises.length === 0 ? (
-            <div className="border-border-subtle text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-3 rounded-lg border border-dashed px-space-6 py-[32px] text-center">
+            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
+              <span className="bg-interactive-subtle flex size-12 shrink-0 items-center justify-center rounded-full">
+                <GalleryVerticalEnd
+                  className="size-5 [stroke-width:1.5]"
+                  style={{ color: 'color-mix(in srgb, var(--moss) 50%, transparent)' }}
+                />
+              </span>
               Todavía no has añadido ningún ejercicio
+              <Button variant="ghost" onClick={openNewExerciseModal}>
+                <Plus data-icon="inline-start" />
+                Añadir ejercicios
+              </Button>
             </div>
           ) : (
-            <ReorderableExerciseList exercises={exercises} onReorder={setExercises} onSelect={openEditExerciseModal} />
+            <>
+              <ReorderableExerciseList exercises={exercises} onReorder={setExercises} onSelect={openEditExerciseModal} />
+              <Button variant="ghost" className="w-full" onClick={openNewExerciseModal}>
+                <Plus data-icon="inline-start" />
+                Añadir ejercicios
+              </Button>
+            </>
           )}
-
-          <Button variant="ghost" className="w-full" onClick={openNewExerciseModal}>
-            <Plus data-icon="inline-start" />
-            Añadir ejercicios
-          </Button>
         </div>
       </div>
 

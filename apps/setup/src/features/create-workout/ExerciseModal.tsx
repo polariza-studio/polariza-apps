@@ -100,7 +100,7 @@ export function ExerciseModal({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Nombre del ejercicio"
-              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent font-light outline-none"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
             <datalist id="exercise-name-suggestions">
               {knownNames.map((knownName) => (
@@ -121,7 +121,7 @@ export function ExerciseModal({
               value={sets}
               onChange={(event) => setSets(event.target.value)}
               placeholder="3"
-              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent font-light outline-none"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
           </div>
 
@@ -134,7 +134,7 @@ export function ExerciseModal({
               value={targetReps}
               onChange={(event) => setTargetReps(event.target.value)}
               placeholder="8-10"
-              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent font-light outline-none"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
           </div>
 
@@ -150,7 +150,7 @@ export function ExerciseModal({
               value={restSeconds}
               onChange={(event) => setRestSeconds(event.target.value)}
               placeholder="60"
-              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/40 w-full border-none bg-transparent font-light outline-none"
+              className="text-display-md leading-display-md text-foreground placeholder:text-foreground/30 w-full border-none bg-transparent font-light outline-none"
             />
           </div>
 
