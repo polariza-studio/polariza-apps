@@ -18,7 +18,15 @@ import { ActivityDetailPage } from '@/features/history/ActivityDetailPage'
 // `mx-auto max-w-[440px]`.
 function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    // useTransitions={false}: by default BrowserRouter wraps every
+    // navigation's location update in React.startTransition, which defers
+    // the new page's render/commit out of the click handler's synchronous
+    // call stack. That's exactly the gap mobile browsers (iOS Safari in
+    // particular) use to decide a .focus() call is no longer part of the
+    // original tap — breaking the workout-name-input autofocus on
+    // /workouts/new. Forcing synchronous navigation keeps the whole click
+    // -> route change -> autofocus chain in one gesture.
+    <BrowserRouter basename={import.meta.env.BASE_URL} useTransitions={false}>
       {/* No installed-app-specific frame here on purpose: the installed
           PWA must render identically to the mobile browser tab (same
           layout, spacing, sticky behavior, scrolling). An earlier
