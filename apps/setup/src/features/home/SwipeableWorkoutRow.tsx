@@ -281,7 +281,7 @@ export function SwipeableWorkoutRow({
         type="button"
         onClick={handleClick}
         onPointerDown={handlePointerDown}
-        aria-label={`Empezar ${workout.name}`}
+        aria-label={`Abrir ${workout.name}`}
         aria-disabled={isOpen}
         className={`border-border-subtle relative flex w-full items-center gap-space-1 rounded-lg border px-space-6 py-space-5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 ${isOpen ? 'bg-interactive-subtle' : 'bg-background hover:bg-[color-mix(in_srgb,var(--moss)_4%,var(--background))] active:bg-[color-mix(in_srgb,var(--moss)_10%,var(--background))]'}`}
         style={{

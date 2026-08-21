@@ -25,7 +25,9 @@ const meta = {
       description: {
         component: `
 **Purpose** — the workout card on Home's "Tus workouts" list. Tapping it
-starts the workout; swiping it left reveals Editar/Eliminar.
+opens WorkoutPreviewPage (\`onStart\`, despite the name — it fires on tap,
+Home decides where that navigates); swiping it left reveals
+Editar/Eliminar.
 
 **Anatomy** — a bordered card (name + exercise count + a decorative play
 badge) with two circular action buttons (Editar, Eliminar) absolutely
@@ -111,7 +113,7 @@ function Demo({ workout: demoWorkout, initialOpen = false }: { workout: Workout;
 }
 
 // Try it: swipe (or drag) left to reveal Editar/Eliminar, tap the card to
-// start, tap outside or swipe right to close.
+// open it (onStart), tap outside or swipe right to close.
 export const Interactive: Story = {
   args: { workout, isOpen: false, onOpenChange: () => {}, onStart: () => {}, onEdit: () => {}, onDelete: () => {} },
   render: () => <Demo workout={workout} />,

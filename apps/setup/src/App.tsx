@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { HomePage } from '@/features/home/HomePage'
 import { CreateWorkoutPage } from '@/features/create-workout/CreateWorkoutPage'
+import { WorkoutPreviewPage } from '@/features/workout/WorkoutPreviewPage'
 import { WorkoutActivePage } from '@/features/workout/WorkoutActivePage'
 import { WorkoutCompletePage } from '@/features/workout/WorkoutCompletePage'
 import { HistoryPage } from '@/features/history/HistoryPage'
@@ -40,6 +41,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/workouts/new" element={<CreateWorkoutPage />} />
         <Route path="/workouts/:workoutId/edit" element={<CreateWorkoutPage />} />
+        <Route path="/workouts/:workoutId/preview" element={<WorkoutPreviewPage />} />
         <Route path="/workouts/:workoutId/active" element={<WorkoutActivePage />} />
         <Route path="/workouts/:workoutId/complete" element={<WorkoutCompletePage />} />
         <Route path="/history" element={<HistoryPage />} />

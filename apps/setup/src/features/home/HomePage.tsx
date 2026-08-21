@@ -97,7 +97,7 @@ export function HomePage() {
                     workout={workout}
                     isOpen={openWorkoutId === workout.id}
                     onOpenChange={(willOpen) => setOpenWorkoutId(willOpen ? workout.id : null)}
-                    onStart={(started) => navigate(`/workouts/${started.id}/active`)}
+                    onStart={(started) => navigate(`/workouts/${started.id}/preview`)}
                     onEdit={(workout) => navigate(`/workouts/${workout.id}/edit`)}
                     onDelete={(workout) => void handleDelete(workout)}
                   />

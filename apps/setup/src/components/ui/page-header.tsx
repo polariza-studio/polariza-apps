@@ -5,14 +5,23 @@ import { IconButton } from "@/components/ui/icon-button"
 import { cn } from "@/lib/utils"
 
 // PageHeader v1 — the row of back/title/close controls at the top of a
-// screen or a modal, covering the 4 real compositions in the product: back
+// screen or a modal, covering the 5 real compositions in the product: back
 // only (HistoryPage), back + title (ActivityDetailPage), title + close
-// (CreateWorkoutPage, and ExerciseModal's own sheet header), and title only
-// with neither action (HomePage's "SetUp / Workouts" band) — the absence of
-// back/close doesn't make Home's header a different component, it's the
-// same PageHeader with both action slots empty. No usage combines back and
+// (CreateWorkoutPage, and ExerciseModal's own sheet header), title only
+// with neither action (HomePage's "SetUp / Workouts" band), and close only
+// with neither back nor title (WorkoutPreviewPage) — the absence of
+// back/title doesn't make Preview's header a different component, it's the
+// same PageHeader with the other slots empty. No usage combines back and
 // close in the same header — both are supported independently, but that
 // combination doesn't exist today and isn't implied to be coming.
+//
+// Close-only is the one composition that isn't `justify-between`: verified
+// against Paper's "preview-workout" artboard, that header uses
+// `justify-content: end` — a lone leading action (back-only) still sits at
+// the row's start under `justify-between` (nothing pushes it elsewhere),
+// but a lone trailing action has nothing to push it right without an
+// explicit `justify-end`, so this is the one case where the two aren't
+// interchangeable.
 //
 // One fixed spec across all compositions, verified against Paper (the
 // "historial", "historial-workout-detail", "crear-workout", "modal" and
@@ -57,44 +66,62 @@ import { cn } from "@/lib/utils"
 // dialog's own accessibility wiring) instead of a plain `<span>` — the
 // visual/typography output is identical either way. It has no effect on
 // the split (no-action) rendering, which never needs it.
+//
+// `inverse` swaps every color token used here (icon color, title colors)
+// from the light-surface set to the inverse one — verified against
+// Paper's "preview-workout" artboard, whose header sits on the same
+// background-inverse surface as WorkoutCompletePage. Mirrors how
+// IconButton itself already renders correctly in both contexts via
+// `currentColor`; PageHeader just needs to be told which token to hand it,
+// since its icon buttons don't inherit an ambient text color here.
 function PageHeader({
   onBack,
   title,
   titleAs: TitleComponent = "span",
   onClose,
+  inverse = false,
   className,
 }: {
   onBack?: () => void
   title?: { emphasis: string; secondary?: string }
   titleAs?: React.ElementType
   onClose?: () => void
+  inverse?: boolean
   className?: string
 }) {
   const hasAction = Boolean(onBack) || Boolean(onClose)
+  const soloClose = Boolean(onClose) && !onBack && !title
+  const iconColor = inverse ? "text-foreground-inverse" : "text-foreground"
+  const emphasisColor = inverse ? "text-foreground-inverse" : "text-foreground"
+  const secondaryColor = inverse ? "text-foreground-inverse-secondary" : "text-foreground-secondary"
 
   return (
-    <div className={cn("mx-auto flex h-16 w-full max-w-[480px] shrink-0 items-center justify-between p-space-7", className)}>
+    <div
+      className={cn(
+        "mx-auto flex h-16 w-full max-w-[480px] shrink-0 items-center p-space-7",
+        soloClose ? "justify-end" : "justify-between",
+        className,
+      )}
+    >
       {onBack && (
-        <IconButton aria-label="Volver" className="text-foreground" onClick={onBack}>
+        <IconButton aria-label="Volver" className={iconColor} onClick={onBack}>
           <ArrowLeft />
         </IconButton>
       )}
       {title &&
         (hasAction ? (
           <TitleComponent className="text-body leading-body">
-            <span className="text-foreground">{title.emphasis}</span>
-            {title.secondary && <span className="text-foreground-secondary"> · {title.secondary}</span>}
+            <span className={emphasisColor}>{title.emphasis}</span>
+            {title.secondary && <span className={secondaryColor}> · {title.secondary}</span>}
           </TitleComponent>
         ) : (
           <>
-            <span className="text-body-emphasis leading-body-emphasis text-foreground">{title.emphasis}</span>
-            {title.secondary && (
-              <span className="text-body leading-body text-foreground-secondary">{title.secondary}</span>
-            )}
+            <span className={cn("text-body-emphasis leading-body-emphasis", emphasisColor)}>{title.emphasis}</span>
+            {title.secondary && <span className={cn("text-body leading-body", secondaryColor)}>{title.secondary}</span>}
           </>
         ))}
       {onClose && (
-        <IconButton aria-label="Cerrar" className="text-foreground" onClick={onClose}>
+        <IconButton aria-label="Cerrar" className={iconColor} onClick={onClose}>
           <X />
         </IconButton>
       )}

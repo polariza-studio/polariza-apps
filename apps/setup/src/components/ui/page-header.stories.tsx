@@ -12,18 +12,18 @@ const meta = {
       description: {
         component: `
 **Purpose** — the back/title/close row at the top of a screen or a modal
-sheet. Covers the 4 real compositions in the product: back only
+sheet. Covers the 5 real compositions in the product: back only
 (HistoryPage), back + title (ActivityDetailPage), title + close
-(CreateWorkoutPage, and ExerciseModal's sheet header), and title with
-neither action (HomePage's "SetUp / Workouts" band). Home's header isn't a
-different component — it's the same PageHeader with both action slots
-empty.
+(CreateWorkoutPage, and ExerciseModal's sheet header), title with neither
+action (HomePage's "SetUp / Workouts" band), and close with neither back
+nor title (WorkoutPreviewPage). None of these is a different component —
+they're all the same PageHeader with different slots filled.
 
 **Anatomy** — up to 3 slots in one fixed-height row: an optional back
 IconButton (ArrowLeft), an optional title, an optional close IconButton
 (X). No usage combines back with close today.
 
-**Variants** — the 4 compositions above, chosen by which props are passed
+**Variants** — the 5 compositions above, chosen by which props are passed
 (\`onBack\`, \`title\`, \`onClose\`) — not separate named variants.
 
 **States** — none of its own; back/close are plain IconButtons and inherit
@@ -31,11 +31,20 @@ IconButton's own hover/pressed/focus states (see UI/IconButton).
 
 **Tokens/specs** — \`h-16\` (64px — Tailwind's own scale, no space-* token
 covers 64px, same direct-exception precedent as Button's \`h-12\`),
-\`p-space-7\` (20px, all sides), \`flex items-center justify-between\`,
-\`mx-auto w-full max-w-[480px]\`. Verified pixel-for-pixel against Paper's
-"historial", "historial-workout-detail", "crear-workout", "modal" and
-"home" artboards — all five share the same 64px/20px box. Back/close icon
-color: \`text-foreground\` on both.
+\`p-space-7\` (20px, all sides), \`flex items-center\`, \`mx-auto w-full
+max-w-[480px]\`. Verified pixel-for-pixel against Paper's "historial",
+"historial-workout-detail", "crear-workout", "modal", "home" and
+"preview-workout" artboards — all six share the same 64px/20px box.
+Back/close icon color: \`text-foreground\` (or \`text-foreground-inverse\`
+with \`inverse\` — see Content below).
+
+**Alignment isn't always \`justify-between\`.** Every composition except
+one uses it — a lone back button still lands at the row's start with
+nothing to push it elsewhere. Close-only (WorkoutPreviewPage) is the
+exception: verified against Paper, that header is \`justify-content: end\`
+— a lone *trailing* action has nothing pushing it right without saying so
+explicitly, so PageHeader switches to \`justify-end\` specifically when
+\`onClose\` is the only prop passed.
 
 **Why \`max-w-[480px]\`, not \`440px\`.** Every other section on these
 screens reaches the shared 440px content column by putting its padding
@@ -86,7 +95,13 @@ about Dialog at all.
 as a different element — used by ExerciseModal to render it as a Radix
 \`Dialog.Title\` (required for the dialog's own accessibility wiring) instead
 of a plain \`<span>\`. It has no effect on the split (no-action) rendering,
-which never needs it.
+which never needs it. \`inverse\` swaps every color token here (icon,
+title) to its inverse-surface counterpart — used by WorkoutPreviewPage,
+which sits on the same \`background-inverse\` surface as
+WorkoutCompletePage. Mirrors IconButton's own light/inverse handling: the
+icon itself always renders correctly via \`currentColor\`, \`inverse\` just
+tells PageHeader which token to hand it, since its icon buttons don't sit
+under an ambient text color here the way IconButton usually does.
 
 **Responsive** — the one component in this system that self-caps its own
 width rather than deferring to a caller-provided content column (see "Why
@@ -133,6 +148,23 @@ export const TitleOnly: Story = {
   },
 };
 
+// No back, no title — the lone close button sits at the row's *end*
+// (justify-end), not its start — and `inverse` swaps its color for the
+// dark surface. WorkoutPreviewPage's actual header, verified against
+// Paper's "preview-workout" artboard (both traits always co-occur there:
+// close-only headers in this product are always on an inverse surface).
+export const CloseOnlyInverse: Story = {
+  args: {
+    onClose: () => {},
+    inverse: true,
+  },
+  render: (args) => (
+    <div className="bg-background-inverse rounded-lg p-2">
+      <PageHeader {...args} />
+    </div>
+  ),
+};
+
 // No wrapper div — PageHeader caps and centers itself. Deliberately placed
 // in a container wider than 480px (unlike a real page's own content flow)
 // to demonstrate that self-capping: every row below lands on the same
@@ -156,6 +188,9 @@ export const AllCompositions: Story = {
         title={{ emphasis: 'SetUp', secondary: 'Workouts' }}
         className="rounded-lg outline outline-1 outline-border-subtle"
       />
+      <div className="bg-background-inverse rounded-lg p-2">
+        <PageHeader onClose={() => {}} inverse />
+      </div>
     </div>
   ),
 };

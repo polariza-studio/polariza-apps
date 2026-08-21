@@ -21,12 +21,24 @@ import { cn } from "@/lib/utils"
 // here — WorkoutActivePage gates it on `ready && Boolean(workout)`, not
 // bare `ready`, so BottomActions takes the caller's own boolean rather
 // than assuming what "ready" means for that screen.
+//
+// `inverse` swaps the surface to background-inverse and the shadow's
+// color — verified against Paper's "preview-workout" artboard (the one
+// dark-surface screen with a sticky action bar): a moss-tinted shadow
+// reads as basically invisible against an already-dark-moss page, so the
+// inverse case uses black instead. Same offset/blur as the light case
+// (`0 -2px 35px`) — only the tint differs: `rgba(41,64,0,0.1)` (moss) vs.
+// `rgba(0,0,0,0.2)` (black). Neither shadow has a Foundations token yet;
+// both are inline exactly as the light one was before this variant.
+// Padding/spacing is identical between the two — only color changes.
 function BottomActions({
   ready,
+  inverse = false,
   className,
   children,
 }: {
   ready: boolean
+  inverse?: boolean
   className?: string
   children: React.ReactNode
 }) {
@@ -35,8 +47,10 @@ function BottomActions({
   return (
     <div
       className={cn(
-        "bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8",
-        showShadow && "shadow-[0_-2px_35px_rgba(41,64,0,0.1)]",
+        "sticky bottom-0 w-full px-space-7 pt-space-7 pb-8",
+        inverse ? "bg-background-inverse" : "bg-background",
+        showShadow &&
+          (inverse ? "shadow-[0_-2px_35px_rgba(0,0,0,0.2)]" : "shadow-[0_-2px_35px_rgba(41,64,0,0.1)]"),
       )}
     >
       <div className={cn("mx-auto flex w-full max-w-[440px] items-center gap-space-6", className)}>{children}</div>
