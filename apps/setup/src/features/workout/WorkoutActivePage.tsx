@@ -5,8 +5,9 @@ import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
 import { BottomActions } from '@/components/ui/bottom-actions';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { TextField } from '@/components/ui/text-field';
 import { formatElapsed, lastWeightForExercise } from './active-workout';
+import { ExerciseSetRow } from './ExerciseSetRow';
+import { SegmentedProgress } from './SegmentedProgress';
 import { useActiveWorkout } from './use-active-workout';
 import { storageRepository } from '@/services/storage';
 import type { Activity } from '@/domain/activity';
@@ -54,14 +55,7 @@ export function WorkoutActivePage() {
               {paused ? <Play fill="currentColor" stroke="none" /> : <Pause fill="currentColor" stroke="none" />}
             </IconButton>
           </div>
-          <div className="flex items-center gap-space-1">
-            {workout.exercises.map((_, index) => (
-              <div
-                key={index}
-                className={`h-1 flex-1 rounded-full ${index <= workout.currentExerciseIndex ? 'bg-state-active' : 'bg-state-inactive'}`}
-              />
-            ))}
-          </div>
+          <SegmentedProgress total={workout.exercises.length} current={workout.currentExerciseIndex} />
         </div>
       </div>
 
@@ -77,43 +71,27 @@ export function WorkoutActivePage() {
           <div className="flex flex-col gap-space-5">
             {exercise.sets.map((set, setIndex) => (
               <div key={setIndex} className="flex flex-col gap-space-5">
-                <div className="flex items-start justify-center gap-space-5">
-                  <div className="bg-interactive-subtle flex w-12 shrink-0 items-center justify-center rounded-lg p-space-2">
-                    <span className="text-label leading-label text-foreground-secondary text-center">Set {setIndex + 1}</span>
-                  </div>
-                  <div className="border-border-subtle flex flex-1 items-center gap-space-5 rounded-lg border p-space-5">
-                    <div className="flex flex-1 flex-col items-start gap-space-1">
-                      <span className="text-caption leading-caption text-foreground-secondary">Reps</span>
-                      <TextField
-                        type="number"
-                        inputMode="numeric"
-                        value={set.reps ?? ''}
-                        onChange={(event) => {
-                          const reps = event.target.value === '' ? undefined : Number(event.target.value);
-                          updateSet(workout.currentExerciseIndex, setIndex, { reps, completed: reps !== undefined });
-                        }}
-                        placeholder={exercise.targetReps}
-                      />
-                    </div>
-                    <div className="bg-border-subtle w-px self-stretch" />
-                    <div className="flex flex-1 flex-col items-start gap-space-1">
-                      <span className="text-caption leading-caption text-foreground-secondary">Peso (kg)</span>
-                      <TextField
-                        type="text"
-                        inputMode="decimal"
-                        value={weightDrafts[setIndex] ?? (set.weight ?? '')}
-                        onChange={(event) => {
-                          const raw = event.target.value.replace(',', '.');
-                          if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
-                          setWeightDrafts((prev) => ({ ...prev, [setIndex]: raw }));
-                          const weight = raw === '' ? undefined : Number(raw);
-                          updateSet(workout.currentExerciseIndex, setIndex, { weight });
-                        }}
-                        placeholder="—"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <ExerciseSetRow
+                  setNumber={setIndex + 1}
+                  reps={{
+                    value: set.reps ?? '',
+                    onChange: (event) => {
+                      const reps = event.target.value === '' ? undefined : Number(event.target.value);
+                      updateSet(workout.currentExerciseIndex, setIndex, { reps, completed: reps !== undefined });
+                    },
+                    placeholder: exercise.targetReps,
+                  }}
+                  weight={{
+                    value: weightDrafts[setIndex] ?? (set.weight ?? ''),
+                    onChange: (event) => {
+                      const raw = event.target.value.replace(',', '.');
+                      if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                      setWeightDrafts((prev) => ({ ...prev, [setIndex]: raw }));
+                      const weight = raw === '' ? undefined : Number(raw);
+                      updateSet(workout.currentExerciseIndex, setIndex, { weight });
+                    },
+                  }}
+                />
                 {setIndex < exercise.sets.length - 1 && (
                   <span className="pl-[68px] text-caption leading-caption text-foreground-secondary">
                     Descanso: {exercise.restSeconds} s

@@ -89,12 +89,20 @@ export function SwipeableWorkoutRow({
   const justResolvedByPointer = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // A sibling row claimed exclusivity (or the parent closed us some other
-  // way) — animate shut. Skipped when we're the one still mid-drag:
-  // onWindowMove already owns `offset` live in that case, and stomping it
-  // here would fight the drag.
+  // Keeps the visual slide in sync with the controlled `isOpen` prop for
+  // any change that wasn't this row's own gesture — a sibling claiming
+  // exclusivity, the parent closing it some other way, or mounting
+  // already open (isOpen=true from the start). Without the true branch,
+  // `offset` never leaves its initial 0 unless a gesture sets it, so a
+  // row externally opened (isOpen=true with no preceding drag on this
+  // row) would show the open background tint without actually sliding —
+  // this makes the component fully honor its own controlled-prop
+  // contract in both directions, not just closing. Skipped when we're the
+  // one still mid-drag: onWindowMove already owns `offset` live in that
+  // case, and stomping it here would fight the drag.
   useEffect(() => {
-    if (!isOpen && !gesture.current) setOffset(0);
+    if (gesture.current) return;
+    setOffset(isOpen ? -OPEN_OFFSET : 0);
   }, [isOpen]);
 
   // Tap/click anywhere outside this row while it's open closes it — not

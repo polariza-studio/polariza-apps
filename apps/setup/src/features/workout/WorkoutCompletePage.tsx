@@ -4,13 +4,6 @@ import { Button } from '@/components/ui/button';
 import { formatElapsed } from './active-workout';
 import { useActiveWorkout } from './use-active-workout';
 
-// Dark-gradient surface — Paper's "workout-page-ending" artboard —
-// foreground-inverse tokens, ghost-inverse for the lower-emphasis action.
-// Light-to-dark (not dark-to-light) and front-loaded into the top quarter
-// (26.17%), matching Paper's stops exactly rather than spreading the
-// transition across the full height.
-const GRADIENT = 'linear-gradient(in oklab 180deg, oklab(42.4% -0.056 0.070) 0%, oklab(33.9% -0.056 0.070) 26.17%)';
-
 export function WorkoutCompletePage() {
   const { workoutId = '' } = useParams<{ workoutId: string }>();
   const { ready, workout, elapsedSeconds, saveActivity, discardActivity } = useActiveWorkout(workoutId);
@@ -18,7 +11,17 @@ export function WorkoutCompletePage() {
   if (!ready || !workout) return null;
 
   return (
-    <div className="flex min-h-svh flex-col items-center" style={{ backgroundImage: GRADIENT }}>
+    // Solid moss surface — verified against Paper's "workout-page-ending"
+    // artboard (its own fill is flat #294000/--moss, no gradient stops at
+    // all). A previous version here used a hand-authored CSS gradient
+    // claiming to match Paper's stops; re-checked directly against the
+    // current design, which has none — corrected rather than carried
+    // forward. bg-background-inverse (--background-inverse: var(--moss))
+    // is the semantic token for this exact color, same as the rest of the
+    // system — not a raw var() reference. foreground-inverse tokens,
+    // ghost-inverse for the lower-emphasis action, both still correct
+    // against Paper regardless of the fill.
+    <div className="bg-background-inverse flex min-h-svh flex-col items-center">
       {/* Empty top-section spacer — Paper hides the back button on this
           screen (no way back once the workout is finished), but keeps the
           64px reserved header space. */}
