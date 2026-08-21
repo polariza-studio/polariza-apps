@@ -9,6 +9,55 @@ const meta = {
   tags: ['autodocs'],
   parameters: {
     layout: 'centered',
+    docs: {
+      description: {
+        component: `
+**Purpose** — the primary call-to-action control across SetUp: starting/
+finishing a workout, saving, adjusting a plan, discarding an activity.
+
+**Anatomy** — a single pill (\`rounded-full\`, fixed \`h-12\`) with centered
+label text and an optional icon, positioned via a \`data-icon="inline-start"
+|"inline-end"\` attribute on the icon child (not a prop) so padding can
+react to its presence (\`has-data-[icon=inline-start]:pl-space-6\`, etc.).
+
+**Variants** — \`primary\` (main CTA), \`ghost\` (secondary/lower-emphasis
+action), \`secondary\` (an important but lower-emphasis-than-primary action —
+its own moss fill/white text, e.g. Finish — not a dark-surface variant
+despite the name), \`ghost-inverse\` (the only variant that actually lives on
+a dark/inverse surface, e.g. Discard Activity).
+
+**States** — Default, Hover, Pressed, Focus, Disabled, per variant (see
+Interaction States below). Text/icon color (\`currentColor\`) never changes
+across Default/Hover/Pressed — only background does, so contrast never
+degrades on interaction. Disabled never dims the whole button (no opacity):
+\`primary\`/\`secondary\` flatten to \`ghost\`'s resting visual weight,
+\`ghost-inverse\` flattens its text to \`foreground-inverse-secondary\`.
+
+**Tokens/specs** — \`h-12\` (Tailwind's own scale — no \`space-*\` token covers
+48px, approved as a direct exception), \`gap-space-5\`, \`py-space-2
+px-space-7\` (\`px-space-6\` on whichever side has an icon), \`rounded-full\`,
+\`text-action\`/\`leading-action\`. Icons: \`size-5\`, \`[stroke-width:1.5]\`
+(Lucide's own default of 2 is wrong per the Button audit). \`shadow-button\`
+applies only to \`secondary\` (its sole Paper example). Focus ring color is
+per-variant: \`foreground\` (moss) for \`primary\`/\`ghost\`/\`secondary\` (all
+render on the light page), \`foreground-inverse\` (white) for
+\`ghost-inverse\` (the one variant on a dark surface) — not a fixed color.
+
+**Content** — label text only, no built-in truncation (\`whitespace-nowrap\`):
+a long label widens the button rather than wrapping or truncating, so
+callers are responsible for keeping labels short. Icon is fully optional,
+leading or trailing.
+
+**Interaction** — the whole pill is the click target; no sub-controls.
+Hover/Pressed/Focus states are real CSS (\`hover:\`/\`active:\`/
+\`focus-visible:\`), not JS-driven.
+
+**Responsive** — no width of its own (\`shrink-0\`, content-sized) unless the
+caller adds \`className="w-full"\` (e.g. CreateWorkoutPage's "Guardar
+Workout") — sizing is always the caller's decision, not a Button variant.
+        `,
+      },
+    },
   },
   argTypes: {
     variant: {

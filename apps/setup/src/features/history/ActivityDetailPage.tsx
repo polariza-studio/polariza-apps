@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 
-import { IconButton } from '@/components/ui/icon-button';
+import { PageHeader } from '@/components/ui/page-header';
 import type { Activity } from '@/domain/activity';
 import { storageRepository } from '@/services/storage';
 import { formatElapsed } from '@/features/workout/active-workout';
@@ -40,16 +39,8 @@ export function ActivityDetailPage() {
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
-      <div className="w-full px-space-7 pt-space-7">
-        <div className="mx-auto flex w-full max-w-[440px] items-center justify-between">
-          <IconButton aria-label="Volver" onClick={() => navigate('/history')} className="text-foreground">
-            <ArrowLeft />
-          </IconButton>
-          <span className="text-body leading-body">
-            <span className="text-foreground">Workout</span>
-            <span className="text-foreground-secondary"> · Detalles</span>
-          </span>
-        </div>
+      <div className="mx-auto flex w-full max-w-[440px]">
+        <PageHeader onBack={() => navigate('/history')} title={{ emphasis: 'Workout', secondary: 'Detalles' }} />
       </div>
 
       <div className="w-full px-space-7 pt-space-9 pb-space-5">

@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Activity, ActivityExercise } from '@/domain/activity';
 import type { ActiveSet, ActiveWorkout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
-import { createActiveWorkout } from './active-workout';
+import { computeElapsedSeconds, createActiveWorkout } from './active-workout';
 
 export function useActiveWorkout(workoutId: string) {
   const navigate = useNavigate();
@@ -56,22 +56,72 @@ export function useActiveWorkout(workoutId: string) {
     });
   }, []);
 
-  // Elapsed-time ticking. Depends only on the paused flag (not on
-  // `workout` itself), so a tick's own state update doesn't restart the
-  // interval every second.
+  // Elapsed time is always recomputed from `startedAt`/`pausedAt`/`pausedMs`
+  // (see computeElapsedSeconds) — this tick only forces a re-render so the
+  // on-screen counter keeps moving while the tab is active. It never
+  // accumulates time itself, so it can't drift or stall when the interval
+  // is throttled or paused by a backgrounded/locked device.
+  const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
     if (!ready || workout?.pausedAt) return;
-    const interval = setInterval(() => {
-      updateWorkout((current) => ({ ...current, elapsedSeconds: current.elapsedSeconds + 1 }));
-    }, 1000);
+    const interval = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, workout?.pausedAt, updateWorkout]);
+  }, [ready, workout?.pausedAt]);
+
+  // The visual tick above can be throttled while backgrounded, so on
+  // return-to-foreground force an immediate recompute rather than waiting
+  // for the next 1s tick.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') setNowTick(Date.now());
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  const elapsedSeconds = workout ? computeElapsedSeconds(workout, nowTick) : 0;
+
+  // Screen Wake Lock: keep the display on while a workout is active. Best
+  // effort only — unsupported browsers/devices, or a denied request, must
+  // never affect the timer or the rest of the workout flow.
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    let sentinel: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        const lock = await navigator.wakeLock.request('screen');
+        if (cancelled) {
+          void lock.release();
+          return;
+        }
+        sentinel = lock;
+      } catch {
+        // Unsupported, denied, or page not visible — fail silently.
+      }
+    };
+    void requestWakeLock();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && !sentinel) void requestWakeLock();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', handleVisibility);
+      void sentinel?.release();
+    };
+  }, [ready]);
 
   const togglePause = useCallback(() => {
-    updateWorkout((current) =>
-      current.pausedAt ? { ...current, pausedAt: undefined } : { ...current, pausedAt: new Date().toISOString() },
-    );
+    updateWorkout((current) => {
+      if (!current.pausedAt) return { ...current, pausedAt: new Date().toISOString() };
+      const pausedFor = Date.now() - new Date(current.pausedAt).getTime();
+      return { ...current, pausedAt: undefined, pausedMs: (current.pausedMs ?? 0) + pausedFor };
+    });
   }, [updateWorkout]);
 
   const updateSet = useCallback(
@@ -145,7 +195,7 @@ export function useActiveWorkout(workoutId: string) {
       workoutId: current.workoutId,
       workoutName: current.workoutName,
       date: new Date().toISOString(),
-      durationSeconds: current.elapsedSeconds,
+      durationSeconds: computeElapsedSeconds(current),
       exercises,
     };
     await storageRepository.saveActivity(activity);
@@ -164,6 +214,7 @@ export function useActiveWorkout(workoutId: string) {
   return {
     ready,
     workout,
+    elapsedSeconds,
     updateSet,
     togglePause,
     goToNext,

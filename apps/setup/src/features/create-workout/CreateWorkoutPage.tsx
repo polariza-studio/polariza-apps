@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { GalleryVerticalEnd, Plus, X } from 'lucide-react';
+import { GalleryVerticalEnd, Plus } from 'lucide-react';
 
+import { BottomActions } from '@/components/ui/bottom-actions';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
 import { TextField } from '@/components/ui/text-field';
 import type { Workout, WorkoutExercise } from '@/domain/workout';
-import { useBottomShadow } from '@/lib/use-bottom-shadow';
 import { storageRepository } from '@/services/storage';
 import { getKnownExerciseNames } from './exercise-name-suggestions';
 import { ExerciseModal } from './ExerciseModal';
@@ -31,7 +32,6 @@ export function CreateWorkoutPage() {
   const [knownNames, setKnownNames] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<WorkoutExercise | null>(null);
-  const showActionsShadow = useBottomShadow(ready);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,16 +97,11 @@ export function CreateWorkoutPage() {
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
-      <div className="w-full p-space-7">
-        <div className="mx-auto flex w-full max-w-[440px] items-center justify-between">
-          <span className="text-body leading-body">
-            <span className="text-foreground">{workoutId ? 'Editar' : 'Nuevo'}</span>
-            <span className="text-foreground-secondary"> · workout</span>
-          </span>
-          <IconButton aria-label="Cerrar" className="text-foreground" onClick={() => navigate('/home')}>
-            <X />
-          </IconButton>
-        </div>
+      <div className="mx-auto flex w-full max-w-[440px]">
+        <PageHeader
+          title={{ emphasis: workoutId ? 'Editar' : 'Nuevo', secondary: 'workout' }}
+          onClose={() => navigate('/home')}
+        />
       </div>
 
       <div className="w-full p-space-7">
@@ -125,25 +120,28 @@ export function CreateWorkoutPage() {
           <span className="text-body leading-body text-foreground-secondary">Ejercicios</span>
 
           {exercises.length === 0 ? (
-            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-1 flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
-              <span className="bg-interactive-subtle flex size-12 shrink-0 items-center justify-center rounded-full">
+            <EmptyState
+              icon={
                 <GalleryVerticalEnd
                   className="size-5 [stroke-width:1.5]"
                   style={{ color: 'color-mix(in srgb, var(--moss) 50%, transparent)' }}
                 />
-              </span>
+              }
+              // Primary only here — it's the screen's one action while
+              // empty. Once an exercise exists, adding another is no
+              // longer the primary action, so the equivalent button below
+              // (once the list isn't empty) stays ghost.
+              cta={
+                <Button variant="primary" onClick={openNewExerciseModal}>
+                  <Plus data-icon="inline-start" />
+                  Añadir ejercicios
+                </Button>
+              }
+            >
               Añade tus ejercicios para
               <br />
               crear el workout.
-              {/* Primary only here — it's the screen's one action while
-                  empty. Once an exercise exists, adding another is no
-                  longer the primary action, so the equivalent button
-                  below (once the list isn't empty) stays ghost. */}
-              <Button variant="primary" onClick={openNewExerciseModal}>
-                <Plus data-icon="inline-start" />
-                Añadir ejercicios
-              </Button>
-            </div>
+            </EmptyState>
           ) : (
             <>
               <ReorderableExerciseList exercises={exercises} onReorder={setExercises} onSelect={openEditExerciseModal} />
@@ -156,15 +154,11 @@ export function CreateWorkoutPage() {
         </div>
       </div>
 
-      <div
-        className={`bg-background sticky bottom-0 px-space-7 pt-space-7 pb-[32px] ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
-      >
-        <div className="mx-auto w-full max-w-[440px]">
-          <Button variant="primary" className="w-full" disabled={!canSave} onClick={() => void handleSave()}>
-            Guardar Workout
-          </Button>
-        </div>
-      </div>
+      <BottomActions ready={ready}>
+        <Button variant="primary" className="w-full" disabled={!canSave} onClick={() => void handleSave()}>
+          Guardar Workout
+        </Button>
+      </BottomActions>
 
       <ExerciseModal
         open={modalOpen}

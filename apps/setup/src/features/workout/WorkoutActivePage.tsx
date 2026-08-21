@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
 
+import { BottomActions } from '@/components/ui/bottom-actions';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { TextField } from '@/components/ui/text-field';
 import { formatElapsed, lastWeightForExercise } from './active-workout';
 import { useActiveWorkout } from './use-active-workout';
-import { useBottomShadow } from '@/lib/use-bottom-shadow';
 import { storageRepository } from '@/services/storage';
 import type { Activity } from '@/domain/activity';
 
 export function WorkoutActivePage() {
   const { workoutId = '' } = useParams<{ workoutId: string }>();
-  const { ready, workout, updateSet, togglePause, goToNext, goToPrevious, finishWorkout, discardActivity } =
+  const { ready, workout, elapsedSeconds, updateSet, togglePause, goToNext, goToPrevious, finishWorkout, discardActivity } =
     useActiveWorkout(workoutId);
 
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -28,8 +28,6 @@ export function WorkoutActivePage() {
   useEffect(() => {
     setWeightDrafts({});
   }, [workout?.currentExerciseIndex]);
-
-  const showActionsShadow = useBottomShadow(ready && Boolean(workout));
 
   if (!ready || !workout) return null;
 
@@ -47,7 +45,7 @@ export function WorkoutActivePage() {
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-6">
           <div className="flex items-baseline justify-between gap-space-3 pt-space-7">
             <div className="flex items-end gap-space-3">
-              <span className="text-heading leading-heading text-foreground">{formatElapsed(workout.elapsedSeconds)}</span>
+              <span className="text-heading leading-heading text-foreground">{formatElapsed(elapsedSeconds)}</span>
               <span className="text-label leading-label text-foreground-secondary">
                 {paused ? 'Tiempo · Pausado' : 'Tiempo'}
               </span>
@@ -127,39 +125,35 @@ export function WorkoutActivePage() {
         </div>
       </div>
 
-      <div
-        className={`bg-background sticky bottom-0 w-full px-space-7 pt-space-7 pb-8 ${showActionsShadow ? 'shadow-[0_-2px_35px_rgba(41,64,0,0.1)]' : ''}`}
-      >
-        <div className="mx-auto flex w-full max-w-[440px] items-center gap-space-6">
-          {paused ? (
-            <Button variant="primary" className="flex-1" onClick={togglePause}>
-              <Play data-icon="inline-start" fill="currentColor" stroke="none" />
-              Reanudar
-            </Button>
-          ) : isFirst ? (
-            <Button variant="ghost" className="flex-1" onClick={() => void discardActivity()}>
-              Salir
-            </Button>
-          ) : (
-            <Button variant="ghost" className="flex-1" onClick={goToPrevious}>
-              <SkipBack data-icon="inline-start" fill="currentColor" stroke="currentColor" />
-              Anterior
-            </Button>
-          )}
+      <BottomActions ready={ready}>
+        {paused ? (
+          <Button variant="primary" className="flex-1" onClick={togglePause}>
+            <Play data-icon="inline-start" fill="currentColor" stroke="none" />
+            Reanudar
+          </Button>
+        ) : isFirst ? (
+          <Button variant="ghost" className="flex-1" onClick={() => void discardActivity()}>
+            Salir
+          </Button>
+        ) : (
+          <Button variant="ghost" className="flex-1" onClick={goToPrevious}>
+            <SkipBack data-icon="inline-start" fill="currentColor" stroke="currentColor" />
+            Anterior
+          </Button>
+        )}
 
-          {paused || isLast ? (
-            <Button variant="secondary" className="flex-1" onClick={finishWorkout}>
-              <Square data-icon="inline-start" fill="currentColor" stroke="none" />
-              Finalizar
-            </Button>
-          ) : (
-            <Button variant="primary" className="flex-1" onClick={goToNext}>
-              Siguiente
-              <SkipForward data-icon="inline-end" fill="currentColor" stroke="currentColor" />
-            </Button>
-          )}
-        </div>
-      </div>
+        {paused || isLast ? (
+          <Button variant="secondary" className="flex-1" onClick={finishWorkout}>
+            <Square data-icon="inline-start" fill="currentColor" stroke="none" />
+            Finalizar
+          </Button>
+        ) : (
+          <Button variant="primary" className="flex-1" onClick={goToNext}>
+            Siguiente
+            <SkipForward data-icon="inline-end" fill="currentColor" stroke="currentColor" />
+          </Button>
+        )}
+      </BottomActions>
     </div>
   );
 }

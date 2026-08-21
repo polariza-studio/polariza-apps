@@ -44,7 +44,9 @@ export type ActiveWorkout = {
   workoutName: string;
   startedAt: string;
   pausedAt?: string;
-  elapsedSeconds: number;
+  // Total milliseconds spent paused so far, from completed pause segments
+  // (excludes any pause currently in progress, tracked via `pausedAt`).
+  pausedMs: number;
   currentExerciseIndex: number;
   exercises: ActiveExercise[];
 };

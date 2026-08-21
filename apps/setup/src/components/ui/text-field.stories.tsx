@@ -8,6 +8,45 @@ const meta = {
   tags: ['autodocs'],
   parameters: {
     layout: 'centered',
+    docs: {
+      description: {
+        component: `
+**Purpose** — the borderless, display-md input used wherever a field sits
+directly on the page or a modal, not inside a bordered container: workout
+name, exercise name/sets/reps/rest, the active-workout set's reps/weight.
+
+**Anatomy** — a single native \`<input>\`. No label, no icon, no affix slots —
+TextField is the field only; pairing it with a label is FormField's job (see
+UI/FormField), not TextField's.
+
+**Variants** — one visual. \`type\`, \`inputMode\`, \`min\`, \`list\`, \`autoFocus\`,
+\`ref\`, \`disabled\`, etc. are native \`<input>\` props passed straight through
+for each call site's own needs (numeric entry, datalist suggestions, focus
+timing) — not component variants.
+
+**States** — Default, Filled, Disabled (native, no custom styling of its
+own). Focus has no visible ring by current implementation — see
+"Focus" below; this is a documented gap, not an inferred fix.
+
+**Tokens/specs** — \`text-display-md\`/\`leading-display-md\`, \`font-light\`,
+\`text-foreground\`, placeholder at \`text-foreground/30\`, no border, no
+background, full width.
+
+**Content** — placeholder-driven, no label of its own (see FormField for the
+label composition). Long values scroll within the input natively; nothing
+truncates.
+
+**Interaction/Focus** — every real call site sets \`outline-none\` and
+TextField applies no custom \`:focus\` treatment, so there is currently no
+visible focus indicator on any TextField in the product. Documented here as
+a gap, not fixed — fixing it is a design decision, not something to infer
+while writing stories.
+
+**Responsive** — always \`w-full\`; sizing is entirely the containing layout's
+responsibility, not a TextField concern.
+        `,
+      },
+    },
   },
   argTypes: {
     type: {
@@ -52,25 +91,6 @@ export const Numeric: Story = {
   },
   render: (args) => (
     <div className="w-[160px]">
-      <TextField {...args} />
-    </div>
-  ),
-};
-
-// The real usage pattern everywhere in the app: a `text-label` caption
-// stacked above the field (Nombre del workout/ejercicio, Sets, Reps,
-// Descanso, and the active workout's Reps/Peso) — TextField itself has no
-// label prop, this composition is the call site's responsibility.
-export const WithLabel: Story = {
-  args: {
-    id: 'story-exercise-name',
-    placeholder: 'Nombre del ejercicio',
-  },
-  render: (args) => (
-    <div className="flex w-[320px] flex-col gap-space-3">
-      <label htmlFor={args.id} className="text-label leading-label text-foreground-secondary">
-        Nombre del ejercicio
-      </label>
       <TextField {...args} />
     </div>
   ),

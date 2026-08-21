@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Plus, SportShoe } from 'lucide-react';
 
+import { ActivityRow } from '@/components/ui/activity-row';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Activity } from '@/domain/activity';
 import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
@@ -17,14 +19,6 @@ const WEEK_TONE_COLOR: Record<WeekTone, string> = {
 };
 
 const RECENT_ACTIVITY_LIMIT = 3;
-
-function formatDateBadge(iso: string): { day: string; month: string } {
-  const date = new Date(iso);
-  return {
-    day: String(date.getDate()),
-    month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
-  };
-}
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -110,23 +104,26 @@ export function HomePage() {
           <span className="text-body leading-body text-foreground-secondary">Tus workouts</span>
 
           {workouts.length === 0 ? (
-            <div className="outline-border text-body leading-body text-foreground-secondary flex flex-1 flex-col items-center justify-center gap-space-7 rounded-lg py-[32px] text-center outline outline-1 outline-dashed">
-              <span className="bg-interactive-subtle flex size-12 shrink-0 items-center justify-center rounded-full">
+            <EmptyState
+              icon={
                 <SportShoe
                   className="size-5 [stroke-width:1.5]"
                   style={{ color: 'color-mix(in srgb, var(--moss) 50%, transparent)' }}
                 />
-              </span>
+              }
+              // Primary only here — it's the screen's one action while
+              // empty. Once a workout exists, adding another is no longer
+              // the primary action, so the equivalent button below (once
+              // the list isn't empty) stays ghost.
+              cta={
+                <Button variant="primary" onClick={() => navigate('/workouts/new')}>
+                  <Plus data-icon="inline-start" />
+                  Crear workout
+                </Button>
+              }
+            >
               No hay workouts creados.
-              {/* Primary only here — it's the screen's one action while
-                  empty. Once a workout exists, adding another is no
-                  longer the primary action, so the equivalent button
-                  below (once the list isn't empty) stays ghost. */}
-              <Button variant="primary" onClick={() => navigate('/workouts/new')}>
-                <Plus data-icon="inline-start" />
-                Crear workout
-              </Button>
-            </div>
+            </EmptyState>
           ) : (
             <>
               <div className="flex flex-col gap-space-5">
@@ -158,30 +155,9 @@ export function HomePage() {
             <span className="text-body leading-body text-foreground-secondary">Tu actividad</span>
 
             <div className="flex flex-col gap-space-5">
-              {recentActivities.map((activity) => {
-                const { day, month } = formatDateBadge(activity.date);
-                return (
-                  // Hover/pressed/focus on the card only (the date chip
-                  // keeps its own fixed interactive-subtle fill) — same
-                  // Button v1 ghost ladder as the workout card.
-                  <Link
-                    key={activity.id}
-                    to={`/history/${activity.id}`}
-                    className="group flex items-center gap-space-5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
-                  >
-                    <div className="bg-interactive-subtle flex w-12 shrink-0 flex-col items-center justify-center gap-space-1 rounded-lg p-space-2">
-                      <span className="text-label-emphasis leading-label-emphasis text-foreground">{day}</span>
-                      <span className="text-label leading-label text-foreground-secondary">{month}</span>
-                    </div>
-                    <div className="border-border-subtle flex flex-1 flex-col items-start gap-space-3 rounded-lg border px-space-6 py-space-5 transition-colors group-hover:bg-interactive-subtle group-active:bg-border-subtle">
-                      <span className="text-heading leading-heading font-light text-foreground">{activity.workoutName}</span>
-                      <span className="text-caption leading-caption text-foreground-secondary">
-                        {activity.exercises.length} ejercicios · {Math.round(activity.durationSeconds / 60)} min
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
+              {recentActivities.map((activity) => (
+                <ActivityRow key={activity.id} activity={activity} to={`/history/${activity.id}`} />
+              ))}
             </div>
 
             <Button variant="ghost" className="w-full" onClick={() => navigate('/history')}>

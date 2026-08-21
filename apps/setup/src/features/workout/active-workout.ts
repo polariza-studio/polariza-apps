@@ -60,10 +60,25 @@ export function createActiveWorkout(workout: Workout, activities: Activity[]): A
     workoutId: workout.id,
     workoutName: workout.name,
     startedAt: new Date().toISOString(),
-    elapsedSeconds: 0,
+    pausedMs: 0,
     currentExerciseIndex: 0,
     exercises,
   };
+}
+
+// Real elapsed time, always derived from wall-clock timestamps rather than
+// an accumulated counter — a counter that only ticks via setInterval falls
+// behind (or stalls entirely) once the tab is backgrounded or the device
+// locks. Frozen automatically once `pausedAt` is set, since the end point
+// then stops being `now` and becomes that fixed timestamp.
+export function computeElapsedMs(workout: ActiveWorkout, now: number = Date.now()): number {
+  const startedAtMs = new Date(workout.startedAt).getTime();
+  const end = workout.pausedAt ? new Date(workout.pausedAt).getTime() : now;
+  return Math.max(0, end - startedAtMs - (workout.pausedMs ?? 0));
+}
+
+export function computeElapsedSeconds(workout: ActiveWorkout, now?: number): number {
+  return Math.floor(computeElapsedMs(workout, now) / 1000);
 }
 
 export function formatElapsed(totalSeconds: number): string {

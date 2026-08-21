@@ -39,7 +39,7 @@ const activeWorkout: ActiveWorkout = {
   workoutId: 'workout-1',
   workoutName: 'Lower body',
   startedAt: new Date().toISOString(),
-  elapsedSeconds: 0,
+  pausedMs: 0,
   currentExerciseIndex: 0,
   exercises: [],
 };

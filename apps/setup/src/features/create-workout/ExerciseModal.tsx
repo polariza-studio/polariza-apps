@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
 import { Dialog } from 'radix-ui';
-import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
+import { FormField } from '@/components/ui/form-field';
+import { ModalSheet } from '@/components/ui/modal-sheet';
+import { PageHeader } from '@/components/ui/page-header';
 import { TextField } from '@/components/ui/text-field';
 import type { WorkoutExercise } from '@/domain/workout';
 
@@ -101,117 +102,90 @@ export function ExerciseModal({
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          // isolate + will-change-transform: Safari/WebKit sub-pixel
-          // misaligns and doubles descendant SVG icons in this dialog
-          // without its own compositing layer. Not translate-z-0: this
-          // element already has a real transform (md:-translate-y-1/2
-          // for centering) that a literal `transform` override would
-          // clobber.
-          //
-          // Entrance animation (data-[state=open]:animate-in slide-in-
-          // from-bottom) is skipped only when opening for a new exercise
-          // — see focusNameOnMount above for why. Editing keeps it: no
-          // exercise, worked the same as always. Exit animation is
-          // untouched either way.
-          className={`fixed inset-x-0 bottom-0 z-50 isolate mx-auto flex max-h-[90vh] w-full max-w-[440px] will-change-transform flex-col overflow-y-auto rounded-t-2xl bg-background outline-none ${exercise ? 'data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom' : ''} data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom md:top-1/2 md:bottom-auto md:-translate-y-1/2 md:rounded-2xl`}
-        >
-          <div className="flex items-center justify-between p-space-7">
-            <Dialog.Title className="text-body leading-body">
-              <span className="text-foreground">{exercise ? 'Editar' : 'Nuevo'}</span>
-              <span className="text-foreground-secondary"> · ejercicio</span>
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <IconButton aria-label="Cerrar" className="text-foreground">
-                <X />
-              </IconButton>
-            </Dialog.Close>
-          </div>
+    // Entrance animation is skipped only when opening for a new exercise —
+    // see focusNameOnMount above for why. Editing keeps it: no exercise,
+    // worked the same as always. Exit animation is untouched either way.
+    <ModalSheet open={open} onOpenChange={onOpenChange} skipEntranceAnimation={!exercise}>
+      <PageHeader
+        title={{ emphasis: exercise ? 'Editar' : 'Nuevo', secondary: 'ejercicio' }}
+        titleAs={Dialog.Title}
+        onClose={() => onOpenChange(false)}
+      />
 
-          <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-name" className="text-caption leading-caption text-foreground-secondary">
-              Nombre del ejercicio
-            </label>
-            <TextField
-              id="exercise-name"
-              ref={focusNameOnMount}
-              list="exercise-name-suggestions"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Nombre del ejercicio"
-            />
-            <datalist id="exercise-name-suggestions">
-              {knownNames.map((knownName) => (
-                <option key={knownName} value={knownName} />
-              ))}
-            </datalist>
-          </div>
+      <div className="px-space-7 pt-space-7 pb-space-4">
+        <FormField label="Nombre del ejercicio" htmlFor="exercise-name">
+          <TextField
+            id="exercise-name"
+            ref={focusNameOnMount}
+            list="exercise-name-suggestions"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Nombre del ejercicio"
+          />
+          <datalist id="exercise-name-suggestions">
+            {knownNames.map((knownName) => (
+              <option key={knownName} value={knownName} />
+            ))}
+          </datalist>
+        </FormField>
+      </div>
 
-          <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-sets" className="text-caption leading-caption text-foreground-secondary">
-              Sets
-            </label>
-            <TextField
-              id="exercise-sets"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={sets}
-              onChange={(event) => setSets(event.target.value)}
-              placeholder="3"
-            />
-          </div>
+      <div className="px-space-7 pt-space-7 pb-space-4">
+        <FormField label="Sets" htmlFor="exercise-sets">
+          <TextField
+            id="exercise-sets"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={sets}
+            onChange={(event) => setSets(event.target.value)}
+            placeholder="3"
+          />
+        </FormField>
+      </div>
 
-          <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-reps" className="text-caption leading-caption text-foreground-secondary">
-              Reps
-            </label>
-            <TextField
-              id="exercise-reps"
-              value={targetReps}
-              onChange={(event) => setTargetReps(event.target.value)}
-              placeholder="8-10"
-            />
-          </div>
+      <div className="px-space-7 pt-space-7 pb-space-4">
+        <FormField label="Reps" htmlFor="exercise-reps">
+          <TextField
+            id="exercise-reps"
+            value={targetReps}
+            onChange={(event) => setTargetReps(event.target.value)}
+            placeholder="8-10"
+          />
+        </FormField>
+      </div>
 
-          <div className="flex flex-col gap-space-3 px-space-7 pt-space-7 pb-space-4">
-            <label htmlFor="exercise-rest" className="text-caption leading-caption text-foreground-secondary">
-              Descanso (s)
-            </label>
-            <TextField
-              id="exercise-rest"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              value={restSeconds}
-              onChange={(event) => setRestSeconds(event.target.value)}
-              placeholder="60"
-            />
-          </div>
+      <div className="px-space-7 pt-space-7 pb-space-4">
+        <FormField label="Descanso (s)" htmlFor="exercise-rest">
+          <TextField
+            id="exercise-rest"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={restSeconds}
+            onChange={(event) => setRestSeconds(event.target.value)}
+            placeholder="60"
+          />
+        </FormField>
+      </div>
 
-          <div className="flex flex-col gap-space-6 px-space-7 py-[32px]">
-            <Button variant="primary" className="w-full" disabled={!canSave} onClick={handleSave}>
-              Guardar ejercicio
-            </Button>
-            {exercise && (
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => {
-                  onDelete(exercise.id);
-                  onOpenChange(false);
-                }}
-              >
-                Eliminar ejercicio
-              </Button>
-            )}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+      <div className="flex flex-col gap-space-6 px-space-7 py-[32px]">
+        <Button variant="primary" className="w-full" disabled={!canSave} onClick={handleSave}>
+          Guardar ejercicio
+        </Button>
+        {exercise && (
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={() => {
+              onDelete(exercise.id);
+              onOpenChange(false);
+            }}
+          >
+            Eliminar ejercicio
+          </Button>
+        )}
+      </div>
+    </ModalSheet>
   );
 }

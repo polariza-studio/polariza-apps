@@ -9,6 +9,57 @@ const meta = {
   tags: ['autodocs'],
   parameters: {
     layout: 'centered',
+    docs: {
+      description: {
+        component: `
+**Purpose** — a bare, icon-only control, currently used for navigation
+(Back/Close in PageHeader) and one dismiss action (InstallAppBanner). A
+separate component from Button — there is no icon-only Button variant, and
+none should exist.
+
+**Anatomy** — a fixed \`size-8\` (32×32px) box, \`rounded-full\`, \`p-space-2\`
+(6px), no background/border/shadow at rest — Paper shows a bare icon, and
+that's the whole component.
+
+**Variants** — one. No default/inverse/size/filled variants — see
+"Content" below for how it reaches both light and dark surfaces without
+one.
+
+**States** — Default, Hover, Pressed, Focus, Disabled (see Interaction
+States below). Text/icon color never changes across Default/Hover/Pressed —
+only background does. Disabled dims only the icon (via
+\`--icon-button-disabled-foreground\`, the same 60%-of-base ratio as
+\`foreground-secondary\`), never the background — no opacity touched
+anywhere.
+
+**Tokens/specs** — \`size-8\`, \`p-space-2\`, \`rounded-full\`. Icon: \`size-5\`
+(20px) default, \`[stroke-width:1.5]\`, \`stroke="currentColor" fill="none"\` —
+no filled-icon exception (unlike Button's Play/Pause/Finish treatment).
+Hover/Pressed backgrounds and the focus ring both derive from
+\`currentColor\` via \`color-mix()\` rather than a fixed token, which is what
+makes one component render correctly on both light and dark surfaces (see
+Content). Focus ring has no offset — IconButton has no fill to separate a
+ring from, so an offset would just paint a fixed-color halo mismatched to
+whichever backdrop it sits on. Hover/Pressed tokens
+(\`--icon-button-hover\`/\`-pressed\`) are PROPOSED, pending visual approval —
+not yet canonical in Foundations.
+
+**Content** — icon-only, no text slot, so there's no label-length concern.
+The one required prop is \`aria-label\` (no visible label to derive an
+accessible name from).
+
+**Interaction** — the whole 32×32 box is the click target.
+
+**Responsive** — fixed size regardless of viewport; no responsive variants.
+
+**Context** — the same component renders unmodified in both light
+(\`text-foreground\`) and inverse (\`text-foreground-inverse\`) surfaces — see
+Light/Inverse Context below — because color, hover/pressed background, and
+the focus ring all key off the inherited \`currentColor\`, not a variant
+prop.
+        `,
+      },
+    },
   },
 } satisfies Meta<typeof IconButton>;
 

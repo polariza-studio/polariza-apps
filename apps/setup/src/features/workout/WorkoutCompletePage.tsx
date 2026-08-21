@@ -13,7 +13,7 @@ const GRADIENT = 'linear-gradient(in oklab 180deg, oklab(42.4% -0.056 0.070) 0%,
 
 export function WorkoutCompletePage() {
   const { workoutId = '' } = useParams<{ workoutId: string }>();
-  const { ready, workout, saveActivity, discardActivity } = useActiveWorkout(workoutId);
+  const { ready, workout, elapsedSeconds, saveActivity, discardActivity } = useActiveWorkout(workoutId);
 
   if (!ready || !workout) return null;
 
@@ -28,7 +28,7 @@ export function WorkoutCompletePage() {
         <div className="flex flex-col items-center gap-space-3">
           <span className="text-body leading-body text-foreground-inverse-secondary">Tiempo de entreno</span>
           <span className="text-display-lg leading-display-lg font-light text-foreground-inverse">
-            {formatElapsed(workout.elapsedSeconds)}
+            {formatElapsed(elapsedSeconds)}
           </span>
         </div>
         <span className="text-display-md leading-display-md font-light text-success">Bien hecho!</span>
