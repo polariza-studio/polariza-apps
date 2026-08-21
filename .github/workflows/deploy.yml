@@ -49,6 +49,14 @@ jobs:
             mkdir -p "site/$name"
             cp -r "$app_dir/dist/." "site/$name/"
             echo "::endgroup::"
+
+            if grep -q '"build-storybook"' "$app_dir/package.json"; then
+              echo "::group::Building $name Storybook"
+              pnpm --dir "$app_dir" build-storybook
+              mkdir -p "site/$name-storybook"
+              cp -r "$app_dir/storybook-static/." "site/$name-storybook/"
+              echo "::endgroup::"
+            fi
           done
 
       - name: Generate catalog index
@@ -65,7 +73,11 @@ jobs:
             for app_dir in apps/*/; do
               name="$(basename "$app_dir")"
               [ -f "$app_dir/package.json" ] || continue
-              echo "<li><a href=\"./$name/\">$name</a></li>"
+              echo "<li><a href=\"./$name/\">$name</a>"
+              if [ -d "site/$name-storybook" ]; then
+                echo " · <a href=\"./$name-storybook/\">Storybook</a>"
+              fi
+              echo '</li>'
             done
             echo '</ul>'
             echo '</body></html>'
