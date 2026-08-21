@@ -5,6 +5,7 @@ import { Plus, SportShoe } from 'lucide-react';
 import { ActivityRow } from '@/components/ui/activity-row';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
 import type { Activity } from '@/domain/activity';
 import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
@@ -58,10 +59,7 @@ export function HomePage() {
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <div className="flex flex-col bg-[var(--lime-soft)]">
-        <div className="flex items-center justify-between gap-space-1 px-space-7 py-space-7">
-          <span className="text-body-emphasis leading-body-emphasis text-foreground">SetUp</span>
-          <span className="text-body leading-body text-foreground-secondary">Workouts</span>
-        </div>
+        <PageHeader title={{ emphasis: 'SetUp', secondary: 'Workouts' }} />
 
         <div className="px-space-7 py-space-7">
           <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">

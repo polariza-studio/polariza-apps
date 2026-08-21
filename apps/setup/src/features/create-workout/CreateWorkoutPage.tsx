@@ -97,12 +97,10 @@ export function CreateWorkoutPage() {
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
-      <div className="mx-auto flex w-full max-w-[440px]">
-        <PageHeader
-          title={{ emphasis: workoutId ? 'Editar' : 'Nuevo', secondary: 'workout' }}
-          onClose={() => navigate('/home')}
-        />
-      </div>
+      <PageHeader
+        title={{ emphasis: workoutId ? 'Editar' : 'Nuevo', secondary: 'workout' }}
+        onClose={() => navigate('/home')}
+      />
 
       <div className="w-full p-space-7">
         <div className="mx-auto w-full max-w-[440px]">

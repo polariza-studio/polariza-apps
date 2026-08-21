@@ -30,9 +30,7 @@ export function HistoryPage() {
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
-      <div className="mx-auto flex w-full max-w-[440px]">
-        <PageHeader onBack={() => navigate('/home')} />
-      </div>
+      <PageHeader onBack={() => navigate('/home')} />
 
       <div className="w-full px-space-7 pt-space-9 pb-space-5">
         <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-9">

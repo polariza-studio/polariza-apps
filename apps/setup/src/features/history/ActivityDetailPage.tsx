@@ -39,9 +39,7 @@ export function ActivityDetailPage() {
 
   return (
     <div className="bg-background flex min-h-svh flex-col">
-      <div className="mx-auto flex w-full max-w-[440px]">
-        <PageHeader onBack={() => navigate('/history')} title={{ emphasis: 'Workout', secondary: 'Detalles' }} />
-      </div>
+      <PageHeader onBack={() => navigate('/history')} title={{ emphasis: 'Workout', secondary: 'Detalles' }} />
 
       <div className="w-full px-space-7 pt-space-9 pb-space-5">
         <div className="mx-auto flex w-full max-w-[440px]">

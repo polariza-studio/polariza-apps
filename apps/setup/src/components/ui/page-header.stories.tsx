@@ -12,15 +12,18 @@ const meta = {
       description: {
         component: `
 **Purpose** — the back/title/close row at the top of a screen or a modal
-sheet. Covers the 3 real compositions in the product: back only
+sheet. Covers the 4 real compositions in the product: back only
 (HistoryPage), back + title (ActivityDetailPage), title + close
-(CreateWorkoutPage, and ExerciseModal's sheet header).
+(CreateWorkoutPage, and ExerciseModal's sheet header), and title with
+neither action (HomePage's "SetUp / Workouts" band). Home's header isn't a
+different component — it's the same PageHeader with both action slots
+empty.
 
 **Anatomy** — up to 3 slots in one fixed-height row: an optional back
-IconButton (ArrowLeft), an optional two-tone title, an optional close
-IconButton (X). No usage combines back with close today.
+IconButton (ArrowLeft), an optional title, an optional close IconButton
+(X). No usage combines back with close today.
 
-**Variants** — the 3 compositions above, chosen by which props are passed
+**Variants** — the 4 compositions above, chosen by which props are passed
 (\`onBack\`, \`title\`, \`onClose\`) — not separate named variants.
 
 **States** — none of its own; back/close are plain IconButtons and inherit
@@ -28,22 +31,49 @@ IconButton's own hover/pressed/focus states (see UI/IconButton).
 
 **Tokens/specs** — \`h-16\` (64px — Tailwind's own scale, no space-* token
 covers 64px, same direct-exception precedent as Button's \`h-12\`),
-\`p-space-7\` (20px, all sides), \`flex items-center justify-between\`, always
-\`w-full\`. Verified pixel-for-pixel against Paper's "historial",
-"historial-workout-detail", "crear-workout" and "modal" artboards — all
-four share this exact height/padding. Title: \`text-body\`/\`leading-body\`,
-emphasis half in \`text-foreground\`, secondary half in
-\`text-foreground-secondary\`, joined by " · ". Back/close icon color:
-\`text-foreground\` on both.
+\`p-space-7\` (20px, all sides), \`flex items-center justify-between\`,
+\`mx-auto w-full max-w-[480px]\`. Verified pixel-for-pixel against Paper's
+"historial", "historial-workout-detail", "crear-workout", "modal" and
+"home" artboards — all five share the same 64px/20px box. Back/close icon
+color: \`text-foreground\` on both.
 
-**One spec, no per-screen spacing.** Production had drifted into two
-different outer paddings before this was caught (History/ActivityDetail:
-\`px-space-7 pt-space-7\`, no bottom padding; CreateWorkout/ExerciseModal:
-\`p-space-7\`, all sides) — checked against Paper, that was implementation
-drift, not an intentional difference: all 4 header artboards specify the
-identical 64px/20px box. PageHeader now owns that spacing itself; every
-caller wraps it only in the shared \`mx-auto max-w-[440px]\` width
-constraint, with no padding of its own layered on top.
+**Why \`max-w-[480px]\`, not \`440px\`.** Every other section on these
+screens reaches the shared 440px content column by putting its padding
+OUTSIDE an \`mx-auto max-w-[440px]\` box — so that box's content touches its
+own edges with no further inset. PageHeader instead owns \`p-space-7\`
+*inside* its own box (needed either way, for the fixed 64px height) — so
+capping at 440 would inset its content a further 20px past every other
+section, which is exactly the drift this fixes: \`max-w-[480px]\` (440 +
+2×20) lets that same padding "eat back" to the 440px line on wide
+viewports, landing flush with everything else. On narrow (mobile)
+viewports the 480 cap never engages and \`p-space-7\` alone reproduces the
+same 20px inset every other section gets from its own outer padding.
+
+**Title rendering depends on whether an action is present.** \`title\` is
+always \`{ emphasis, secondary? }\`. With \`onBack\` or \`onClose\` present, the
+title only has one end of the row to itself, so both halves join into one
+\`text-body\`/\`leading-body\` block — emphasis in \`text-foreground\`,
+secondary in \`text-foreground-secondary\`, joined by " · " (e.g. "Editar ·
+workout"). With neither action present (Home), the whole row is free, and
+the two halves render as fully independent labels pushed to opposite edges
+by \`justify-between\` — no dot: emphasis in
+\`text-body-emphasis\`/\`leading-body-emphasis\`/\`text-foreground\` ("SetUp"),
+secondary in \`text-body\`/\`leading-body\`/\`text-foreground-secondary\`
+("Workouts") — verified against Paper's "home" artboard.
+
+**One spec, no per-screen spacing.** Production had drifted twice on this
+component before landing here — first into two different outer paddings
+per screen (History/ActivityDetail: \`px-space-7 pt-space-7\`, no bottom
+padding; CreateWorkout/ExerciseModal: \`p-space-7\`, all sides), then, after
+fixing that, into a width mismatch (pages wrapped PageHeader in
+\`mx-auto max-w-[440px]\` and its own padding inset the content a further
+20px inside that, misaligning it against every section below). Both were
+implementation drift, not intentional per-screen differences — checked
+against Paper for the first, and against the rest of each page's own
+content column for the second. PageHeader now owns both spacing and
+width-capping itself; every caller (HistoryPage, ActivityDetailPage,
+CreateWorkoutPage, ExerciseModal, HomePage) drops it in directly, no
+wrapper div at all.
 
 **Interaction** — \`onBack\`/\`onClose\` are plain click handlers; PageHeader
 doesn't assume navigation or a specific closing mechanism. Inside
@@ -52,14 +82,19 @@ dialog's own root already receives — behaviorally identical to wrapping the
 button in Radix's \`Dialog.Close\`, just without requiring PageHeader to know
 about Dialog at all.
 
-**Content** — \`titleAs\` (default \`"span"\`) lets the title render as a
-different element — used by ExerciseModal to render it as a Radix
+**Content** — \`titleAs\` (default \`"span"\`) lets the *joined* title render
+as a different element — used by ExerciseModal to render it as a Radix
 \`Dialog.Title\` (required for the dialog's own accessibility wiring) instead
-of a plain \`<span>\`. The two-tone formatting is identical either way.
+of a plain \`<span>\`. It has no effect on the split (no-action) rendering,
+which never needs it.
 
-**Responsive** — no width of its own beyond \`w-full\`; the surrounding
-\`mx-auto max-w-[440px]\` content column (same as every other section on
-these screens) is the caller's concern, not PageHeader's.
+**Responsive** — the one component in this system that self-caps its own
+width rather than deferring to a caller-provided content column (see "Why
+\`max-w-[480px]\`" above) — because it's also the one component dropped
+directly into containers of very different native widths (a page's full
+flow, Home's full-bleed hero band, ModalSheet's already-440-capped
+content) and needs to land on the same 440px line in all of them without
+each caller having to know that.
         `,
       },
     },
@@ -89,21 +124,38 @@ export const TitleWithClose: Story = {
   },
 };
 
-// The same spec (h-16, p-space-7) rendered across all 3 compositions —
-// only the width constraint (mx-auto max-w-[440px], the same one used
-// everywhere else on these screens) comes from the caller.
+// No back, no close — the whole row is free, so emphasis/secondary split
+// to opposite edges instead of joining into one block. HomePage's actual
+// header, verified against Paper's "home" artboard.
+export const TitleOnly: Story = {
+  args: {
+    title: { emphasis: 'SetUp', secondary: 'Workouts' },
+  },
+};
+
+// No wrapper div — PageHeader caps and centers itself. Deliberately placed
+// in a container wider than 480px (unlike a real page's own content flow)
+// to demonstrate that self-capping: every row below lands on the same
+// 440px-wide, centered line purely from PageHeader's own classes, with
+// nothing extra from the caller.
 export const AllCompositions: Story = {
   render: () => (
     <div className="flex flex-col gap-6">
-      <div className="mx-auto w-full max-w-[440px] rounded-lg outline outline-1 outline-border-subtle">
-        <PageHeader onBack={() => {}} />
-      </div>
-      <div className="mx-auto w-full max-w-[440px] rounded-lg outline outline-1 outline-border-subtle">
-        <PageHeader onBack={() => {}} title={{ emphasis: 'Workout', secondary: 'Detalles' }} />
-      </div>
-      <div className="mx-auto w-full max-w-[440px] rounded-lg outline outline-1 outline-border-subtle">
-        <PageHeader title={{ emphasis: 'Nuevo', secondary: 'workout' }} onClose={() => {}} />
-      </div>
+      <PageHeader onBack={() => {}} className="rounded-lg outline outline-1 outline-border-subtle" />
+      <PageHeader
+        onBack={() => {}}
+        title={{ emphasis: 'Workout', secondary: 'Detalles' }}
+        className="rounded-lg outline outline-1 outline-border-subtle"
+      />
+      <PageHeader
+        title={{ emphasis: 'Nuevo', secondary: 'workout' }}
+        onClose={() => {}}
+        className="rounded-lg outline outline-1 outline-border-subtle"
+      />
+      <PageHeader
+        title={{ emphasis: 'SetUp', secondary: 'Workouts' }}
+        className="rounded-lg outline outline-1 outline-border-subtle"
+      />
     </div>
   ),
 };
