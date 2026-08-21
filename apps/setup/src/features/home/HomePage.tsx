@@ -11,13 +11,8 @@ import type { Workout } from '@/domain/workout';
 import { storageRepository } from '@/services/storage';
 import { InstallAppBanner } from './InstallAppBanner';
 import { SwipeableWorkoutRow } from './SwipeableWorkoutRow';
-import { getWeeklyActivitySummary, type WeekTone } from './weekly-activity';
-
-const WEEK_TONE_COLOR: Record<WeekTone, string> = {
-  active: 'var(--foreground)',
-  past: 'var(--foreground-secondary)',
-  future: 'color-mix(in srgb, var(--moss) 20%, transparent)',
-};
+import { WeeklyActivity } from './WeeklyActivity';
+import { getWeeklyActivitySummary } from './weekly-activity';
 
 const RECENT_ACTIVITY_LIMIT = 3;
 
@@ -62,37 +57,8 @@ export function HomePage() {
         <PageHeader title={{ emphasis: 'SetUp', secondary: 'Workouts' }} />
 
         <div className="px-space-7 py-space-7">
-          <div className="mx-auto flex w-full max-w-[440px] flex-col gap-space-7">
-            <div className="flex flex-col gap-space-3">
-              <span className="text-body leading-body text-foreground-secondary">Esta semana</span>
-              <div className="flex items-baseline gap-space-3">
-                <span className="text-display-lg leading-display-lg text-foreground">{weekly.totalMinutes}</span>
-                <span className="text-body leading-body text-foreground">min</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-[2px] px-space-1">
-              <div className="flex h-[67px] items-end justify-between">
-                {weekly.days.map((day, index) => (
-                  <div
-                    key={index}
-                    className="w-3"
-                    style={{ height: day.height, backgroundColor: WEEK_TONE_COLOR[day.tone] }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-start justify-between">
-                {weekly.days.map((day, index) => (
-                  <span
-                    key={index}
-                    className="w-3 text-center text-label-emphasis leading-label-emphasis"
-                    style={{ color: WEEK_TONE_COLOR[day.tone] }}
-                  >
-                    {day.label}
-                  </span>
-                ))}
-              </div>
-            </div>
+          <div className="mx-auto w-full max-w-[440px]">
+            <WeeklyActivity weekly={weekly} />
           </div>
         </div>
       </div>
