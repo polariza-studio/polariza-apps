@@ -1,0 +1,75 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Spacing" />
+
+# Spacing
+
+SetUp's spacing scale, translated from the Paper exploration (`setup-product-flow`) into `src/index.css`. This page renders the live CSS custom properties — if a bar looks wrong, the token itself is wrong, not this page.
+
+**Approved 2026-08-14**, from an exhaustive Paper audit and cleanup pass (unified the day/set column gap to 68px and the row-list gap to 12px across screens). Named tokens, not Tailwind's numeric scale — `gap-1`/`p-4` etc. are untouched and still mean whatever Tailwind's own arithmetic scale says; these are additive, collision-free utilities (`gap-space-5`, `p-space-7`, …).
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-1</code>
+    <div style={{ width: '4px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>4px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-2</code>
+    <div style={{ width: '6px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>6px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-3</code>
+    <div style={{ width: '8px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>8px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-4</code>
+    <div style={{ width: '10px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>10px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-5</code>
+    <div style={{ width: '12px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>12px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-6</code>
+    <div style={{ width: '16px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>16px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-7</code>
+    <div style={{ width: '20px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>20px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-8</code>
+    <div style={{ width: '24px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>24px</span>
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <code style={{ width: '84px' }}>space-9</code>
+    <div style={{ width: '40px', height: '16px', background: 'var(--primary)' }} />
+    <span style={{ color: 'var(--foreground-secondary)', fontSize: '12px' }}>40px</span>
+  </div>
+</div>
+
+| Token | Size | Where it comes from in Paper |
+| --- | --- | --- |
+| `space-1` | 4px | Label→value gaps (stat blocks, Reps/Weight, Overview field labels) |
+| `space-2` | 6px | Button `paddingBlock`, chip padding, back-button padding |
+| `space-3` | 8px | Related-content gaps (stats-header, "102"+"min", counter→"Time") |
+| `space-4` | 10px | Stat-block `paddingBlock` |
+| `space-5` | 12px | Row/chip padding, button icon-to-text gap, list-item spacing (workout-type rows, Set rows) |
+| `space-6` | 16px | Button `paddingLeft`, gap between a button pair |
+| `space-7` | 20px | Screen/section/card padding |
+| `space-8` | 24px | Gaps between major sections |
+| `space-9` | 40px | Overview's title→"What to expect" gap — a confirmed intentional outlier, not folded into `space-8` |
+
+**68px is deliberately not a token.** It's the day/set-selector column's layout dimension (how far apart 3 stacked labels land, given the column's height and content), not an intentional spacing decision — treat it as a component measurement, not something to reach for when spacing something new.
+
+## Source of truth
+
+Measured directly from the Paper file via `get_computed_styles` on real nodes across all 6 current screens. Re-audit this page if a meaningful amount of time has passed and Paper may have drifted.

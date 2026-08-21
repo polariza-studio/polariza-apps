@@ -1,0 +1,46 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Icons" />
+
+# Icons
+
+Library: **lucide-react** only (spec §14) — never emoji as icons.
+
+Sizing is established by `components/ui/button.tsx` (see Components/Button): `size-5` (20px) is the default for icons inside a button, matching the exact icon dimensions measured across every button in Paper (every icon SVG is 20×20). Outside of Button, follow the same convention — `size-5` (20px) as the default, sizing down only when a specific inline-with-text context calls for it.
+
+**Stroke width is `1.5`, not Lucide's default of `2`.** Corrected 2026-08-14 — a Button audit read Paper's raw icon markup directly (`get_jsx`, not just measured dimensions) and found every stroke-based icon uses `strokeWidth="1.5"`. An earlier version of this page said to leave Lucide's default alone; that was an unverified assumption, not a Paper measurement. Button enforces this with `[&_svg]:[stroke-width:1.5]` on its base classes — outside Button, set it explicitly per icon until something more central exists.
+
+## Stroke vs. fill — approved 2026-08-14
+
+**Default icon** — `stroke="currentColor"`, `fill="none"` (Lucide's own default `fill`; don't override it). Color comes entirely from `currentColor`, so an icon sitting inside a colored button automatically picks up the right ink — Button never sets an icon color directly, and never will (no filled Button variants, no filled-icon color tokens, no component-specific icon colors). (Paper itself has no explicit color set on any icon yet — `currentColor` is a codebase convention, not something measured in Paper.)
+
+**Filled workout action icon** (an approved, named exception) — `stroke="none"`, `fill="currentColor"`. This is an *icon-level* choice made where the icon is used, not a Button prop or variant — each approved filled icon decides for itself. Exactly four icons carry this treatment today:
+
+| Icon | Lucide component | Used for |
+| --- | --- | --- |
+| Play | `Play` | Start Workout, Resume |
+| Pause | `Pause` | Pause |
+| Finish | `Square` | Finish |
+| Next | `SkipForward` | Next (Active Workout) — approved 2026-08-17, same treatment as Play/Pause/Finish, but keeps its stroke (see note below) |
+
+```tsx
+<Play data-icon="inline-start" fill="currentColor" stroke="none" />
+<Pause data-icon="inline-start" fill="currentColor" stroke="none" />
+<Square data-icon="inline-start" fill="currentColor" stroke="none" />
+<SkipForward data-icon="inline-end" fill="currentColor" stroke="currentColor" />
+```
+
+**Both props are required, not just `fill`.** Every Lucide icon component ships `stroke="currentColor"` and `stroke-width="2"` on its root `<svg>` regardless of what `fill` you pass — adding `fill="currentColor"` alone leaves a 2px outline stroke doubled on top of the fill, which Paper's equivalent icons don't have (confirmed via `get_jsx`: Paper's filled icons carry a `fill` attribute and *no* `stroke` attribute at all). `stroke="none"` removes that leftover outline.
+
+**`SkipForward` is the one exception that keeps `stroke="currentColor"`** (corrected 2026-08-17): unlike Play/Pause/Square, which are single filled shapes, SkipForward is a filled triangle *plus* a separate stroked line (the leading bar) — Lucide draws that bar as a zero-width `<line>`, which has no fill area at all and renders only via its stroke. `stroke="none"` on the whole icon silently deletes the bar, leaving what reads as a plain `Play` triangle. `fill="currentColor"` still fills the triangle; `stroke="currentColor"` is what makes the bar visible (Button's own CSS already sets `stroke-width: 1.5` on descendant icons, so no explicit width is needed here).
+
+Don't extend this treatment to any other icon without adding it to this table first — it's a short, named list, not a general rule for "icons that feel like actions."
+
+This is a usage rule, not a gallery — see [lucide.dev/icons](https://lucide.dev/icons) for what's available. The rule that matters for SetUp is *when* an icon is allowed to carry meaning on its own. Per spec §16, Workout Mode has to work for someone standing, moving, and tired mid-session:
+
+- Icon-only controls are reserved for a small set of very common, instantly-recognizable actions (back, close, pause).
+- Everything else — and anything in Onboarding, Plan Settings, or a primary call-to-action — pairs the icon with a visible text label. Don't let an icon carry meaning alone if getting it wrong costs the user their workout state.
+
+## Source of truth
+
+Measured directly from the Paper file via `get_computed_styles`/`get_jsx` on real nodes across all 6 current screens. Re-audit this page if a meaningful amount of time has passed and Paper may have drifted.

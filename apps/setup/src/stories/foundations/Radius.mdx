@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Radius" />
+
+# Radius
+
+SetUp's corner-radius and border tokens, translated from the Paper exploration (`setup-product-flow`) into `src/index.css`. This page renders the live CSS custom properties — if a swatch looks wrong, the token itself is wrong, not this page.
+
+**Approved 2026-08-14.** Only two canonical radius values exist — confirmed against Paper, where every non-pill surface measured at exactly 8px and every pill/circular element at 100px, with zero exceptions anywhere in the file.
+
+<div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '8px' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+    <div style={{ width: '48px', height: '48px', background: 'var(--surface-subtle)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }} />
+    <code style={{ fontSize: '12px' }}>radius-md</code>
+  </div>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+    <div style={{ width: '48px', height: '48px', background: 'var(--surface-subtle)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-full)' }} />
+    <code style={{ fontSize: '12px' }}>radius-full</code>
+  </div>
+</div>
+
+- **`radius-md`** (8px) — cards, rows, chips, stat blocks. The one surface radius in the whole product.
+- **`radius-full`** (100px) — buttons, circular icon buttons, pill-shaped dividers. In practice this is Tailwind's own `rounded-full` utility (hardcoded to a very large radius, not theme-configurable) — visually identical to 100px at every size used here, so there's no separate `rounded-radius-full` class; `--radius-full` exists purely as the documented canonical value.
+
+**Do not create `radius-sm`, `radius-lg`, `radius-xl`, or any other radius token** unless Paper introduces an actual new radius — there are only two surface treatments in this product, pill or `radius-md`, nothing in between.
+
+**Update 2026-08-14**: `--radius-sm`/`--radius-lg`/`--radius-xl`/`--radius-2xl`/`--radius-3xl`/`--radius-4xl` (and their `--radius` seed) have been removed from `index.css`. They were legacy shadcn scaffold values kept only because Button v1's predecessor referenced `--radius-lg`; once Button v1 stopped using them, a full `src/` grep confirmed zero remaining consumers, so they were deleted rather than left as dead code.
+
+## Borders
+
+Width follows Tailwind's default scale (`border` = 1px, `border-2` = 2px) — not overridden. Two color weights, both semantic tokens (see Foundations/Colors): `border` (moss @ 20%) for chip outlines, `border-subtle` (moss @ 10%) for dividers and other outlines.
+
+Paper's dividers are filled rectangles (`background-color: var(--border-subtle)` at a fixed height), not CSS borders. The day-selector chips use a real `outline` (not a fill, not a `border`) at the stronger weight — `outline: 1px solid var(--border)` — so it doesn't affect layout box size.
+
+<div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+  <div style={{ width: '80px', height: '48px', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }} />
+  <div style={{ width: '48px', height: '48px', outline: '1px solid var(--border)', borderRadius: '9999px' }} />
+</div>
+
+## Source of truth
+
+Measured directly from the Paper file via `get_computed_styles` on real nodes across all 6 current screens. Re-audit this page if a meaningful amount of time has passed and Paper may have drifted.

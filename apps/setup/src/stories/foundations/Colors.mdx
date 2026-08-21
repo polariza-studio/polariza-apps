@@ -1,0 +1,93 @@
+import { Meta, ColorPalette, ColorItem } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Colors" />
+
+# Colors
+
+SetUp's color tokens, translated from the Paper exploration (`setup-product-flow`) into `src/index.css`. This page renders the live CSS custom properties — if a swatch looks wrong, the token itself is wrong, not this page.
+
+**Approved 2026-08-14.** This is the canonical semantic source of truth for SetUp, defined by the user after a full audit of the current Paper file (6 screens: Home, Workout Overview, three Workout Mode states, Workout Completion). Paper remains the *visual* reference; this list is the *semantic* one. Don't infer, rename, or add color tokens without asking first. Treat this page as fixed unless the user revises it, even if Paper drifts further — unlike the other Foundations pages, this one doesn't get re-audited on a time basis.
+
+## Primitives
+
+Raw palette values. **Not exposed as Tailwind utilities** (`bg-moss` etc. don't exist) — components consume the semantic tokens below, never these directly, unless explicitly approved for a specific case.
+
+<ColorPalette>
+  <ColorItem title="moss" subtitle="--moss" colors={{ moss: '#294000' }} />
+  <ColorItem title="lime" subtitle="--lime" colors={{ lime: '#BFF753' }} />
+  <ColorItem title="lime-soft" subtitle="--lime-soft — not yet assigned to a semantic token" colors={{ 'lime-soft': '#CEFB83' }} />
+  <ColorItem title="neutral-0 / neutral-50" subtitle="--neutral-0, --neutral-50" colors={{ 'neutral-0': 'var(--neutral-0)', 'neutral-50': 'var(--neutral-50)' }} />
+</ColorPalette>
+
+## Semantic tokens
+
+<ColorPalette>
+  <ColorItem
+    title="background / background-inverse"
+    subtitle="Page surface, and its full-bleed inversion (Workout Overview, Workout Completion)"
+    colors={{ background: 'var(--background)', 'background-inverse': 'var(--background-inverse)' }}
+  />
+  <ColorItem
+    title="foreground / foreground-secondary"
+    subtitle="The one ink color for light-screen text, at two opacities — not separate hardcoded grays"
+    colors={{ foreground: 'var(--foreground)', 'foreground-secondary': 'var(--foreground-secondary)' }}
+  />
+  <ColorItem
+    title="foreground-inverse / foreground-inverse-secondary"
+    subtitle="Same idea, for text on an inverted (dark) surface"
+    colors={{ 'foreground-inverse': 'var(--foreground-inverse)', 'foreground-inverse-secondary': 'var(--foreground-inverse-secondary)' }}
+  />
+  <ColorItem
+    title="surface-subtle / surface-inverse"
+    subtitle="Barely-there tinted surfaces (stat chips, day-selector chip fills) — light and inverted-context versions"
+    colors={{ 'surface-subtle': 'var(--surface-subtle)', 'surface-inverse': 'var(--surface-inverse)' }}
+  />
+  <ColorItem
+    title="border / border-subtle"
+    subtitle="Two weights: chip outlines (border) vs. dividers and other outlines (border-subtle)"
+    colors={{ border: 'var(--border)', 'border-subtle': 'var(--border-subtle)' }}
+  />
+  <ColorItem
+    title="primary / primary-foreground"
+    subtitle="The real primary CTA fill: Start Workout, Save Activity, Next, Resume"
+    colors={{ primary: 'var(--primary)', 'primary-foreground': 'var(--primary-foreground)' }}
+  />
+  <ColorItem
+    title="secondary / secondary-foreground"
+    subtitle="Important action, lower emphasis than primary: Finish. Same primitives as background-inverse/foreground-inverse, distinct role — promoted from shadcn-alias 2026-08-14"
+    colors={{ secondary: 'var(--secondary)', 'secondary-foreground': 'var(--secondary-foreground)' }}
+  />
+  <ColorItem
+    title="interactive-subtle / interactive-subtle-inverse"
+    subtitle="Always-visible (not hover-only) tinted button surface: Adjust plan, Pause, Discard Activity"
+    colors={{ 'interactive-subtle': 'var(--interactive-subtle)', 'interactive-subtle-inverse': 'var(--interactive-subtle-inverse)' }}
+  />
+  <ColorItem
+    title="state-active / state-inactive"
+    subtitle="Step-bar segments and similar progress/selection indicators"
+    colors={{ 'state-active': 'var(--state-active)', 'state-inactive': 'var(--state-inactive)' }}
+  />
+</ColorPalette>
+
+**Two screens invert to a dark surface**: Workout Overview and Workout Completion are full-bleed moss with near-white text, instead of the usual light background — `bg-background-inverse text-foreground-inverse`. The "Finish" button is a different thing: it's a single button with its own dark fill (`bg-secondary text-secondary-foreground`) sitting on an otherwise-light Workout Mode screen, not a full-screen inversion — see Button's own docs (Components/Button) for its variant table.
+
+## shadcn compatibility aliases — not canonical
+
+`components/ui/button.tsx` (and any future shadcn-added component) expects `--muted`, `--accent` (plus their `-foreground` pairs), `--card`, `--popover`, `--input`, `--ring`, and `--destructive` to exist, because shadcn's generated code references them. **None of these are part of Color Foundations v1** — they carry no approved product meaning yet. They're kept defined only so existing components don't break, conservatively aliased onto the semantic tokens above. (`--secondary`/`--secondary-foreground` used to be in this bucket too — promoted to canonical 2026-08-14, see the swatch above.)
+
+| shadcn variable | Aliased to |
+| --- | --- |
+| `--muted` / `--muted-foreground` | `--surface-subtle` / `--foreground-secondary` |
+| `--accent` / `--accent-foreground` | `--interactive-subtle` / `--foreground` |
+| `--card`, `--popover` (+ foregrounds) | `--background` / `--foreground` (flat surfaces, no distinct card tone) |
+| `--input` | `--border` |
+| `--ring` | `--foreground` |
+| `--destructive` | unchanged shadcn default (no red exists in v1; Paper doesn't style Discard Activity as alarming) |
+
+Don't use these six aliases intentionally in new SetUp components, and don't treat them as approved foundations — they're a compatibility shim, not a design decision. That's also why they're not shown as swatches above.
+
+`--chart-1` through `--chart-5` are likewise unaddressed by v1 (the weekly-graph green that used to live in `--chart-1` no longer exists in Paper — replaced with moss) and are left at shadcn's neutral placeholders.
+
+## Source of truth
+
+Measured directly from the Paper file via `get_computed_styles` on real nodes across all 6 current screens, not eyeballed from a screenshot.

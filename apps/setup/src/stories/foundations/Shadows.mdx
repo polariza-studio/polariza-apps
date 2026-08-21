@@ -1,0 +1,17 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Shadows" />
+
+# Shadows
+
+**Approved 2026-08-14.** One token, one consumer: `--shadow-button` (`0 4px 8px 2px`, tinted at `border-subtle`'s weight — moss @ 10%, see Foundations/Colors) is applied to Button's `secondary` variant only (`components/ui/button.tsx`) — Finish is the sole button in Paper that carries a shadow, confirmed by a full button audit and re-audit. `primary`, `ghost`, and `ghost-inverse` have no shadow.
+
+<div style={{ display: 'flex', gap: '24px', marginTop: '8px', alignItems: 'center' }}>
+  <div style={{ padding: '12px 24px', borderRadius: '9999px', background: 'var(--background-inverse)', color: 'var(--foreground-inverse)', boxShadow: 'var(--shadow-button)' }}>Finish</div>
+</div>
+
+Don't add a shadow anywhere else — other buttons, cards, sections — without a new Paper example and explicit approval, the same way this one was.
+
+## Source of truth
+
+Measured directly from the Paper file via `get_computed_styles` on real nodes across all 6 current screens. Re-audit this page if a meaningful amount of time has passed and Paper may have drifted.
